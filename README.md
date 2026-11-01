@@ -112,14 +112,6 @@ docs/                          SE and ID documents, backlog tickets
 scripts/                       create-github-issues.sh
 ```
 
-Three rules keep the design clean (SE document, section 6):
-
-1. **The browser never works out DFS itself.** The server returns every step; the frontend only
-   plays them back (NFR-03).
-2. **The `model` package has no Spring code**, so the algorithm is tested with plain JUnit.
-3. **Learner-facing text lives in `static/data/*.json`**, not in JavaScript, so content can be
-   edited without touching code.
-
 ---
 
 ## API
@@ -171,7 +163,7 @@ Any key can be overridden when starting, for example
 
 ## Development tips
 
-- **Frontend changes:** edit, save, refresh the browser. No restart, no build.
+- **Frontend changes:** edit, save, refresh the browser.
 - **Java changes:** Spring Boot DevTools restarts the app automatically when your IDE recompiles
   (or run `./mvnw compile` in a second terminal).
 - **IDE:** open the folder in IntelliJ IDEA or VS Code (with the Java extension pack); it is a

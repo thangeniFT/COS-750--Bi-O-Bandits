@@ -2,39 +2,9 @@
 
 How the group works on this repository. Read this once before your first ticket.
 
-## Setting up GitHub
-
-One person does this once.
-
-1. **Create the repository** on GitHub (private is fine; the examiners need a link, so add them
-   or make it public before submission). Do not add a README or licence on GitHub; the repo
-   already has them.
-2. **Push** this folder (if you received it as a zip, unzip it and `cd cos212-dfs-tutor` first):
-   ```bash
-   git init -b main
-   git add .
-   git update-index --chmod=+x mvnw scripts/create-github-issues.sh
-   git commit -m "Project skeleton"
-   git remote add origin https://github.com/<owner>/cos212-dfs-tutor.git
-   git push -u origin main
-   ```
-3. **Add every group member** as a collaborator (Settings > Collaborators).
-4. **Protect `main`** (Settings > Branches > Add rule for `main`):
-   - Require a pull request before merging, with **1 approval**.
-   - Require status checks to pass: **Java build and tests** and **Frontend and content tests**
-     (they appear after CI has run once).
-5. **Create the labels and issues** from the backlog (needs the [GitHub CLI](https://cli.github.com),
-   logged in with `gh auth login`):
-   ```bash
-   scripts/create-github-issues.sh --dry-run   # check first
-   scripts/create-github-issues.sh
-   ```
-6. **Create a project board** (Projects > New project > Board) with the columns
-   *Backlog, Ready, In progress, In review, Done*, and add all issues to it.
-
 ## Working on a ticket
 
-1. **Pick** an issue from *Ready*, assign yourself, and move it to *In progress*. Start with
+1. **Pick** an issue from *TODO*, assign yourself, and move it to *In progress*. Start with
    tickets whose dependencies are done (see [docs/BACKLOG.md](docs/BACKLOG.md)). *Good first issue*
    tickets are small and self-contained.
 2. **Branch** from an up-to-date `main`. Name the branch after the ticket:
