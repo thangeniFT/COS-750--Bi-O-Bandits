@@ -1,0 +1,22 @@
+{
+  "_comment": "Glossary from the ID document (appendix C). Shown as tooltips for bold terms (ticket C-03).",
+  "terms": {
+    "node": "One item in a tree, holding a value.",
+    "root": "The node at the top of the tree. Every search starts here.",
+    "child": "A node directly below another node.",
+    "parent": "The node directly above another node.",
+    "leaf": "A node with no children: a dead end.",
+    "subtree": "A node together with everything below it.",
+    "binary search tree": "A tree where each node has at most two children, smaller values are on the left and larger values are on the right.",
+    "stack": "A collection where you can only add to the top (push) and take from the top (pop). Last in, first out.",
+    "push": "Put an item on top of a stack.",
+    "pop": "Take the top item off a stack.",
+    "depth-first search": "Exploring a tree by going as deep as possible along one path before backing up to try another.",
+    "visit": "The moment DFS takes a node off the stack and looks at it.",
+    "backtracking": "Going back to the most recent node that still has an unexplored child.",
+    "traversal": "Visiting every node in a tree once, in a set order.",
+    "pre-order": "Write a node down before its subtrees.",
+    "in-order": "Write a node down between its left and right subtrees.",
+    "post-order": "Write a node down after both of its subtrees."
+  }
+}

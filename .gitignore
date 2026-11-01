@@ -1,0 +1,34 @@
+# Build output
+target/
+*.class
+
+# Maven wrapper downloads (the scripts and properties are committed)
+.mvn/wrapper/maven-wrapper.jar
+
+# Node (there are no dependencies, but just in case)
+node_modules/
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+*.code-workspace
+
+# Operating systems
+.DS_Store
+Thumbs.db
+
+# LaTeX build files (the .tex sources and PDFs in docs/ are committed)
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+
+# Local, personal settings
+.env
+*.local.json

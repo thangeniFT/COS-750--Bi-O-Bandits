@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  COS212 DFS Tutor - Maven build.
+
+  Build and run with the Maven Wrapper so everyone uses the same Maven version:
+    ./mvnw spring-boot:run      (Windows: mvnw.cmd spring-boot:run)
+    ./mvnw test
+    ./mvnw verify               (what CI runs)
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Spring Boot 3.5 is the release line named in the SE document. -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.16</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>za.ac.up</groupId>
+    <artifactId>cos212-dfs-tutor</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <name>COS212 DFS Tutor</name>
+    <description>Pre-lecture tutor for depth-first search on a binary search tree (COS750 project)</description>
+
+    <properties>
+        <java.version>21</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <!-- REST endpoints and serving the static HTML/CSS/JS frontend. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Bean Validation (@NotNull etc.) on request bodies. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- Restarts the app when Java changes and reloads static files. Never packaged into the JAR. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- JUnit 5, AssertJ, MockMvc. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <!-- Produces target/dfs-tutor.jar (the name used in the SE deployment diagram). -->
+        <finalName>dfs-tutor</finalName>
+
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- spring-boot:run serves src/main/resources directly, so HTML/CSS/JS/JSON
+                         edits show up on browser refresh without a rebuild. -->
+                    <addResources>true</addResources>
+                </configuration>
+            </plugin>
+
+            <!-- Fails fast with a clear message if someone builds with an older JDK. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>require-java-21</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>[21,)</version>
+                                    <message>This project needs JDK 21 or newer. Check JAVA_HOME (see README, Troubleshooting).</message>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

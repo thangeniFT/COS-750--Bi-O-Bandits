@@ -1,0 +1,198 @@
+{
+  "_comment": "Learner-facing lesson content, one object per screen, in order. Text follows the ID document (appendix A). **bold** and *italic* are supported. 'type' picks the renderer in js/screens/index.js. Edit wording here, not in JavaScript.",
+  "title": "Depth-first search on a binary search tree",
+  "screens": [
+    {
+      "id": "hook",
+      "gagneEvent": 1,
+      "type": "choice",
+      "title": "A maze",
+      "body": [
+        "You are standing at the entrance of a maze. You can only see the passage right in front of you. At each fork you must choose a way to go.",
+        "**How would you make sure you never miss the exit?**"
+      ],
+      "options": [
+        "Pick a random passage every time.",
+        "Always take the left-most passage you have not tried yet. If you hit a dead end, go back to the last fork and try the next passage.",
+        "Try the first step of every passage, then the second step of every passage, and so on."
+      ],
+      "reveal": "All three are real strategies, and two of them always work. Today you will learn the second one. It is called **depth-first search**."
+    },
+    {
+      "id": "goals",
+      "gagneEvent": 2,
+      "type": "text",
+      "title": "What you will learn",
+      "body": [
+        "In the next 20 minutes you will learn to:",
+        "1. Walk through a tree the depth-first way, and explain what that means.",
+        "2. Use a **stack** to keep track of where to go back to.",
+        "3. Check whether you are ready for the lecture, and get help if you are not.",
+        "You can go back to any screen at any time. Nothing here is marked."
+      ]
+    },
+    {
+      "id": "warmup",
+      "gagneEvent": 3,
+      "type": "warmup",
+      "title": "Quick warm-up",
+      "body": ["Two quick questions to check you have what you need. If either one is new to you, a short refresher card will help."],
+      "questions": [
+        {
+          "id": "w1",
+          "prompt": "Which of these pictures is a tree?",
+          "options": [
+            { "id": "a", "text": "Picture 1: one node at the top, every other node hangs below exactly one parent", "correct": true },
+            { "id": "b", "text": "Picture 2: the lines form a loop" },
+            { "id": "c", "text": "Picture 3: two separate pieces with no line between them" }
+          ],
+          "refresher": "trees"
+        },
+        {
+          "id": "w2",
+          "prompt": "You push 1, then 2, then 3 onto a stack. Which number comes off first?",
+          "options": [
+            { "id": "a", "text": "1" },
+            { "id": "b", "text": "2" },
+            { "id": "c", "text": "3", "correct": true }
+          ],
+          "refresher": "stacks"
+        }
+      ],
+      "refreshers": {
+        "trees": "A **tree** is made of **nodes** joined by lines. The top node is the **root**. Each node can have **children** below it. A node with no children is a **leaf**. Any node together with everything below it forms a **subtree**.",
+        "stacks": "A **stack** is like a pile of plates. You can only put a plate on top (**push**) or take the top plate off (**pop**). The last plate you put on is the first one you take off."
+      }
+    },
+    {
+      "id": "concept-bst",
+      "gagneEvent": 4,
+      "type": "explorer",
+      "title": "Binary search trees",
+      "body": [
+        "In a **binary search tree** (BST), every node has at most two children: a left child and a right child. The tree follows one rule:",
+        "**Smaller values go to the left. Larger values go to the right.**",
+        "Try it: insert 65 into the tree below and watch where it goes."
+      ],
+      "tree": "sandbox",
+      "allowEdit": true,
+      "mode": "none"
+    },
+    {
+      "id": "concept-idea",
+      "gagneEvent": 4,
+      "type": "text",
+      "title": "The big idea",
+      "body": [
+        "Remember the maze? Depth-first search does the same thing in a tree.",
+        "Start at the root. Go down to the left as far as you can. When you reach a leaf (a dead end), go back up to the last node that still has an unexplored child, and go down that way.",
+        "Going back up is called **backtracking**."
+      ]
+    },
+    {
+      "id": "concept-stack",
+      "gagneEvent": 4,
+      "type": "text",
+      "title": "How DFS remembers",
+      "body": [
+        "To backtrack, DFS needs to remember which nodes it still has to explore. It keeps them on a **stack**.",
+        "When DFS leaves a node, it pushes the node's children onto the stack: **right child first, then left child**. Because the left child went on last, it is on top, so it comes off first. That is why DFS always explores the left side first."
+      ]
+    },
+    {
+      "id": "concept-steps",
+      "gagneEvent": 4,
+      "type": "text",
+      "title": "The four steps",
+      "body": [
+        "1. Push the root onto the stack.",
+        "2. Pop the top node and **visit** it.",
+        "3. If it is the value you are looking for, stop. Otherwise push its right child, then its left child. Skip any child that is empty.",
+        "4. If the stack is empty, stop: the value is not in the tree. Otherwise, go back to step 2."
+      ]
+    },
+    {
+      "id": "concept-orders",
+      "gagneEvent": 4,
+      "type": "explorer",
+      "title": "Three orders, one walk",
+      "body": [
+        "You can also use DFS to list every value in a tree. The walk is always the same. What changes is *when* you write a node down:",
+        "**Pre-order:** when you first arrive at the node. **In-order:** after its left side, before its right side. **Post-order:** when you leave the node for the last time.",
+        "Run in-order on this tree. Notice anything about the result?"
+      ],
+      "tree": "A",
+      "allowEdit": false,
+      "mode": "traverse",
+      "order": "IN_ORDER",
+      "afterRun": "It is sorted! In a BST, everything on the left is smaller and everything on the right is larger, so \"left, me, right\" always lists the values from smallest to largest."
+    },
+    {
+      "id": "concept-not",
+      "gagneEvent": 4,
+      "type": "text",
+      "title": "What DFS does not do",
+      "body": [
+        "DFS does not look at the values to decide where to go. Even if you are searching for 80, and 80 is bigger than the root, DFS still explores the whole left side first.",
+        "That might seem wasteful. Keep the thought; we come back to it at the end."
+      ]
+    },
+    {
+      "id": "worked-example",
+      "gagneEvent": 5,
+      "type": "explorer",
+      "title": "Worked example: search for 60",
+      "body": ["Let us search for 60. Click **Next** to take one step at a time. Watch the stack on the right."],
+      "tree": "A",
+      "allowEdit": false,
+      "mode": "search",
+      "target": 60
+    },
+    {
+      "id": "practice",
+      "gagneEvent": 6,
+      "type": "practice",
+      "title": "Your turn",
+      "body": [
+        "**Practice 1.** Here is a new tree. This time, *you* say which node comes next. We are searching for 55.",
+        "**Practice 2.** Now on your own: put the nodes of this tree in in-order. Hint: the answer should be sorted."
+      ],
+      "tree": "B",
+      "target": 55,
+      "orderTask": "IN_ORDER"
+    },
+    {
+      "id": "quiz",
+      "gagneEvent": 8,
+      "type": "quiz",
+      "title": "Readiness quiz",
+      "body": ["Six questions to check you are ready for the lecture. After each one, tell us how sure you were. There are no marks; this is just for you."]
+    },
+    {
+      "id": "summary",
+      "gagneEvent": 9,
+      "type": "text",
+      "title": "Summary",
+      "body": [
+        "**What you can now do**",
+        "- Walk a tree depth-first: go deep on the left, backtrack, then go right.",
+        "- Use a stack to remember where to go back to (push right, then left).",
+        "- List a tree in pre-order, in-order and post-order, and know that in-order is sorted for a BST.",
+        "**Take these to the lecture**",
+        "1. DFS needed 6 visits to find 60. If you used the BST rule (smaller left, larger right), you would need only 3. How would that search work? What is the worst case?",
+        "2. When might you want to explore a tree level by level instead of depth first?"
+      ]
+    },
+    {
+      "id": "sandbox",
+      "gagneEvent": 9,
+      "type": "explorer",
+      "title": "Try it yourself",
+      "body": ["Build your own tree, then predict the DFS order before you run it."],
+      "tree": "sandbox",
+      "allowEdit": true,
+      "mode": "both",
+      "target": 60
+    }
+  ]
+}

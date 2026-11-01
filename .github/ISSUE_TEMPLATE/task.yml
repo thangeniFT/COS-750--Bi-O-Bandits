@@ -1,0 +1,40 @@
+name: Task
+description: A piece of work to build (code, content or documents)
+title: "[X-00] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use the next free id for the area: B (backend), F (frontend), C (content), Q (testing with people), D (documents).
+        Most tasks already exist in docs/backlog/ and were created by scripts/create-github-issues.sh.
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: What problem does this solve for students or for the team? Which requirement (FR/NFR/LO)?
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What to do
+      placeholder: "- ..."
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      value: |
+        - [ ] ...
+        - [ ] Tests pass locally (`./mvnw verify` and `npm test`) and in CI
+        - [ ] Pull request reviewed and approved by one other member
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options: [Must, Should, Could]
+    validations:
+      required: true

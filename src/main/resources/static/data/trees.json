@@ -1,0 +1,11 @@
+{
+  "_comment": "Insertion orders for the fixed lesson trees. The server builds the actual tree (POST /api/tree/preview), so the shape always matches the Java BST. Expected DFS results for both trees are in the ID document, section 11.2.",
+  "A": {
+    "label": "Tree A",
+    "values": [50, 30, 70, 20, 40, 60, 80]
+  },
+  "B": {
+    "label": "Tree B",
+    "values": [45, 25, 65, 15, 35, 55, 30]
+  }
+}

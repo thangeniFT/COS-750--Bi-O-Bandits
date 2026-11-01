@@ -1,0 +1,12 @@
+{
+  "name": "cos212-dfs-tutor-frontend-tests",
+  "private": true,
+  "description": "Runs the frontend unit tests with Node's built-in test runner. No npm install needed; the app itself has no build step.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"src/test/js/**/*.test.js\""
+  }
+}
