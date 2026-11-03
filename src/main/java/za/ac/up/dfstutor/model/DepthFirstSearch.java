@@ -75,43 +75,49 @@ public final class DepthFirstSearch {
 
     }
 
-    /**
-     * Visits every node of the tree in the given depth-first order.
-     *
-     * <p>Implement this recursively: the three orders then differ only in where a single
-     * "record this node" line sits relative to the two recursive calls (SE document, listing 2).
-     *
-     * <p>For a traversal, each step's {@code stackAfter} is the <em>recursion (call) stack</em>:
-     * the path from the root down to the node being recorded, top first. For example, when
-     * in-order records 20 on the example tree, the path is {@code [20, 30, 50]}.
-     *
-     * <p><b>Expected visit orders on the example tree:</b>
-     * <ul>
-     *   <li>pre-order: 50, 30, 20, 40, 70, 60, 80</li>
-     *   <li>in-order: 20, 30, 40, 50, 60, 70, 80 (sorted, for any BST)</li>
-     *   <li>post-order: 20, 40, 30, 60, 80, 70, 50</li>
-     * </ul>
-     *
-     * @param tree  the tree to traverse; it is not modified
-     * @param order which depth-first order to record
-     * @return the result, finished with {@code completed()}: no target and {@code found = false}
-     * @throws NullPointerException if {@code tree} or {@code order} is {@code null}
-     */
     public DfsResult traverse(BinarySearchTree tree, TraversalOrder order) {
         Objects.requireNonNull(tree, "tree");
         Objects.requireNonNull(order, "order");
 
-        // TODO(B-02): implement the recursive traversal described above.
-        //  Suggested shape:
-        //    DfsResult.Builder result = DfsResult.builder(order, null);
-        //    walk(tree.getRoot(), order, new ArrayDeque<>(), result);
-        //    return result.completed();
-        //  where walk(...) pushes the node's value onto the path, records it before / between /
-        //  after the two recursive calls depending on the order, and pops it again at the end.
-        //  Use explanations.traversalVisit(...) for the wording. Then enable
-        //  DepthFirstSearchTest.Traversal.
-        throw new UnsupportedOperationException(
-                "DFS traversal is not implemented yet (backlog ticket B-02).");
+        DfsResult.Builder result = DfsResult.builder(order, null);
+        walk(tree.getRoot(), order, new ArrayDeque<>(), result);
+        return result.completed();
+
+    }
+
+    private void walk(TreeNode node, TraversalOrder order, Deque<TreeNode> path, DfsResult.Builder result) {
+        // Base case: an empty subtree has nothing to visit.
+        if (node == null) {
+            return;
+        }
+
+        path.push(node);
+
+        if (order == TraversalOrder.PRE_ORDER) {
+            record(node, order, path, result);
+        }
+        walk(node.getLeft(), order, path, result);
+        if (order == TraversalOrder.IN_ORDER) {
+            record(node, order, path, result); // between the children
+        }
+        walk(node.getRight(), order, path, result);
+        if (order == TraversalOrder.POST_ORDER) {
+            record(node, order, path, result);
+        }
+
+        path.pop();
+    }
+
+    /**
+     * Records one traversal step: the node, the current path (top first) and its explanation.
+     *
+     * @param node   the node being written down
+     * @param order  the traversal order in use
+     * @param path   the current path from the root, with {@code node} on top
+     * @param result collects the step
+     */
+    private void record(TreeNode node, TraversalOrder order, Deque<TreeNode> path, DfsResult.Builder result) {
+        result.visit(node.getValue(), valuesTopFirst(path), explanations.traversalVisit(node.getValue(), order));
     }
 
     /**

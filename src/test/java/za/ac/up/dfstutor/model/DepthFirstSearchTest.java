@@ -158,7 +158,6 @@ class DepthFirstSearchTest {
 
     @Nested
     @DisplayName("traverse (backlog ticket B-02)")
-    @Disabled("Enable when backlog ticket B-02 (DFS traversal) is picked up")
     class Traversal {
 
         @Test

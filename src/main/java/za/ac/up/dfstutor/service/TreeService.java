@@ -138,7 +138,6 @@ public class TreeService {
      * @return the traversal result with every step
      * @throws TutorException                {@code INVALID_ORDER} for an unknown order, or if the
      *                                       values break a rule
-     * @throws UnsupportedOperationException until backlog ticket B-02 is done
      */
     public synchronized DfsResult traverse(String order, List<Integer> values) {
         TraversalOrder parsed;
