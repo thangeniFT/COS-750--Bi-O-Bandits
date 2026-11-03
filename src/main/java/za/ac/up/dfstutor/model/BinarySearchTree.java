@@ -85,7 +85,7 @@ public final class BinarySearchTree {
         TreeNode current = root;
         while (true) {
             if (value == current.getValue()) {
-                return false; // BR-4: duplicates are rejected, the tree is not changed.
+                return false; // BR-4: duplicates are rejected
             }
             if (value < current.getValue()) {
                 if (current.getLeft() == null) {

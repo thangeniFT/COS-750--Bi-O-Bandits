@@ -1,9 +1,6 @@
 package za.ac.up.dfstutor.model;
 
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Depth-first search and depth-first traversal over a {@link BinarySearchTree}, recording every
@@ -42,52 +39,40 @@ public final class DepthFirstSearch {
         this.explanations = Objects.requireNonNull(explanations, "explanations");
     }
 
-    /**
-     * Searches the tree for {@code target} using iterative, pre-order DFS with an explicit stack.
-     *
-     * <p>The stack is explicit (rather than hidden in recursion) because the stack is exactly what
-     * the lesson wants students to see.
-     *
-     * <p><b>Algorithm</b> (the same four steps the student reads on screen 4d):
-     * <ol>
-     *   <li>Push the root onto the stack (skip this if the tree is empty).</li>
-     *   <li>While the stack is not empty, pop the top node and visit it.</li>
-     *   <li>If its value equals the target, record the step and return {@code found()}.
-     *       Otherwise push its right child, then its left child, skipping {@code null} children,
-     *       and record the step. Pushing right first leaves the left child on top, so left is
-     *       explored first (BR-8).</li>
-     *   <li>If the stack runs empty, return {@code notFound()}.</li>
-     * </ol>
-     *
-     * <p><b>Expected results on the example tree</b> (inserted as 50, 30, 70, 20, 40, 60, 80):
-     * <ul>
-     *   <li>target 60: found, visit order 50, 30, 20, 40, 70, 60; stack after each step (top first):
-     *       [30, 70], [20, 40, 70], [40, 70], [70], [60, 80], [80]</li>
-     *   <li>target 65: not found, all 7 nodes visited</li>
-     *   <li>target 50: found after 1 visit</li>
-     *   <li>empty tree: not found, 0 visits, no steps</li>
-     * </ul>
-     *
-     * @param tree   the tree to search; it is not modified
-     * @param target the value to look for
-     * @return the result with {@link TraversalOrder#PRE_ORDER}, the visit order and every step
-     * @throws NullPointerException if {@code tree} is {@code null}
-     */
+
     public DfsResult search(BinarySearchTree tree, int target) {
         Objects.requireNonNull(tree, "tree");
+        DfsResult.Builder result = DfsResult.builder(TraversalOrder.PRE_ORDER, target);
+        Deque<TreeNode> stack = new ArrayDeque<>();
 
-        // TODO(B-01): implement the iterative DFS search described above.
-        //  Hints:
-        //   - Use java.util.ArrayDeque as the stack: push() adds to the top, pop() removes the top,
-        //     and iterating over it goes from top to bottom, which is the order the API reports.
-        //   - Record each visit with:
-        //       result.visit(current.getValue(), valuesTopFirst(stack), explanations.searchVisit(...))
-        //     AFTER pushing the children, so that stackAfter shows the stack at the end of the step.
-        //   - For the target node use explanations.searchFound(...) and do not push its children.
-        //   - Then delete the throw below and enable DepthFirstSearchTest.Search.
-        //  Reference listing: SE document, section 9, listing 1.
-        throw new UnsupportedOperationException(
-                "DFS search is not implemented yet (backlog ticket B-01).");
+        if (!tree.isEmpty()) {
+            stack.push(tree.getRoot());
+        }
+
+        // Keep going until there is nothing left to explore.
+        while (!stack.isEmpty()) {
+            TreeNode current = stack.pop();
+
+            if (current.getValue() == target) {
+                result.visit(current.getValue(), valuesTopFirst(stack),
+                    explanations.searchFound(current.getValue()));
+                return result.found();
+            }
+
+            if (current.getRight() != null) {
+                stack.push(current.getRight());
+            }
+            if (current.getLeft() != null) {
+                stack.push(current.getLeft());
+            }
+
+            List<Integer> stackAfter = valuesTopFirst(stack);
+            result.visit(current.getValue(), stackAfter,
+                explanations.searchVisit(current, target, stackAfter));
+        }
+
+        return result.notFound();
+
     }
 
     /**
@@ -136,7 +121,7 @@ public final class DepthFirstSearch {
      * <p>An {@link java.util.ArrayDeque} used with {@code push}/{@code pop} iterates from the top of
      * the stack to the bottom, so a simple loop gives the order the API expects.
      *
-     * @param stack the algorithm's working stack (not modified)
+     * @param stack the algorithm's working stack
      * @return the node values from top to bottom
      */
     static List<Integer> valuesTopFirst(Deque<TreeNode> stack) {

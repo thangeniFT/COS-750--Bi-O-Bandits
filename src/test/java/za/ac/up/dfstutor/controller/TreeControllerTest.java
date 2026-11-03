@@ -145,7 +145,6 @@ class TreeControllerTest {
 
     @Nested
     @DisplayName("POST /api/dfs/search (backlog ticket B-01)")
-    @Disabled("Enable together with DepthFirstSearchTest.Search (ticket B-01)")
     class Search {
 
         @Test

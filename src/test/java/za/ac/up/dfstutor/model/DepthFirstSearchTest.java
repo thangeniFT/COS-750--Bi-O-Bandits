@@ -43,7 +43,6 @@ class DepthFirstSearchTest {
 
     @Nested
     @DisplayName("search (backlog ticket B-01)")
-    @Disabled("Enable when backlog ticket B-01 (DFS search) is picked up")
     class Search {
 
         @Test
