@@ -52,34 +52,28 @@ public class StepExplanations {
     /**
      * Explains the search step that finds the target.
      *
-     * <p>Target wording for B-03: "Visit 60. This is the target. Stop searching."
-     *
      * @param node the value of the node that matched the target
      * @return the sentence for the final step of a successful search
      */
     public String searchFound(int node) {
-        // TODO(B-03): replace with the full wording described above.
-        return "Visit " + node + ". Found it.";
+        return "Visit " + node + ". This is the target. Stop searching.";
     }
 
     /**
      * Explains a traversal step, which records (writes down) one node.
-     *
-     * <p>Target wording for B-03, by order:
-     * <ul>
-     *   <li>pre-order: "Arrive at 50 and write it down straight away: in pre-order a node comes
-     *       before its children."</li>
-     *   <li>in-order: "You have finished everything left of 50, so write 50 down now: left, node,
-     *       right."</li>
-     *   <li>post-order: "You have finished both sides of 50, so write it down on the way back up."</li>
-     * </ul>
-     *
      * @param node  the value being recorded
      * @param order the traversal order in use
      * @return one or two sentences describing the step
      */
     public String traversalVisit(int node, TraversalOrder order) {
-        // TODO(B-03): replace with the full wording described above.
-        return "Write down " + node + " (" + order.label() + ").";
+        // A switch expression must cover every order, so adding a new order will not compile
+        return switch (order) {
+            case PRE_ORDER -> "Arrive at " + node + " and write it down straight away: "
+                + "in pre-order a node comes before its children.";
+            case IN_ORDER -> "You have finished everything left of " + node + ", so write " + node
+                + " down now: left, node, right.";
+            case POST_ORDER -> "You have finished both sides of " + node
+                + ", so write it down on the way back up.";
+        };
     }
 }
