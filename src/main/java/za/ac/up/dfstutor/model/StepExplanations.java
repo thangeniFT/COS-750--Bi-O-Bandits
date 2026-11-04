@@ -9,24 +9,12 @@ import java.util.List;
  * touching the algorithm. Follow the writing rules in the ID document (section 7.2): short
  * sentences, second person, and always say <em>why</em>, not only <em>what</em>.
  *
- * <p><b>Status:</b> placeholder wording. Backlog ticket <b>B-03</b> replaces each method body with
- * the full wording shown in the examples below (taken from the lesson script, ID document
- * appendix A). The placeholders are deliberately simple but correct, so tickets B-01 and B-02 do
- * not have to wait for B-03.
+ * <p><b>Status:</b> placeholder wording.
  */
 public class StepExplanations {
 
     /**
      * Explains a search step where the visited node is <em>not</em> the target.
-     *
-     * <p>Target wording for B-03, by case:
-     * <ul>
-     *   <li>two children: "Visit 50. It is not 60. Push 70 (right), then 30 (left), so 30 is on top."</li>
-     *   <li>one child: "Visit 35. It is not 55. It has only a left child, so push 30. 30 is on top."</li>
-     *   <li>leaf: "Visit 20. It is not 60. It is a leaf, so there is nothing to push. Backtrack:
-     *       40 is now on top."</li>
-     *   <li>leaf, stack now empty: "... There is nothing left on the stack, so 65 is not in the tree."</li>
-     * </ul>
      *
      * @param visited            the node just taken off the stack
      * @param target             the value being searched for
@@ -34,8 +22,31 @@ public class StepExplanations {
      * @return one or two sentences describing the step
      */
     public String searchVisit(TreeNode visited, int target, List<Integer> stackAfterTopFirst) {
-        // TODO(B-03): replace with the full wording described above.
-        return "Visit " + visited.getValue() + ". It is not " + target + ".";
+        String start = "Visit " + visited.getValue() + ". It is not " + target + ". ";
+        TreeNode left = visited.getLeft();
+        TreeNode right = visited.getRight();
+
+// Two children: say both pushes in the order they happen, and why left ends on top.
+        if (left != null && right != null) {
+            return start + "Push " + right.getValue() + " (right), then " + left.getValue()
+                + " (left), so " + left.getValue() + " is on top.";
+        }
+
+// One child: only that child is pushed.
+        if (left != null || right != null) {
+            TreeNode child = left != null ? left : right;
+            String side = left != null ? "left" : "right";
+            return start + "It has only a " + side + " child, so push " + child.getValue() + ". "
+                + child.getValue() + " is on top.";
+        }
+
+// Leaf: nothing to push. Either backtrack to whatever is now on top, or the search is over.
+        String leaf = start + "It is a leaf, so there is nothing to push. ";
+        if (stackAfterTopFirst.isEmpty()) {
+            return leaf + "There is nothing left on the stack, so " + target + " is not in the tree.";
+        }
+        return leaf + "Backtrack: " + stackAfterTopFirst.getFirst() + " is now on top.";
+
     }
 
     /**
