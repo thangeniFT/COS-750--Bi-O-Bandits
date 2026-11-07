@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COS212 DFS Tutor – Guided Practice</title>
+<style>
+  :root {
+    --ink: #1f2430;
+    --muted: #6b7280;
+    --line: #e3e6eb;
+    --panel: #f1f4f7;
+    --page: #ffffff;
+    --good: #1f7a4d;
+    --bad: #b42318;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e6e6e6; font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); }
+  .page { max-width: 1000px; margin: 16px auto; background: var(--page); min-height: 600px; }
+
+  /* Header */
+  header { display: flex; justify-content: space-between; align-items: center; padding: 18px 56px; border-bottom: 1px solid var(--line); }
+  .brand { font-weight: 700; letter-spacing: .02em; }
+  nav { display: flex; gap: 32px; font-size: 13px; }
+  nav a { color: var(--ink); text-decoration: none; }
+  nav a.active { font-weight: 700; }
+  nav a:hover { text-decoration: underline; }
+
+  main { padding: 28px 56px 32px; }
+  .crumb { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+  h1 { font-size: 32px; margin: 18px 0 8px; }
+  .sub { color: var(--muted); font-size: 14px; margin: 0 0 22px; }
+
+  /* Question banner */
+  .question { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; margin-bottom: 18px; }
+  .question h2 { margin: 0 0 6px; font-size: 18px; }
+  .question p { margin: 0; font-size: 12px; color: var(--muted); }
+
+  /* Two-column layout */
+  .grid { display: grid; grid-template-columns: 1fr 292px; gap: 18px; align-items: stretch; }
+  .card { border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+  .card h3 { margin: 0 0 8px; font-size: 14px; }
+  .answers { background: var(--panel); }
+  .answers h3 { font-size: 16px; margin-bottom: 14px; }
+
+  /* Tree */
+  svg { width: 100%; height: auto; display: block; }
+  .edge { stroke: #9aa1ad; stroke-width: 1.5; }
+  .node circle { fill: #fff; stroke: var(--ink); stroke-width: 1.5; transition: fill .2s; }
+  .node text { font-size: 13px; font-weight: 600; text-anchor: middle; dominant-baseline: central; fill: var(--ink); }
+  .node.visited circle { fill: #d5dae1; }
+  .node.current circle { fill: var(--ink); }
+  .node.current text { fill: #fff; }
+  .node.target circle { stroke-dasharray: 3 2; }
+  .legend { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  /* Answer buttons */
+  .option { display: block; width: 100%; text-align: left; font: inherit; font-size: 13px; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; margin-bottom: 10px; cursor: pointer; }
+  .option:hover:not(:disabled) { border-color: var(--ink); }
+  .option b { margin-right: 6px; }
+  .option.wrong { border-color: var(--bad); color: var(--bad); background: #fef3f2; }
+  .option.correct { border-color: var(--good); color: var(--good); background: #ecfdf3; }
+  .option:disabled { cursor: default; }
+  button:focus-visible, a:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+
+  .btn-hint, .btn-outline { font: inherit; font-size: 12px; font-weight: 600; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; cursor: pointer; }
+  .btn-hint:hover, .btn-outline:hover { border-color: var(--ink); }
+  .btn-hint:disabled { opacity: .5; cursor: default; }
+
+  /* Feedback / hint area */
+  #feedback { margin-top: 12px; font-size: 13px; line-height: 1.5; min-height: 20px; }
+  #feedback .box { background: #fff; border-left: 3px solid var(--ink); padding: 10px 12px; border-radius: 4px; }
+  #feedback .box.good { border-color: var(--good); }
+  #feedback .box.bad { border-color: var(--bad); }
+  .stack { display: inline-flex; gap: 4px; margin-top: 6px; }
+  .stack span { border: 1px solid var(--ink); border-radius: 4px; padding: 2px 8px; font-weight: 600; }
+  .btn-next { margin-top: 10px; font: inherit; font-size: 12px; font-weight: 600; background: var(--ink); color: #fff; border: 0; border-radius: 6px; padding: 9px 14px; cursor: pointer; }
+
+  /* Footer */
+  .hint-ladder { font-size: 12px; color: var(--muted); margin: 8px 2px 0; }
+  .hint-ladder .on { color: var(--ink); font-weight: 700; }
+  footer { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; gap: 12px; flex-wrap: wrap; }
+  .meta { font-size: 11px; color: var(--muted); display: flex; gap: 10px; }
+  .btn-primary { font: inherit; font-size: 12px; font-weight: 700; background: var(--ink); color: #fff; border: 0; border-radius: 6px; padding: 14px 20px; cursor: pointer; text-decoration: none; }
+  .btn-outline { text-decoration: none; color: var(--ink); padding: 14px 20px; font-weight: 700; }
+
+  @media (max-width: 760px) {
+    header, main { padding-left: 20px; padding-right: 20px; }
+    header { flex-direction: column; gap: 10px; }
+    nav { gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="brand">COS212 DFS TUTOR</div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="learn.html">Learn</a>
+      <a href="explorer.html">Explorer</a>
+      <a href="practice.html" class="active" aria-current="page">Practice</a>
+      <a href="quiz.html">Quiz</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="crumb">Guided practice / Search for 55</div>
+    <h1>Your turn: predict the next node</h1>
+    <p class="sub">Try a search on your own. The tutor will provide hints whenever you need them.</p>
+
+    <section class="question" aria-live="polite">
+      <h2 id="question-title">DFS just visited 45. Which node will it visit next?</h2>
+      <p>Think about the stack before choosing your answer.</p>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <h3>Example practice tree (new values)</h3>
+        <svg id="tree" viewBox="0 0 520 320" role="img" aria-label="Binary tree used for DFS practice"></svg>
+        <div class="legend">Dark = just visited · Grey = already visited · Dashed outline = node we are searching for</div>
+      </section>
+
+      <section class="card answers">
+        <h3>Choose the next node</h3>
+        <div id="options"></div>
+        <button class="btn-hint" id="hintBtn">Get a hint</button>
+        <div id="feedback" aria-live="polite"></div>
+      </section>
+    </div>
+
+    <div class="hint-ladder" id="ladder">Hint ladder: <span>nudge</span> → <span>rule</span> → <span>worked answer</span></div>
+
+    <footer>
+      <a class="btn-outline" href="explorer.html">← Visualizer</a>
+      <div class="meta"><span>Self-paced learning</span><span>•</span><span>Your answers are not graded</span></div>
+      <a class="btn-primary" href="quiz.html">Readiness quiz →</a>
+    </footer>
+  </main>
+</div>
+
+<script>
+/* ---------- Data ---------- */
+const TARGET = 55;
+const ROOT = 45;
+
+// Tree: value -> {left, right, x, y}
+const TREE = {
+  45: { left: 25,   right: 65,   x: 260, y: 40 },
+  25: { left: 15,   right: 35,   x: 130, y: 120 },
+  65: { left: 55,   right: null, x: 390, y: 120 },
+  15: { left: null, right: null, x: 70,  y: 200 },
+  35: { left: 30,   right: null, x: 190, y: 200 },
+  55: { left: null, right: null, x: 330, y: 200 },
+  30: { left: null, right: null, x: 150, y: 280 }
+};
+
+// Distractors for each step (the correct answer is added automatically)
+const DISTRACTORS = {
+  45: [65, 15],
+  25: [35, 65],
+  15: [65, 55],
+  35: [65, 55],
+  30: [55, 25],
+  65: [35, 25]
+};
+
+/* ---------- Build the DFS (preorder, left first) with an explicit stack ---------- */
+const steps = []; // each: { visited, next, stackAfter }
+(function buildSteps() {
+  const stack = [ROOT];
+  const order = [];
+  while (stack.length) {
+    const n = stack.pop();
+    order.push(n);
+    if (n === TARGET) { steps.push({ visited: n, next: null, stackAfter: [...stack] }); break; }
+    const { left, right } = TREE[n];
+    if (right !== null) stack.push(right);
+    if (left !== null) stack.push(left);
+    steps.push({ visited: n, next: stack[stack.length - 1] ?? null, stackAfter: [...stack] });
+  }
+})();
+
+/* ---------- State ---------- */
+let stepIndex = 0;
+let hintLevel = 0;   // 0 none, 1 nudge, 2 rule, 3 worked answer
+let solved = false;
+const visited = new Set();
+
+/* ---------- Elements ---------- */
+const svg = document.getElementById("tree");
+const optionsEl = document.getElementById("options");
+const feedbackEl = document.getElementById("feedback");
+const hintBtn = document.getElementById("hintBtn");
+const titleEl = document.getElementById("question-title");
+const ladderSpans = document.querySelectorAll("#ladder span");
+
+/* ---------- Tree drawing ---------- */
+function drawTree() {
+  const NS = "http://www.w3.org/2000/svg";
+  svg.innerHTML = "";
+  // edges first so nodes sit on top
+  for (const [val, n] of Object.entries(TREE)) {
+    [n.left, n.right].forEach(child => {
+      if (child === null) return;
+      const c = TREE[child];
+      const line = document.createElementNS(NS, "line");
+      line.setAttribute("class", "edge");
+      line.setAttribute("x1", n.x); line.setAttribute("y1", n.y);
+      line.setAttribute("x2", c.x); line.setAttribute("y2", c.y);
+      svg.appendChild(line);
+    });
+  }
+  const current = steps[stepIndex].visited;
+  for (const [val, n] of Object.entries(TREE)) {
+    const v = Number(val);
+    const g = document.createElementNS(NS, "g");
+    let cls = "node";
+    if (v === current) cls += " current";
+    else if (visited.has(v)) cls += " visited";
+    if (v === TARGET) cls += " target";
+    g.setAttribute("class", cls);
+    g.innerHTML = `<circle cx="${n.x}" cy="${n.y}" r="17"></circle><text x="${n.x}" y="${n.y}">${v}</text>`;
+    svg.appendChild(g);
+  }
+}
+
+/* ---------- Question rendering ---------- */
+function shuffle(arr) {
+  return arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(p => p[1]);
+}
+
+function renderStep() {
+  const step = steps[stepIndex];
+  solved = false;
+  hintLevel = 0;
+  feedbackEl.innerHTML = "";
+  hintBtn.disabled = false;
+  updateLadder();
+  titleEl.textContent = `DFS just visited ${step.visited}. Which node will it visit next?`;
+  drawTree();
+
+  const letters = ["A", "B", "C"];
+  const choices = shuffle([step.next, ...DISTRACTORS[step.visited]]);
+  optionsEl.innerHTML = "";
+  choices.forEach((val, i) => {
+    const btn = document.createElement("button");
+    btn.className = "option";
+    btn.dataset.value = val;
+    btn.innerHTML = `<b>${letters[i]}.</b> Node ${val}`;
+    btn.addEventListener("click", () => choose(btn, val));
+    optionsEl.appendChild(btn);
+  });
+}
+
+function choose(btn, val) {
+  if (solved) return;
+  const step = steps[stepIndex];
+  if (val === step.next) {
+    solved = true;
+    btn.classList.add("correct");
+    optionsEl.querySelectorAll(".option").forEach(b => b.disabled = true);
+    hintBtn.disabled = true;
+    const isLast = steps[stepIndex + 1].next === null;
+    feedbackEl.innerHTML = `<div class="box good"><strong>Correct.</strong> ${explain(step)}
+      <br><button class="btn-next" id="nextBtn">${isLast ? "Continue" : "Next step"}</button></div>`;
+    document.getElementById("nextBtn").addEventListener("click", advance);
+  } else {
+    btn.classList.add("wrong");
+    btn.disabled = true;
+    feedbackEl.innerHTML = `<div class="box bad"><strong>Not quite.</strong> Node ${val} is not next. Try again or ask for a hint.</div>`;
+  }
+}
+
+function advance() {
+  visited.add(steps[stepIndex].visited);
+  stepIndex++;
+  if (steps[stepIndex].next === null) return finish();
+  renderStep();
+}
+
+function finish() {
+  const found = steps[stepIndex].visited;
+  titleEl.textContent = `DFS visited ${found}. Search complete!`;
+  drawTree();
+  optionsEl.innerHTML = "";
+  hintBtn.style.display = "none";
+  feedbackEl.innerHTML = `<div class="box good"><strong>You found ${TARGET}.</strong>
+    Visit order: ${steps.map(s => s.visited).join(" → ")}. Ready to test yourself?</div>`;
+}
+
+/* ---------- Hints: nudge -> rule -> worked answer ---------- */
+function stackHTML(stack) {
+  if (!stack.length) return "<em>empty</em>";
+  // top of stack shown on the left
+  return `<span class="stack">${[...stack].reverse().map(n => `<span>${n}</span>`).join("")}</span>`;
+}
+
+function explain(step) {
+  return `The stack was ${stackHTML(step.stackAfter)} (top on the left), so we pop <strong>${step.next}</strong>.`;
+}
+
+function giveHint() {
+  if (solved || hintLevel >= 3) return;
+  hintLevel++;
+  const step = steps[stepIndex];
+  const node = TREE[step.visited];
+  let html = "";
+  if (hintLevel === 1) {
+    html = `<strong>Nudge:</strong> After visiting ${step.visited}, which of its children go onto the stack? Which one is popped first?`;
+  } else if (hintLevel === 2) {
+    html = node.left === null && node.right === null
+      ? `<strong>Rule:</strong> ${step.visited} is a leaf, so backtrack: pop whatever is on top of the stack.`
+      : `<strong>Rule:</strong> Push the right child first, then the left, so the left child is on top and is visited first.`;
+    html += `<br>Current stack: ${stackHTML(step.stackAfter)}`;
+  } else {
+    html = `<strong>Worked answer:</strong> ${explain(step)}`;
+    hintBtn.disabled = true;
+  }
+  feedbackEl.innerHTML = `<div class="box">${html}</div>`;
+  updateLadder();
+}
+
+function updateLadder() {
+  ladderSpans.forEach((s, i) => s.classList.toggle("on", i === hintLevel - 1));
+}
+
+hintBtn.addEventListener("click", giveHint);
+
+/* ---------- Start ---------- */
+renderStep();
+</script>
+</body>
+</html>
