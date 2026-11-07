@@ -1,11 +1,9 @@
 // Specification for stateForStep in static/js/components/step-player.js (backlog ticket F-02).
-// Skipped until the ticket is picked up: delete the `skip` option and make the tests pass.
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { stateForStep } from '../../main/resources/static/js/components/step-player.js';
 
-const SKIP = 'Backlog ticket F-02 (step player): remove this skip when you start the ticket';
 
 /** Builds a DfsResult like the server's, from (node, stackAfter) pairs. */
 const result = (order, target, found, pairs) => ({
@@ -34,7 +32,7 @@ const inOrder = result('IN_ORDER', null, false, [
 
 const asObject = (map) => Object.fromEntries([...map.entries()].sort(([a], [b]) => a - b));
 
-describe('stateForStep', { skip: SKIP }, () => {
+describe('stateForStep', () => {
   test('before the first step only the root is shown, waiting on the stack', () => {
     assert.deepEqual(asObject(stateForStep(search60, -1, 50)), { 50: 'on-stack' });
   });
