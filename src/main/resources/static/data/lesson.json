@@ -1,198 +1,368 @@
 {
-  "_comment": "Learner-facing lesson content, one object per screen, in order. Text follows the ID document (appendix A). **bold** and *italic* are supported. 'type' picks the renderer in js/screens/index.js. Edit wording here, not in JavaScript.",
+  "_comment": "Learner-facing content, one object per screen, in the recommended order (the 'path'). 'id' is the URL (#/learn/2), 'section' is the menu item it belongs to, 'type' picks the renderer in js/screens/index.js, 'gagneEvent' records which of Gagné's nine events the screen serves (ID document, section 6). **bold** and *italic* are supported. Edit wording here, not in JavaScript. Run npm test after every change.",
   "title": "Depth-first search on a binary search tree",
+  "footerNote": ["Self-paced learning", "Your answers are not graded"],
+  "sections": [
+    { "id": "home", "label": "Home", "start": "home" },
+    { "id": "learn", "label": "Learn", "start": "learn/1" },
+    { "id": "explorer", "label": "Explorer", "start": "explorer" },
+    { "id": "practice", "label": "Practice", "start": "practice" },
+    { "id": "quiz", "label": "Quiz", "start": "quiz" }
+  ],
   "screens": [
     {
-      "id": "hook",
-      "gagneEvent": 1,
-      "type": "choice",
-      "title": "A maze",
-      "body": [
-        "You are standing at the entrance of a maze. You can only see the passage right in front of you. At each fork you must choose a way to go.",
-        "**How would you make sure you never miss the exit?**"
-      ],
-      "options": [
-        "Pick a random passage every time.",
-        "Always take the left-most passage you have not tried yet. If you hit a dead end, go back to the last fork and try the next passage.",
-        "Try the first step of every passage, then the second step of every passage, and so on."
-      ],
-      "reveal": "All three are real strategies, and two of them always work. Today you will learn the second one. It is called **depth-first search**."
-    },
-    {
-      "id": "goals",
-      "gagneEvent": 2,
-      "type": "text",
-      "title": "What you will learn",
-      "body": [
-        "In the next 20 minutes you will learn to:",
-        "1. Walk through a tree the depth-first way, and explain what that means.",
-        "2. Use a **stack** to keep track of where to go back to.",
-        "3. Check whether you are ready for the lecture, and get help if you are not.",
-        "You can go back to any screen at any time. Nothing here is marked."
+      "id": "home",
+      "section": "home",
+      "type": "home",
+      "gagneEvent": [1, 2],
+      "title": "Welcome",
+      "shortTitle": "Home",
+      "eyebrow": "Pre-lecture learning / COS212",
+      "titleLines": ["Explore trees.", "Understand depth-first search."],
+      "subtitle": "Learn binary search trees and explore how DFS visits nodes, uses a stack and backtracks. Designed for complete beginners.",
+      "exploreLabel": "Explore the tree",
+      "meta": ["20–25 minutes", "Self-paced", "No marks"],
+      "preview": {
+        "label": "BST + DFS visualisation preview",
+        "tree": "A",
+        "target": 60,
+        "caption": "**Lost in a maze?** Take the left-most passage you have not tried. At a dead end, go back to the last fork and try the next one. That is depth-first search, and here it is on a tree."
+      },
+      "outcomesTitle": "What you'll learn",
+      "outcomes": [
+        { "title": "Trace DFS on a tree", "text": "Follow the visit order: go deep on the left, backtrack, then go right." },
+        { "title": "Use a stack to track the path", "text": "Push right, then left, and always take the top." },
+        { "title": "Tell DFS apart from BST search", "text": "See why DFS ignores the values, and what that costs." }
       ]
     },
     {
-      "id": "warmup",
-      "gagneEvent": 3,
-      "type": "warmup",
-      "title": "Quick warm-up",
-      "body": ["Two quick questions to check you have what you need. If either one is new to you, a short refresher card will help."],
-      "questions": [
-        {
-          "id": "w1",
-          "prompt": "Which of these pictures is a tree?",
-          "options": [
-            { "id": "a", "text": "Picture 1: one node at the top, every other node hangs below exactly one parent", "correct": true },
-            { "id": "b", "text": "Picture 2: the lines form a loop" },
-            { "id": "c", "text": "Picture 3: two separate pieces with no line between them" }
-          ],
-          "refresher": "trees"
-        },
-        {
-          "id": "w2",
-          "prompt": "You push 1, then 2, then 3 onto a stack. Which number comes off first?",
-          "options": [
-            { "id": "a", "text": "1" },
-            { "id": "b", "text": "2" },
-            { "id": "c", "text": "3", "correct": true }
-          ],
-          "refresher": "stacks"
-        }
-      ],
-      "refreshers": {
-        "trees": "A **tree** is made of **nodes** joined by lines. The top node is the **root**. Each node can have **children** below it. A node with no children is a **leaf**. Any node together with everything below it forms a **subtree**.",
-        "stacks": "A **stack** is like a pile of plates. You can only put a plate on top (**push**) or take the top plate off (**pop**). The last plate you put on is the first one you take off."
+      "id": "learn/1",
+      "section": "learn",
+      "type": "lesson",
+      "gagneEvent": [3, 4],
+      "lesson": 1,
+      "title": "What is a Binary Search Tree?",
+      "shortTitle": "BST basics",
+      "progressLabel": "Introduction to trees",
+      "subtitle": "Before learning depth-first search, let's understand the structure we will explore.",
+      "figure": {
+        "kind": "tree",
+        "title": "A tree is made of connected nodes",
+        "text": "The **root** is the starting node. Each node can have **children**. A **leaf** has no children.",
+        "tree": "A",
+        "labels": { "50": "root", "30": "left child", "70": "right child", "80": "leaf" }
+      },
+      "side": {
+        "title": "The BST ordering rule",
+        "items": [
+          { "heading": "Smaller values go LEFT.", "text": "Example: 30 is smaller than 50." },
+          { "heading": "Larger values go RIGHT.", "text": "Example: 70 is larger than 50." }
+        ],
+        "note": "This rule applies at every node."
+      },
+      "quickCheck": {
+        "position": "end",
+        "prompt": "Quick check: where would the number 25 go?",
+        "options": [
+          { "id": "a", "text": "Right child of 20", "correct": true, "feedback": "25 < 50, so go left. 25 < 30, so go left to 20. 25 > 20, so go right. That spot is empty, so 25 goes there." },
+          { "id": "b", "text": "Left child of 30", "feedback": "Close, but 30 already has a left child: 20. Keep comparing: 25 > 20, so 25 becomes the right child of 20." },
+          { "id": "c", "text": "Right child of 70", "feedback": "25 is smaller than 50, so it belongs in the left half of the tree, not under 70." }
+        ]
       }
     },
     {
-      "id": "concept-bst",
-      "gagneEvent": 4,
-      "type": "explorer",
-      "title": "Binary search trees",
-      "body": [
-        "In a **binary search tree** (BST), every node has at most two children: a left child and a right child. The tree follows one rule:",
-        "**Smaller values go to the left. Larger values go to the right.**",
-        "Try it: insert 65 into the tree below and watch where it goes."
-      ],
-      "tree": "sandbox",
-      "allowEdit": true,
-      "mode": "none"
+      "id": "learn/2",
+      "section": "learn",
+      "type": "lesson",
+      "gagneEvent": [4],
+      "lesson": 2,
+      "title": "Depth-First Search: go deep, then backtrack",
+      "shortTitle": "The big idea",
+      "progressLabel": "The big idea",
+      "subtitle": "Remember the maze on the home page? DFS does the same thing in a tree. Learn the idea before the step-by-step explorer.",
+      "figure": {
+        "kind": "dfs",
+        "title": "See a left-first DFS traversal",
+        "tree": "A",
+        "order": "PRE_ORDER",
+        "autoplay": true
+      },
+      "side": {
+        "title": "How DFS works",
+        "ordered": true,
+        "items": [
+          "Start at the root node.",
+          "Explore one branch as deeply as possible.",
+          "Backtrack when you reach a dead end.",
+          "Continue until the search is complete."
+        ],
+        "note": "Our DFS explores left before right. Going back up is called **backtracking**."
+      },
+      "quickCheck": {
+        "position": "end",
+        "prompt": "Quick check: DFS has just visited 20, a leaf. Which node does it visit next?",
+        "options": [
+          { "id": "a", "text": "40", "correct": true, "feedback": "20 is a dead end, so DFS backtracks to 30 and goes down its unexplored right side: 40." },
+          { "id": "b", "text": "70", "feedback": "70 is still waiting. DFS first finishes everything under 30, so 40 comes before 70." },
+          { "id": "c", "text": "50", "feedback": "DFS does not restart at the root. It goes back to the most recent node with an unexplored child (30) and visits 40." }
+        ]
+      }
     },
     {
-      "id": "concept-idea",
-      "gagneEvent": 4,
-      "type": "text",
-      "title": "The big idea",
-      "body": [
-        "Remember the maze? Depth-first search does the same thing in a tree.",
-        "Start at the root. Go down to the left as far as you can. When you reach a leaf (a dead end), go back up to the last node that still has an unexplored child, and go down that way.",
-        "Going back up is called **backtracking**."
-      ]
+      "id": "learn/3",
+      "section": "learn",
+      "type": "lesson",
+      "gagneEvent": [3, 4],
+      "lesson": 3,
+      "title": "How DFS remembers: the stack",
+      "shortTitle": "The stack",
+      "progressLabel": "Using a stack",
+      "subtitle": "To backtrack, DFS has to remember which nodes it still needs to explore. It keeps them on a stack. First, a quick check on stacks.",
+      "quickCheck": {
+        "position": "start",
+        "prompt": "Warm-up: you push 1, then 2, then 3 onto a stack. Which number comes off first?",
+        "options": [
+          { "id": "a", "text": "1", "feedback": "1 went on first, so it is at the bottom. A stack gives back the *last* item you put on." },
+          { "id": "b", "text": "2", "feedback": "2 is in the middle. A stack only lets you take the top item." },
+          { "id": "c", "text": "3", "correct": true, "feedback": "The last one in is the first one out. DFS relies on exactly this." }
+        ],
+        "refresher": "**Refresher:** a **stack** is like a pile of plates. You can only put a plate on top (**push**) or take the top plate off (**pop**). The last plate you put on is the first one you take off."
+      },
+      "figure": {
+        "kind": "dfs",
+        "title": "Watch the stack",
+        "text": "Step through a search for 60. Watch what goes on the stack, and what comes off.",
+        "tree": "A",
+        "search": 60,
+        "showStack": true
+      },
+      "side": {
+        "title": "Push right, then left",
+        "items": [
+          { "heading": "DFS keeps a stack.", "text": "It holds the nodes DFS still has to explore." },
+          { "heading": "Leaving a node: push its children.", "text": "**Right** child first, then **left** child." },
+          { "heading": "The left child is on top.", "text": "It went on last, so it comes off first." }
+        ],
+        "note": "That is why DFS always explores the left side first."
+      }
     },
     {
-      "id": "concept-stack",
-      "gagneEvent": 4,
-      "type": "text",
-      "title": "How DFS remembers",
-      "body": [
-        "To backtrack, DFS needs to remember which nodes it still has to explore. It keeps them on a **stack**.",
-        "When DFS leaves a node, it pushes the node's children onto the stack: **right child first, then left child**. Because the left child went on last, it is on top, so it comes off first. That is why DFS always explores the left side first."
-      ]
-    },
-    {
-      "id": "concept-steps",
-      "gagneEvent": 4,
-      "type": "text",
+      "id": "learn/4",
+      "section": "learn",
+      "type": "lesson",
+      "gagneEvent": [4],
+      "lesson": 4,
       "title": "The four steps",
-      "body": [
-        "1. Push the root onto the stack.",
-        "2. Pop the top node and **visit** it.",
-        "3. If it is the value you are looking for, stop. Otherwise push its right child, then its left child. Skip any child that is empty.",
-        "4. If the stack is empty, stop: the value is not in the tree. Otherwise, go back to step 2."
-      ]
+      "shortTitle": "Four steps",
+      "progressLabel": "The algorithm",
+      "subtitle": "The whole search fits in four steps. Here they are in plain English and in Java, the way you will see them in COS212.",
+      "figure": {
+        "kind": "code",
+        "title": "DFS search in Java",
+        "text": "The numbers in the comments match the four steps on the right.",
+        "lines": [
+          "Deque<TreeNode> stack = new ArrayDeque<>();",
+          "if (root != null) stack.push(root);           // 1. push the root",
+          "while (!stack.isEmpty()) {",
+          "    TreeNode current = stack.pop();           // 2. pop and visit",
+          "    if (current.value == target) {",
+          "        return true;                          // 3. found: stop",
+          "    }",
+          "    if (current.right != null) stack.push(current.right); // right first",
+          "    if (current.left != null) stack.push(current.left);   // then left",
+          "}",
+          "return false;                                 // 4. stack empty: not there"
+        ]
+      },
+      "side": {
+        "title": "In plain English",
+        "ordered": true,
+        "items": [
+          "Push the root onto the stack.",
+          "Pop the top node and **visit** it.",
+          "If it is the target, stop. Otherwise push its right child, then its left child, skipping empty ones.",
+          "If the stack is empty, stop: the value is not in the tree. Otherwise go back to step 2."
+        ]
+      },
+      "quickCheck": {
+        "position": "end",
+        "prompt": "Quick check: DFS pops 30, which is not the target. Its children are 20 (left) and 40 (right). What does it push, in order?",
+        "options": [
+          { "id": "a", "text": "40, then 20", "correct": true, "feedback": "Right first, then left. 20 ends up on top, so it is explored next." },
+          { "id": "b", "text": "20, then 40", "feedback": "That would leave 40 on top, and DFS would explore the right side first. Push right first, so left is on top." },
+          { "id": "c", "text": "Nothing", "feedback": "When a node is not the target, DFS pushes its children so it can explore them later." }
+        ]
+      }
     },
     {
-      "id": "concept-orders",
-      "gagneEvent": 4,
-      "type": "explorer",
+      "id": "learn/5",
+      "section": "learn",
+      "type": "lesson",
+      "gagneEvent": [4],
+      "lesson": 5,
       "title": "Three orders, one walk",
-      "body": [
-        "You can also use DFS to list every value in a tree. The walk is always the same. What changes is *when* you write a node down:",
-        "**Pre-order:** when you first arrive at the node. **In-order:** after its left side, before its right side. **Post-order:** when you leave the node for the last time.",
-        "Run in-order on this tree. Notice anything about the result?"
-      ],
-      "tree": "A",
-      "allowEdit": false,
-      "mode": "traverse",
-      "order": "IN_ORDER",
-      "afterRun": "It is sorted! In a BST, everything on the left is smaller and everything on the right is larger, so \"left, me, right\" always lists the values from smallest to largest."
+      "shortTitle": "Three orders",
+      "progressLabel": "Traversal orders",
+      "subtitle": "DFS can also list every value in a tree. The walk is always the same. What changes is *when* you write a node down.",
+      "figure": {
+        "kind": "dfs",
+        "title": "Try each order",
+        "text": "Choose an order, then step through it. Run **in-order** to the end: notice anything?",
+        "tree": "A",
+        "order": "IN_ORDER",
+        "orderPicker": true,
+        "afterRun": {
+          "IN_ORDER": "**It is sorted!** In a BST everything on the left is smaller and everything on the right is larger, so \"left, node, right\" always lists the values from smallest to largest."
+        }
+      },
+      "side": {
+        "title": "When to write a node down",
+        "items": [
+          { "heading": "Pre-order", "text": "When you first arrive, before its children." },
+          { "heading": "In-order", "text": "After its left side, before its right side." },
+          { "heading": "Post-order", "text": "When you leave it for the last time, after both sides." }
+        ],
+        "note": "Same walk, same tree: only the moment of writing changes."
+      },
+      "quickCheck": {
+        "position": "end",
+        "prompt": "Quick check: which order lists the values of a BST from smallest to largest?",
+        "options": [
+          { "id": "a", "text": "Pre-order", "feedback": "Pre-order writes the root first, and the root is not the smallest value." },
+          { "id": "b", "text": "In-order", "correct": true, "feedback": "Left side (smaller), then the node, then the right side (larger): sorted every time." },
+          { "id": "c", "text": "Post-order", "feedback": "Post-order writes the root last, and the root is not the largest value." }
+        ]
+      }
     },
     {
-      "id": "concept-not",
-      "gagneEvent": 4,
-      "type": "text",
+      "id": "learn/6",
+      "section": "learn",
+      "type": "lesson",
+      "gagneEvent": [4],
+      "lesson": 6,
       "title": "What DFS does not do",
-      "body": [
-        "DFS does not look at the values to decide where to go. Even if you are searching for 80, and 80 is bigger than the root, DFS still explores the whole left side first.",
-        "That might seem wasteful. Keep the thought; we come back to it at the end."
-      ]
+      "shortTitle": "DFS vs BST search",
+      "progressLabel": "DFS is not BST search",
+      "subtitle": "DFS does not look at the values to decide where to go. Even when the target is bigger than the root, it explores the whole left side first.",
+      "figure": {
+        "kind": "dfs",
+        "title": "Search for 80 with DFS",
+        "text": "80 is bigger than 50, but watch where DFS goes first.",
+        "tree": "A",
+        "search": 80,
+        "caption": "DFS needed **{nodesVisited} visits** to find 80. BST search would need only 3."
+      },
+      "side": {
+        "title": "DFS is not BST search",
+        "items": [
+          { "heading": "DFS ignores the values.", "text": "It always explores left first, whatever the target is." },
+          { "heading": "BST search uses them.", "text": "Looking for 80: 80 > 50, go right; 80 > 70, go right. Found in 3 visits: 50, 70, 80." }
+        ],
+        "note": "You will meet BST search in the lecture. Keep this difference in mind."
+      },
+      "quickCheck": {
+        "position": "end",
+        "prompt": "Quick check: DFS is searching tree A for 80. At the root (50), where does it go first?",
+        "options": [
+          { "id": "a", "text": "Left, to 30", "correct": true, "feedback": "DFS always goes left first. It never compares 80 with 50 to choose a direction." },
+          { "id": "b", "text": "Right, to 70, because 80 > 50", "feedback": "That is the BST search rule. DFS ignores the values and explores the left side first." }
+        ]
+      }
     },
     {
-      "id": "worked-example",
-      "gagneEvent": 5,
+      "id": "explorer",
+      "section": "explorer",
       "type": "explorer",
-      "title": "Worked example: search for 60",
-      "body": ["Let us search for 60. Click **Next** to take one step at a time. Watch the stack on the right."],
-      "tree": "A",
-      "allowEdit": false,
-      "mode": "search",
-      "target": 60
+      "gagneEvent": [5],
+      "title": "Explore DFS, step by step",
+      "shortTitle": "Explorer",
+      "subtitle": "Watch the visited nodes, the stack and the visit order change as you explore.",
+      "example": {
+        "tree": "A",
+        "target": 60,
+        "intro": "**Worked example.** DFS searches this tree for 60. Press **Search**, then **Next step** to move one step at a time. Watch the stack on the right: the node on top is always the next one visited."
+      },
+      "own": {
+        "intro": "**Your own tree.** Insert values, search for any number, or run a traversal. Before each run, predict the visit order, then check it."
+      },
+      "doneMessage": "**You followed the whole search.** Now try it on a tree you build yourself.",
+      "lockedNote": "Try your own tree unlocks after you finish the worked example."
     },
     {
       "id": "practice",
-      "gagneEvent": 6,
+      "section": "practice",
       "type": "practice",
-      "title": "Your turn",
-      "body": [
-        "**Practice 1.** Here is a new tree. This time, *you* say which node comes next. We are searching for 55.",
-        "**Practice 2.** Now on your own: put the nodes of this tree in in-order. Hint: the answer should be sorted."
-      ],
+      "gagneEvent": [6, 7],
+      "eyebrow": "Guided practice / Search for 55",
+      "title": "Your turn: predict the next node",
+      "shortTitle": "Practice",
+      "subtitle": "Try a search on your own. The tutor gives hints whenever you need them.",
       "tree": "B",
       "target": 55,
-      "orderTask": "IN_ORDER"
+      "questionHint": "Think about the stack before choosing your answer. You can also click the node on the tree.",
+      "treeTitle": "Practice tree (new values)",
+      "choicesTitle": "Choose the next node",
+      "finishText": "Next: list the whole tree in in-order, below.",
+      "worked": "A few steps needed the full answer. Replaying the worked example may help.",
+      "orderTask": {
+        "order": "IN_ORDER",
+        "title": "Practice 2: put the nodes in in-order",
+        "text": "Click the nodes in in-order (left side, node, right side), or type them. Hint: for a BST the answer is sorted.",
+        "correct": "**Correct.** In-order of a BST always comes out sorted. You are ready for the quiz.",
+        "wrong": "Remember: everything left of a node comes before it, and everything right of it comes after."
+      }
     },
     {
       "id": "quiz",
-      "gagneEvent": 8,
+      "section": "quiz",
       "type": "quiz",
-      "title": "Readiness quiz",
-      "body": ["Six questions to check you are ready for the lecture. After each one, tell us how sure you were. There are no marks; this is just for you."]
+      "gagneEvent": [7, 8],
+      "title": "Check your understanding",
+      "shortTitle": "Readiness quiz",
+      "subtitle": "Six questions aligned to the lesson outcomes, with an explanation for each answer. Nothing is recorded.",
+      "resultsTitle": "Your readiness check",
+      "passText": "**You are ready for the lecture.** Look at anything you missed in the guided review, or go to your summary.",
+      "failText": "**Not quite ready yet, and that is fine.** The guided review takes you through each question you missed, starting with the ones you were most sure about. Then try a fresh set."
+    },
+    {
+      "id": "quiz/review",
+      "section": "quiz",
+      "type": "review",
+      "inPath": false,
+      "countsForProgress": false,
+      "gagneEvent": [7],
+      "title": "Not quite: let's work through it",
+      "shortTitle": "Guided review",
+      "subtitle": "Each explanation names the mix-up behind the answer. Use the hints if you need them; nothing is marked.",
+      "emptyTitle": "Nothing to review",
+      "emptyText": "There are no wrong answers to go through. Take the quiz, or go to your summary."
     },
     {
       "id": "summary",
-      "gagneEvent": 9,
-      "type": "text",
-      "title": "Summary",
-      "body": [
-        "**What you can now do**",
-        "- Walk a tree depth-first: go deep on the left, backtrack, then go right.",
-        "- Use a stack to remember where to go back to (push right, then left).",
-        "- List a tree in pre-order, in-order and post-order, and know that in-order is sorted for a BST.",
-        "**Take these to the lecture**",
-        "1. DFS needed 6 visits to find 60. If you used the BST rule (smaller left, larger right), you would need only 3. How would that search work? What is the worst case?",
-        "2. When might you want to explore a tree level by level instead of depth first?"
+      "section": "learn",
+      "type": "summary",
+      "countsForProgress": false,
+      "gagneEvent": [9],
+      "title": "Learning summary",
+      "shortTitle": "Summary",
+      "titles": {
+        "ready": "You're ready to keep exploring",
+        "review": "Almost there: review a few ideas",
+        "noQuiz": "Your learning summary"
+      },
+      "subtitle": "Review what you have learned, revisit any tricky topics, or practise with your own tree.",
+      "canDoTitle": "What you can now do",
+      "nextTitle": "Choose what to do next",
+      "nextCards": {
+        "replay": { "title": "Replay DFS", "text": "Review the worked example and watch each stack change." },
+        "ownTree": { "title": "Try another tree", "text": "Insert your own values and observe the visit order." },
+        "lecture": { "title": "Prepare for lecture", "text": "Questions to think about before the lecture." }
+      },
+      "lectureQuestions": [
+        "DFS needed 6 visits to find 60 in tree A. Using the BST rule (smaller left, larger right) you would need only 3. How would that search work, and what is its worst case?",
+        "When might you want to explore a tree level by level (breadth-first) instead of depth-first?",
+        "Our DFS uses an explicit stack. How would you write the same search with recursion, and where does the stack go?"
       ]
-    },
-    {
-      "id": "sandbox",
-      "gagneEvent": 9,
-      "type": "explorer",
-      "title": "Try it yourself",
-      "body": ["Build your own tree, then predict the DFS order before you run it."],
-      "tree": "sandbox",
-      "allowEdit": true,
-      "mode": "both",
-      "target": 60
     }
   ]
 }

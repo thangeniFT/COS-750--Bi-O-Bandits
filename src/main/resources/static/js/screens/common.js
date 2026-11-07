@@ -158,14 +158,3 @@ export function showFeedback(box, kind, text) {
 export function clearMessage(box) {
   box.textContent = '';
 }
-
-/**
- * Old heading helper, still used by the screens that the wireframe layout replaces.
- * @deprecated removed together with text-screen.js, choice-screen.js and warmup-screen.js
- * @param {{title: string, body?: string[]}} screen
- * @param {HTMLElement} container
- */
-export function renderHeader(screen, container) {
-  container.append(el('h1', {}, screen.title));
-  for (const text of screen.body ?? []) container.append(paragraph(text));
-}
