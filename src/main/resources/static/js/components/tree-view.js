@@ -1,28 +1,45 @@
 /**
- * Draws a binary search tree as SVG and lets other components colour its nodes.
+ * Draws a binary search tree as SVG, lets other components set node states, and can make nodes
+ * clickable (predict mode, quiz questions, ordering tasks).
  *
  * Layout rule: a node's column is its position in sorted order and its row is its depth. For a
  * BST this guarantees that left children are drawn to the left, right children to the right, and
  * nodes never overlap, without any clever spacing code.
  *
  * Node states (ID document, figure 4) are set with a `data-state` attribute; css/styles.css
- * decides how each state looks, so visual changes never need JavaScript changes.
+ * decides how each state looks. Each state has its own shape or mark, never colour alone:
+ *   current ● solid dark   visited ✓ tick   on-stack ◌ dashed outline   found ★ star
  *
- * Status: implemented (basic). Backlog ticket F-01 adds the legend, better scaling for skewed
- * 15-node trees, and screen-reader descriptions of state changes.
+ * Status: implemented.
  * @module components/tree-view
  */
+
+import { el } from '../util.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /** The allowed node states. Anything else is a programming error. */
 export const NODE_STATES = Object.freeze(['unvisited', 'current', 'visited', 'on-stack', 'found']);
 
+/** The mark drawn beside a node in each state ('' = none). */
+const MARKS = { unvisited: '', current: '', visited: '✓', 'on-stack': '', found: '★' };
+
+/** Words for screen readers and tooltips. */
+const DESCRIBE = {
+  unvisited: 'not yet visited',
+  current: 'current node',
+  visited: 'visited',
+  'on-stack': 'waiting on the stack',
+  found: 'found',
+};
+
 /** Drawing constants, in SVG units. */
 const RADIUS = 20;
 const COLUMN_GAP = 52;
 const ROW_GAP = 70;
 const MARGIN = 24;
+/** Extra space on each side when nodes carry labels such as "ROOT". */
+const LABEL_SPACE = 70;
 
 /**
  * @typedef {object} PlacedNode
@@ -93,12 +110,14 @@ function svgEl(tag, attributes = {}) {
 /**
  * @typedef {object} TreeViewHandle
  * @property {number[]} values - every value in the drawing, in sorted order
+ * @property {number|null} rootValue - the root's value, or null for an empty tree
  * @property {(value: number, state: string) => void} setState - sets one node's state
  * @property {(states: Map<number, string>) => void} setStates - sets every node at once; nodes not
  *           in the map become 'unvisited'
  * @property {() => void} resetStates - makes every node 'unvisited'
- * @property {(value: number) => SVGGElement|undefined} nodeElement - the <g> for a value, for click
- *           handlers in predict mode and tree-click quiz questions
+ * @property {(onChoose: (value: number) => void, label?: string) => () => void} makeClickable -
+ *           turns every node into a button (mouse, Enter or Space); returns a function that undoes it
+ * @property {(value: number) => SVGGElement|undefined} nodeElement - the <g> for a value
  */
 
 /**
@@ -106,16 +125,20 @@ function svgEl(tag, attributes = {}) {
  *
  * @param {SVGSVGElement} svg - the target element
  * @param {import('../api.js').TreeView} treeView - the tree from the API
+ * @param {{labels?: Record<string, string>}} [options] - labels: text to show beside some nodes,
+ *        for example { "50": "root", "30": "left child" } (lesson 1)
  * @returns {TreeViewHandle} functions to change node states afterwards
  */
-export function renderTree(svg, treeView) {
+export function renderTree(svg, treeView, { labels = {} } = {}) {
   const { nodes, width, height } = layoutTree(treeView.root);
   const byValue = new Map(nodes.map((node) => [node.value, node]));
   /** @type {Map<number, SVGGElement>} */
   const groups = new Map();
+  const hasLabels = Object.keys(labels).length > 0;
+  const pad = hasLabels ? LABEL_SPACE : 0;
 
   svg.replaceChildren();
-  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.setAttribute('viewBox', `${-pad} 0 ${width + 2 * pad} ${height}`);
   svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', nodes.length === 0
     ? 'An empty tree'
@@ -137,31 +160,28 @@ export function renderTree(svg, treeView) {
   for (const node of nodes) {
     const group = svgEl('g', { class: 'tree-node', 'data-value': node.value, 'data-state': 'unvisited' });
     const title = svgEl('title');
-    title.textContent = `${node.value}, not yet visited`;
+    title.textContent = `${node.value}, ${DESCRIBE.unvisited}`;
     const value = svgEl('text', { class: 'tree-node__value', x: node.x, y: node.y });
     value.textContent = String(node.value);
-    const markX = node.x + RADIUS * 0.75;
-    const markY = node.y - RADIUS * 0.75;
-    const mark = svgEl('text', { class: 'tree-node__mark', x: markX, y: markY });
-    mark.textContent = '✓';
-    group.append(
-      title,
-      svgEl('circle', { cx: node.x, cy: node.y, r: RADIUS }),
-      value,
-      svgEl('circle', { class: 'tree-node__mark-bg', cx: markX, cy: markY, r: 7 }),
-      mark,
-    );
+    const mark = svgEl('text', { class: 'tree-node__mark', x: node.x + RADIUS + 6, y: node.y - RADIUS + 2 });
+    group.append(title, svgEl('circle', { class: 'tree-node__circle', cx: node.x, cy: node.y, r: RADIUS }), value, mark);
     svg.append(group);
     groups.set(node.value, group);
-  }
 
-  const describe = {
-    unvisited: 'not yet visited',
-    current: 'current node',
-    visited: 'visited',
-    'on-stack': 'waiting on the stack',
-    found: 'found',
-  };
+    const label = labels[String(node.value)];
+    if (label) {
+      // Left children get their label on the left, everything else on the right.
+      const onLeft = node.parent !== null && node.value < node.parent;
+      const text = svgEl('text', {
+        class: 'tree-label',
+        x: onLeft ? node.x - RADIUS - 8 : node.x + RADIUS + 8,
+        y: node.y - RADIUS - 4,
+        'text-anchor': onLeft ? 'end' : 'start',
+      });
+      text.textContent = label;
+      svg.append(text);
+    }
+  }
 
   const setState = (nodeValue, state) => {
     if (!NODE_STATES.includes(state)) {
@@ -170,11 +190,16 @@ export function renderTree(svg, treeView) {
     const group = groups.get(nodeValue);
     if (!group) return;
     group.dataset.state = state;
-    group.querySelector('title').textContent = `${nodeValue}, ${describe[state]}`;
+    group.querySelector('.tree-node__mark').textContent = MARKS[state];
+    group.querySelector('title').textContent = `${nodeValue}, ${DESCRIBE[state]}`;
+    if (group.getAttribute('role') === 'button') {
+      group.setAttribute('aria-label', `Node ${nodeValue}, ${DESCRIBE[state]}`);
+    }
   };
 
   return {
     values: nodes.map((node) => node.value),
+    rootValue: treeView.root ? treeView.root.value : null,
     setState,
     setStates(states) {
       for (const nodeValue of groups.keys()) {
@@ -184,6 +209,46 @@ export function renderTree(svg, treeView) {
     resetStates() {
       for (const nodeValue of groups.keys()) setState(nodeValue, 'unvisited');
     },
+    makeClickable(onChoose) {
+      const undo = [];
+      for (const [nodeValue, group] of groups) {
+        group.setAttribute('role', 'button');
+        group.setAttribute('tabindex', '0');
+        group.setAttribute('aria-label', `Node ${nodeValue}, ${DESCRIBE[group.dataset.state]}`);
+        const onClick = () => onChoose(nodeValue);
+        const onKey = (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onChoose(nodeValue);
+          }
+        };
+        group.addEventListener('click', onClick);
+        group.addEventListener('keydown', onKey);
+        undo.push(() => {
+          group.removeEventListener('click', onClick);
+          group.removeEventListener('keydown', onKey);
+          group.removeAttribute('role');
+          group.removeAttribute('tabindex');
+          group.removeAttribute('aria-label');
+        });
+      }
+      return () => undo.forEach((fn) => fn());
+    },
     nodeElement: (nodeValue) => groups.get(nodeValue),
   };
+}
+
+/**
+ * The key to the node states, shown under every tree that changes state.
+ *
+ * @returns {HTMLUListElement}
+ */
+export function treeLegend() {
+  const item = (state, symbol, text) => el('li', {},
+    el('span', { class: `legend__swatch legend__swatch--${state}`, 'aria-hidden': 'true' }, symbol), text);
+  return el('ul', { class: 'legend', 'aria-label': 'Key' },
+    item('current', '', 'Current'),
+    item('visited', '✓', 'Visited'),
+    item('on-stack', '', 'On stack'),
+    item('found', '★', 'Found'));
 }
