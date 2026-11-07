@@ -1,14 +1,4 @@
 /**
- * Rule-based quiz logic: which questions to ask, how to grade an answer, the score, and what to
- * review afterwards. No DOM and no server calls; the quiz screen (js/screens/quiz-screen.js) uses
- * these functions and draws the results.
- *
- * "Rule-based feedback" means every message comes from data/quiz-bank.json: each wrong option, or
- * each known wrong ordering, carries its own feedback and the misconception (M1-M5) it reveals.
- * Nothing is generated at run time.
- *
- * Status: SKELETON. Backlog ticket F-06. The tests that define the behaviour are in
- * src/test/js/quiz-engine.test.js and are skipped until the ticket is picked up.
  * @module quiz/quiz-engine
  */
 
@@ -79,8 +69,21 @@ export const CONFIDENCE = Object.freeze(['guessing', 'fairly-sure', 'certain']);
  * @returns {QuizItem[]}
  */
 export function selectItems(bank, seenIds = []) {
-  // TODO(F-06)
-  throw new Error('selectItems is not implemented yet (backlog ticket F-06).');
+  const seen = new Set(seenIds);
+
+  const bySlot = new Map();
+  for (const item of bank.items) {
+    if (!bySlot.has(item.slot)) bySlot.set(item.slot, []);
+    bySlot.get(item.slot).push(item);
+  }
+
+  return [...bySlot.keys()]
+    .sort((a, b) => a - b)
+    .map((slot) => {
+      // Copy before sorting so the bank itself is not reordered.
+      const variants = [...bySlot.get(slot)].sort((a, b) => a.variant.localeCompare(b.variant));
+      return variants.find((item) => !seen.has(item.id)) ?? variants[0];
+    });
 }
 
 /**
