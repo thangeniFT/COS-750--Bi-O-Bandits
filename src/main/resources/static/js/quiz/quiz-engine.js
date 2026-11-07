@@ -137,6 +137,26 @@ export function gradeAnswer(item, answer) {
   return { correct: false, feedback, misconception: null };
 }
 
+function sameOrder(a, b) {
+  return a.length === b.length && a.every((value, i) => value === b[i]);
+}
+
+/**
+ * Finds the 0-based index of the first position where `answer` differs from `expected`.
+ * A missing value (answer too short) or an extra value (answer too long) counts as a difference.
+ * Only called when the two are known to differ.
+ *
+ * @param {number[]} answer
+ * @param {number[]} expected
+ * @returns {number}
+ */
+function firstDifference(answer, expected) {
+  const longest = Math.max(answer.length, expected.length);
+  for (let i = 0; i < longest; i++) {
+    if (answer[i] !== expected[i]) return i;
+  }
+  return longest;
+}
 /**
  * Totals a finished attempt.
  *
@@ -145,8 +165,8 @@ export function gradeAnswer(item, answer) {
  * @returns {{correct: number, total: number, passed: boolean}} passed is correct >= passMark
  */
 export function scoreQuiz(responses, passMark = PASS_MARK) {
-  // TODO(F-06)
-  throw new Error('scoreQuiz is not implemented yet (backlog ticket F-06).');
+  const correct = responses.filter((r) => r.result.correct).length;
+  return { correct, total: responses.length, passed: correct >= passMark };
 }
 
 /**
@@ -166,6 +186,24 @@ export function scoreQuiz(responses, passMark = PASS_MARK) {
  * }}
  */
 export function planReview(responses) {
-  // TODO(F-06)
-  throw new Error('planReview is not implemented yet (backlog ticket F-06).');
+  // Higher rank = more sure. CONFIDENCE runs from least to most sure
+  const rank = (confidence) => CONFIDENCE.indexOf(confidence);
+
+  const review = responses
+    .filter((r) => !r.result.correct)
+    .sort((a, b) => rank(b.confidence) - rank(a.confidence) || a.item.slot - b.item.slot)
+    .map((r) => ({
+      itemId: r.item.id,
+      slot: r.item.slot,
+      outcome: r.item.outcome,
+      confidence: r.confidence,
+      misconception: r.result.misconception,
+    }));
+
+  const worthALook = responses
+    .filter((r) => r.result.correct && r.confidence === 'guessing')
+    .sort((a, b) => a.item.slot - b.item.slot)
+    .map((r) => ({ itemId: r.item.id, slot: r.item.slot, outcome: r.item.outcome }));
+
+  return { review, worthALook };
 }
