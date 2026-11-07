@@ -108,8 +108,17 @@ export function selectItems(bank, seenIds = []) {
  * @returns {GradeResult}
  */
 export function gradeAnswer(item, answer) {
-  // TODO(F-06)
-  throw new Error('gradeAnswer is not implemented yet (backlog ticket F-06).');
+  if (item.type === 'choice') {
+    const option = item.options.find((o) => o.id === answer);
+    if (!option) {
+      throw new Error(`Item ${item.id} has no option "${answer}".`);
+    }
+    return {
+      correct: option.correct === true,
+      feedback: option.feedback,
+      misconception: option.misconception ?? null,
+    };
+  }
 }
 
 /**
