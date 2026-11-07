@@ -14,21 +14,20 @@ Design documents: [SE document](docs/COS212_DFS_SE_Document.pdf) ·
 
 ## Project status
 
-This is a **walking skeleton**: it runs end to end, and the remaining work is split into tickets.
+The app runs end to end and follows the wireframes (Home, Learn, Explorer, Practice, Quiz).
 
 | Area | State |
 |---|---|
 | Spring Boot app, REST API, error handling, config | Done |
-| `BinarySearchTree` (insert, duplicates rejected, reset to the example tree) | Done |
-| DFS search and traversal (`DepthFirstSearch`) | Tickets **B-01**, **B-02**: tests written and disabled; the API answers 501 until done |
-| Frontend shell, navigation, lesson content, tree drawing, sandbox insert/reset | Done |
-| Step player, stack panel, predict mode | Tickets **F-02**, **F-03**, **F-05** |
-| Quiz engine, quiz screen, guided review | Tickets **F-06**, **F-07**, **F-08** |
-| Lesson text and quiz bank (from the ID document) | Seeded; review in **C-01**, **C-02** |
+| `BinarySearchTree`, DFS search and traversal, step explanations | Done (B-01, B-02, B-03) |
+| Sandbox tree per browser session | Done (B-04) |
+| Home, six lessons, explorer (worked example, then your own tree), practice | Done |
+| Step player, stack panel, legend, predict mode with hint ladder | Done (F-01, F-02, F-03, F-05) |
+| Quiz with confidence rating, guided review, summary | Done (F-06, F-07, F-08) |
+| Lesson text and quiz bank (from the ID document) | Written; human review in **C-01**, **C-02** |
 
-Every unfinished piece is marked in the code with `TODO(<ticket>)`, shows a dashed
-"Not built yet (ticket)" box in the app, and has its expected behaviour already written as a
-skipped test. See [docs/BACKLOG.md](docs/BACKLOG.md).
+The learning design behind each screen (Gagné's nine events) is recorded as `gagneEvent` on every
+screen in `data/lesson.json`. Remaining work is in [docs/BACKLOG.md](docs/BACKLOG.md).
 
 ---
 
@@ -60,7 +59,8 @@ Then open <http://localhost:8080>. The first run downloads Maven and the depende
 internet access and takes a minute or two.
 
 Jump straight to any screen with its id, for example
-<http://localhost:8080/#/worked-example> or <http://localhost:8080/#/sandbox>.
+<http://localhost:8080/#/learn/3> or <http://localhost:8080/#/explorer?tab=example>. Screen ids
+are the `id` fields in `data/lesson.json`.
 
 ### Run the tests
 
@@ -102,8 +102,10 @@ src/main/resources/
     js/app.js                  loads content, URL-hash navigation between screens
     js/api.js                  the only code that calls the server
     js/util.js                 small helpers (safe text, input parsing, DOM helper)
-    js/components/             tree-view, stack-panel, step-player, predict-mode
-    js/screens/                one file per screen type (text, choice, explorer, warmup, ...)
+    js/progress.js             finished screens and quiz state, for this browser tab only
+    js/components/             tree-view, stack-panel, step-player, predict-mode, order-input
+    js/screens/                one file per screen type (home, lesson, explorer, practice, quiz,
+                               review, summary) plus common.js for shared pieces
     js/quiz/quiz-engine.js     rule-based quiz logic (no DOM)
 
 src/test/java/...              JUnit 5 tests
