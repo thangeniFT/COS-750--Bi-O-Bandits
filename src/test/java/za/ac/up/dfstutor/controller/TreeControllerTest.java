@@ -6,7 +6,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,8 +16,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.mock.web.MockHttpSession;
 
-import za.ac.up.dfstutor.service.TreeService;
 
 /**
  * End-to-end tests of the JSON API: real Spring context, real service, fake HTTP (MockMvc).
@@ -32,15 +31,6 @@ class TreeControllerTest {
 
     @Autowired
     private MockMvc mvc;
-
-    @Autowired
-    private TreeService service;
-
-    /** The sandbox tree is shared, so every test starts from the example tree. */
-    @BeforeEach
-    void resetTree() {
-        service.reset();
-    }
 
     /** Sends a JSON POST request. */
     private ResultActions postJson(String path, String json) throws Exception {
@@ -65,6 +55,37 @@ class TreeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size").value(8))
                 .andExpect(jsonPath("$.root.right.left.right.value").value(65));
+    }
+
+    @Test
+    @DisplayName("each HTTP session has its own sandbox tree (B-04)")
+    void sandboxIsIsolatedPerSession() throws Exception {
+        MockHttpSession sessionA = new MockHttpSession();
+        MockHttpSession sessionB = new MockHttpSession();
+
+        mvc.perform(post("/api/tree/insert")
+                        .session(sessionA)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"value\": 65}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(8));
+
+        mvc.perform(post("/api/tree/insert")
+                        .session(sessionB)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"value\": 55}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(8));
+
+        mvc.perform(get("/api/tree").session(sessionA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.root.right.left.right.value").value(65))
+                .andExpect(jsonPath("$.size").value(8));
+
+        mvc.perform(get("/api/tree").session(sessionB))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.root.right.left.left.value").value(55))
+                .andExpect(jsonPath("$.size").value(8));
     }
 
     @Test
@@ -117,9 +138,16 @@ class TreeControllerTest {
     @Test
     @DisplayName("reset restores the example tree")
     void reset() throws Exception {
-        postJson("/api/tree/insert", "{\"value\": 65}");
+        MockHttpSession session = new MockHttpSession();
 
-        mvc.perform(post("/api/tree/reset"))
+        mvc.perform(post("/api/tree/insert")
+                        .session(session)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"value\": 65}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(8));
+
+        mvc.perform(post("/api/tree/reset").session(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size").value(7));
     }
