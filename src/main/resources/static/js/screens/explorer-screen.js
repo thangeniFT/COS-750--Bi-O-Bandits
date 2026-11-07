@@ -1,142 +1,151 @@
 /**
- * Screen type "explorer": a tree with controls to run DFS and play it back. Used for the BST
- * screen, "three orders", the worked example and the sandbox.
+ * Screen type "explorer" (wireframe 04). Gagné event 5 (learning guidance), then free exploration.
  *
- * lesson.json fields:
- *  - tree:      "A" or "B" (a fixed tree from data/trees.json, built with POST /api/tree/preview),
- *               or "sandbox" (the shared tree that insert/reset change)
- *  - mode:      "search", "traverse", "both" or "none" - which DFS controls to show
- *  - target:    default search target (search modes)
- *  - order:     default traversal order (traverse modes)
- *  - allowEdit: true to show insert / reset controls (sandbox only)
- *  - afterRun:  optional text revealed after a run (for example "It is sorted!")
- * A fixed tree in "search" mode runs the search automatically, so the worked example starts ready
- * for the student to press "Next step".
+ * Two tabs, in a fixed order:
+ *  1. "Worked example" - tree A, target 60, and only the Search button. Fewer controls keep the
+ *     cognitive load low while the student learns to read the stack.
+ *  2. "Try your own tree" - unlocked after the worked example has been stepped to the end. Adds
+ *     insert, reset, any search target and the three traversal orders, on the sandbox tree.
+ * The unlock is remembered for the tab's session. #/explorer?tab=example always opens the worked
+ * example (the guided review links here).
  *
- * Status: implemented as a walking skeleton. Drawing, insert, reset and calling the DFS endpoints
- * all work. Playback depends on the step player (F-02) and stack panel (F-03); the polished
- * controls and result summary are ticket F-04.
+ * lesson.json fields: title, subtitle, example { tree, target, intro }, own { intro },
+ * doneMessage, lockedNote.
+ *
+ * Talks to the server through api.js only: preview (draw tree A), getTree / insert / reset (sandbox),
+ * search and traverse (the steps).
+ *
+ * Status: implemented.
  * @module screens/explorer-screen
  */
 
 import { api } from '../api.js';
+import { progress } from '../progress.js';
 import { StackPanel } from '../components/stack-panel.js';
 import { StepPlayer } from '../components/step-player.js';
-import { renderTree } from '../components/tree-view.js';
-import { el, formatText, parseWholeNumber } from '../util.js';
-import { clearMessage, renderHeader, showError } from './common.js';
+import { renderTree, treeLegend } from '../components/tree-view.js';
+import { el, parseWholeNumber } from '../util.js';
+import { card, clearMessage, pageFooter, renderPageHeader, richText, showError, showFeedback } from './common.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /**
- * @param {any} screen - the screen object from lesson.json (fields above)
+ * @param {any} screen
  * @param {HTMLElement} container
- * @param {{trees: Record<string, {values: number[]}>}} ctx
+ * @param {any} ctx
  */
 export function render(screen, container, ctx) {
-  renderHeader(screen, container);
+  const unlocked = Boolean(progress.get('explorerUnlocked'));
+  const tab = ctx.params.get('tab') === 'own' && unlocked ? 'own'
+    : ctx.params.get('tab') === 'example' || !unlocked ? 'example' : 'own';
+  const isExample = tab === 'example';
 
-  /** Insertion order for a fixed tree, or undefined for the sandbox. */
-  const values = screen.tree === 'sandbox' ? undefined : ctx.trees[screen.tree]?.values;
-  const mode = screen.mode ?? 'none';
+  renderPageHeader(container, {
+    eyebrow: `Interactive explorer / ${isExample ? 'Worked example' : 'Your own tree'}`,
+    title: screen.title,
+    subtitle: screen.subtitle,
+  });
 
-  // --- Page structure ---------------------------------------------------------------------
+  // --- Tabs --------------------------------------------------------------------------------
+  const tabButton = (id, text, enabled) => el('button', {
+    type: 'button', class: 'tab', role: 'tab', 'aria-selected': String(tab === id), disabled: !enabled,
+    onclick: () => ctx.go('explorer', { tab: id }),
+  }, text);
+  const ownTab = tabButton('own', unlocked ? '2. Try your own tree' : '2. Try your own tree 🔒', unlocked);
+  container.append(el('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Explorer mode' },
+    tabButton('example', '1. Worked example', true), ownTab));
+  container.append(richText('p', { class: 'subtitle' }, isExample ? screen.example.intro : screen.own.intro));
+  if (!unlocked) container.append(richText('p', { class: 'visually-hidden' }, screen.lockedNote));
+
+  // --- Page parts --------------------------------------------------------------------------
   const svg = document.createElementNS(SVG_NS, 'svg');
+  const visited = el('p', { class: 'visit-order' });
   const stackBox = el('div');
-  const explanation = el('div', { class: 'explanation', 'aria-live': 'polite' },
-    mode === 'none' ? 'Insert a value to see where it goes.' : 'Run DFS to see each step here.');
+  const explanation = el('p', { class: 'explanation', 'aria-live': 'polite' });
   const status = el('span', { class: 'step-status' });
   const message = el('div', { class: 'message', role: 'alert' });
-  const afterRun = el('div', { class: 'message message--success', 'aria-live': 'polite' });
+  const done = el('div', { class: 'message', 'aria-live': 'polite' });
+  const stackTitle = el('h2', { class: 'card__title' }, 'DFS Stack (top first)');
+  const stack = new StackPanel(stackBox, { emptyText: isExample ? 'Press Search to start.' : 'Run a search or traversal to see the stack.' });
 
-  const stack = new StackPanel(stackBox);
   /** @type {StepPlayer|null} */
   let player = null;
+  /** @type {import('../components/tree-view.js').TreeViewHandle|null} */
+  let tree = null;
 
-  // --- Step controls (work once F-02 is done) ---------------------------------------------
-  const backBtn = el('button', { type: 'button', class: 'btn', onclick: () => { player?.back(); updateStepButtons(); } }, 'Previous step');
-  const nextBtn = el('button', { type: 'button', class: 'btn btn--primary', onclick: () => { player?.next(); updateStepButtons(); } }, 'Next step');
-  const restartBtn = el('button', { type: 'button', class: 'btn', onclick: () => { player?.restart(); updateStepButtons(); } }, 'Restart');
+  const backBtn = el('button', { type: 'button', class: 'btn', onclick: () => player?.back() }, '← Previous');
+  const nextBtn = el('button', { type: 'button', class: 'btn btn--primary', onclick: () => player?.next() }, 'Next step →');
+  const restartBtn = el('button', { type: 'button', class: 'btn', onclick: () => player?.restart() }, 'Restart');
 
-  /** Enables the step buttons only when there is somewhere to go. */
-  function updateStepButtons() {
+  /** Enables the step buttons only when there is somewhere to go, and notices the end. */
+  function afterStep() {
     backBtn.disabled = !player?.canBack;
     nextBtn.disabled = !player?.canNext;
     restartBtn.disabled = !player?.canBack;
+    if (isExample && player?.atEnd && !progress.get('explorerUnlocked')) {
+      progress.set('explorerUnlocked', true);
+      ctx.markDone();
+      ownTab.disabled = false;
+      ownTab.textContent = '2. Try your own tree';
+      showFeedback(done, 'success', screen.doneMessage);
+      done.append(' ', el('button', { type: 'button', class: 'btn btn--small', onclick: () => ctx.go('explorer', { tab: 'own' }) }, 'Try your own tree →'));
+    }
   }
 
-  /**
-   * Draws a tree and creates a fresh step player for it.
-   * @param {import('../api.js').TreeView} view
-   */
+  /** Draws a tree and forgets any previous run. */
   function drawTree(view) {
-    const tree = renderTree(svg, view);
-    player = new StepPlayer({ tree, stack, explanation, status });
+    tree = renderTree(svg, view);
+    player = new StepPlayer({ tree, stack, explanation, status, visited, onStep: afterStep });
     stack.clear();
-    updateStepButtons();
+    visited.textContent = '';
+    status.textContent = '';
+    explanation.textContent = isExample ? '' : 'Insert values, then search or run a traversal.';
+    afterStep();
   }
 
   /**
    * Runs an API call that returns a DfsResult and loads it into the player.
    * @param {() => Promise<import('../api.js').DfsResult>} call
+   * @param {boolean} traversal - true for a traversal (the panel then shows the path from the root)
    */
-  async function runDfs(call) {
+  async function runDfs(call, traversal) {
     clearMessage(message);
-    afterRun.textContent = '';
     try {
       const result = await call();
+      stackTitle.textContent = traversal ? 'Path from the root (top first)' : 'DFS Stack (top first)';
       player.load(result);
-      if (screen.afterRun) afterRun.innerHTML = formatText(screen.afterRun);
     } catch (error) {
       showError(message, error);
     }
-    updateStepButtons();
   }
 
-  // --- DFS controls -----------------------------------------------------------------------
-  const controls = [];
+  // --- Controls bar: only Search in the worked example ---------------------------------------
+  const values = isExample ? ctx.trees[screen.example.tree].values : undefined;
+  const targetInput = el('input', { type: 'number', id: 'explorer-target', min: 0, max: 99, value: isExample ? screen.example.target : '', disabled: isExample });
+  const search = () => {
+    const parsed = parseWholeNumber(targetInput.value);
+    if (!parsed.ok) { showError(message, parsed); return; }
+    runDfs(() => api.search(parsed.value, values), false);
+  };
+  const searchForm = el('form', { novalidate: true, onsubmit: (event) => { event.preventDefault(); search(); } },
+    el('span', { class: 'field' },
+      el('label', { for: 'explorer-target' }, 'Find target'),
+      targetInput,
+      el('button', { type: 'submit', class: 'btn btn--primary' }, 'Search')));
 
-  if (mode === 'search' || mode === 'both') {
-    const input = el('input', { type: 'number', id: `target-${screen.id}`, min: 0, max: 99, value: screen.target ?? '' });
-    const runSearch = () => {
-      const parsed = parseWholeNumber(input.value);
-      if (!parsed.ok) {
-        showError(message, parsed);
-        return;
-      }
-      runDfs(() => api.search(parsed.value, values));
-    };
-    controls.push(el('form', { class: 'form-row', novalidate: true, onsubmit: (event) => { event.preventDefault(); runSearch(); } },
-      el('label', { for: input.id }, 'Search for'),
-      input,
-      el('button', { type: 'submit', class: 'btn btn--primary' }, 'Run DFS search')));
-  }
-
-  if (mode === 'traverse' || mode === 'both') {
-    const select = el('select', { id: `order-${screen.id}` },
-      ...['PRE_ORDER', 'IN_ORDER', 'POST_ORDER'].map((order) => el('option', {
-        value: order,
-        selected: order === (screen.order ?? 'PRE_ORDER'),
-      }, order.replace('_', '-').toLowerCase())));
-    controls.push(el('form', { class: 'form-row', novalidate: true, onsubmit: (event) => { event.preventDefault(); runDfs(() => api.traverse(select.value, values)); } },
-      el('label', { for: select.id }, 'Traversal order'),
-      select,
-      el('button', { type: 'submit', class: 'btn btn--primary' }, 'Run traversal')));
-  }
-
-  if (screen.allowEdit) {
-    const input = el('input', { type: 'number', id: `insert-${screen.id}`, min: 0, max: 99 });
+  const bar = card({ alt: true, className: 'controls-bar' });
+  if (isExample) {
+    bar.append(searchForm);
+  } else {
+    const insertInput = el('input', { type: 'number', id: 'explorer-insert', min: 0, max: 99, placeholder: 'e.g. 65' });
     const insert = async () => {
       clearMessage(message);
-      const parsed = parseWholeNumber(input.value);
-      if (!parsed.ok) {
-        showError(message, parsed);
-        return;
-      }
+      const parsed = parseWholeNumber(insertInput.value);
+      if (!parsed.ok) { showError(message, parsed); return; }
       try {
         drawTree(await api.insert(parsed.value));
-        explanation.textContent = `${parsed.value} was inserted.`;
-        input.value = '';
+        explanation.textContent = `${parsed.value} was inserted. Run a search to see how DFS reaches it.`;
+        insertInput.value = '';
       } catch (error) {
         showError(message, error);
       }
@@ -150,31 +159,39 @@ export function render(screen, container, ctx) {
         showError(message, error);
       }
     };
-    controls.push(el('form', { class: 'form-row', novalidate: true, onsubmit: (event) => { event.preventDefault(); insert(); } },
-      el('label', { for: input.id }, 'Insert a value'),
-      input,
-      el('button', { type: 'submit', class: 'btn' }, 'Insert'),
-      el('button', { type: 'button', class: 'btn', onclick: reset }, 'Reset tree')));
+    const orderSelect = el('select', { id: 'explorer-order' },
+      el('option', { value: 'PRE_ORDER' }, 'Pre-order'),
+      el('option', { value: 'IN_ORDER' }, 'In-order'),
+      el('option', { value: 'POST_ORDER' }, 'Post-order'));
+    bar.append(
+      el('form', { novalidate: true, onsubmit: (event) => { event.preventDefault(); insert(); } },
+        el('span', { class: 'field' },
+          el('label', { for: 'explorer-insert' }, 'Insert value'),
+          insertInput,
+          el('button', { type: 'submit', class: 'btn' }, 'Insert'))),
+      searchForm,
+      el('button', { type: 'button', class: 'btn', onclick: reset }, 'Reset tree'),
+      el('form', { novalidate: true, onsubmit: (event) => { event.preventDefault(); runDfs(() => api.traverse(orderSelect.value), true); } },
+        el('span', { class: 'field' },
+          el('label', { for: 'explorer-order' }, 'Traversal'),
+          orderSelect,
+          el('button', { type: 'submit', class: 'btn' }, 'Run'))));
   }
 
-  const showStepControls = mode !== 'none';
-  container.append(el('div', { class: 'explorer' },
-    el('div', { class: 'panel explorer__tree' }, el('p', { class: 'panel__title' }, 'Tree'), svg),
-    el('div', { class: 'panel' }, el('p', { class: 'panel__title' }, 'Stack (top first)'), stackBox),
-    el('div', { class: 'explorer__below' },
-      explanation,
-      showStepControls && el('div', { class: 'form-row' }, backBtn, nextBtn, restartBtn, status),
-      message,
-      afterRun,
-      ...controls)));
+  container.append(
+    bar,
+    message,
+    el('div', { class: 'two-col' },
+      card({ title: 'Binary Search Tree' }, svg, treeLegend(), visited),
+      card({ alt: true }, stackTitle, stackBox, explanation)),
+    el('div', { class: 'step-bar' }, backBtn, nextBtn, restartBtn, status),
+    done,
+    pageFooter(ctx));
 
-  // --- Initial load -----------------------------------------------------------------------
+  // --- Initial load ------------------------------------------------------------------------
   (async () => {
     try {
-      drawTree(values ? await api.preview(values) : await api.getTree());
-      if (mode === 'search' && values && screen.target !== undefined) {
-        await runDfs(() => api.search(screen.target, values));
-      }
+      drawTree(isExample ? await api.preview(values) : await api.getTree());
     } catch (error) {
       showError(message, error);
     }
