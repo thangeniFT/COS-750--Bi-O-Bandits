@@ -119,6 +119,22 @@ export function gradeAnswer(item, answer) {
       misconception: option.misconception ?? null,
     };
   }
+  if (sameOrder(answer, item.answer)) {
+    return { correct: true, feedback: item.correctFeedback, misconception: null };
+  }
+
+  // A known wrong order, such as in-order instead of pre-order, has its own targeted feedback.
+  const rule = (item.rules ?? []).find((r) => sameOrder(answer, r.match));
+  if (rule) {
+    return { correct: false, feedback: rule.feedback, misconception: rule.misconception ?? null };
+  }
+
+  // Anything else: point at the first place the answer goes wrong.
+  const index = firstDifference(answer, item.answer);
+  const feedback = item.fallbackFeedback
+    .replaceAll('{position}', String(index + 1))
+    .replaceAll('{expected}', index < item.answer.length ? String(item.answer[index]) : 'nothing');
+  return { correct: false, feedback, misconception: null };
 }
 
 /**
