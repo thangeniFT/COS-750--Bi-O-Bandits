@@ -1,6 +1,5 @@
 // Specification for static/js/quiz/quiz-engine.js (backlog ticket F-06).
-// Skipped until the ticket is picked up: delete the `skip` option on each describe() and make the
-// tests pass. The tests use the real quiz bank, so they also catch content mistakes.
+// The tests use the real quiz bank, so they also catch content mistakes.
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -9,14 +8,13 @@ import { gradeAnswer, planReview, scoreQuiz, selectItems } from '../../main/reso
 
 const bank = JSON.parse(readFileSync(new URL('../../main/resources/static/data/quiz-bank.json', import.meta.url), 'utf8'));
 const item = (id) => bank.items.find((i) => i.id === id);
-const SKIP = 'Backlog ticket F-06 (quiz engine): remove this skip when you start the ticket';
 
 /** Builds a response as the quiz screen would. */
 const response = (id, correct, confidence) => ({
   item: item(id), answer: 'x', confidence, result: { correct, feedback: '', misconception: null },
 });
 
-describe('selectItems', { skip: SKIP }, () => {
+describe('selectItems', () => {
   test('first attempt: variant A of every slot, in slot order', () => {
     assert.deepEqual(selectItems(bank).map((i) => i.id), ['1A', '2A', '3A', '4A', '5A', '6A']);
   });
@@ -32,7 +30,7 @@ describe('selectItems', { skip: SKIP }, () => {
   });
 });
 
-describe('gradeAnswer: choice items', { skip: SKIP }, () => {
+describe('gradeAnswer: choice items', () => {
   test('the correct option', () => {
     assert.deepEqual(gradeAnswer(item('1A'), 'a'), {
       correct: true, feedback: item('1A').options[0].feedback, misconception: null,
@@ -55,7 +53,7 @@ describe('gradeAnswer: choice items', { skip: SKIP }, () => {
   });
 });
 
-describe('gradeAnswer: order items', { skip: SKIP }, () => {
+describe('gradeAnswer: order items', () => {
   test('the exact answer is correct', () => {
     const result = gradeAnswer(item('3A'), [50, 30, 20, 40, 70, 60, 80]);
     assert.equal(result.correct, true);
@@ -81,7 +79,7 @@ describe('gradeAnswer: order items', { skip: SKIP }, () => {
   });
 });
 
-describe('scoreQuiz', { skip: SKIP }, () => {
+describe('scoreQuiz', () => {
   const responses = (correctCount) => ['1A', '2A', '3A', '4A', '5A', '6A']
     .map((id, index) => response(id, index < correctCount, 'certain'));
 
@@ -98,7 +96,7 @@ describe('scoreQuiz', { skip: SKIP }, () => {
   });
 });
 
-describe('planReview', { skip: SKIP }, () => {
+describe('planReview', () => {
   test('wrong answers are reviewed most-confident first, then by slot', () => {
     const plan = planReview([
       response('1A', false, 'guessing'),
