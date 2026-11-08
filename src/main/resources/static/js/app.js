@@ -1,470 +1,109 @@
+/* ==========================================================
+   COS212 DFS Tutor — shared helpers
+   ========================================================== */
 
-/**
- * Starts the COS212 DFS Tutor.
- *
- * Responsibilities:
- * - Load lesson content and example trees.
- * - Navigate between screens using URL hashes.
- * - Render screens using the existing screen modules.
- * - Update application and learning progress.
- * - Display the main navigation matching the Figma designs.
- *
- * @module app
- */
+const STORE_KEY = "cos212-dfs-quiz";
 
-import { loadData } from './api.js';
-import { renderScreen } from './screens/index.js';
-import { el } from './util.js';
-
-// Existing page elements
-const screenEl = document.getElementById('screen');
-const mainEl = document.getElementById('main');
-const backBtn = document.getElementById('nav-back');
-const nextBtn = document.getElementById('nav-next');
-const progressEl = document.getElementById('progress');
-const progressLabel = document.getElementById('progress-label');
-
-// Application state
-const state = {
-  lesson: null,
-  trees: {},
-  index: 0,
-  cleanup: null,
+// ---------- Session storage (answers persist across the 3 pages) ----------
+const Store = {
+  load() {
+    try {
+      return JSON.parse(sessionStorage.getItem(STORE_KEY)) || { answers: {} };
+    } catch (e) {
+      return { answers: {} };
+    }
+  },
+  save(state) {
+    try { sessionStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* storage blocked */ }
+  },
+  setAnswer(index, choice, confidence) {
+    const state = this.load();
+    const prev = state.answers[index];
+    // "first" keeps the first attempt so retries don't inflate the readiness score
+    state.answers[index] = { choice, confidence, first: prev ? prev.first : choice };
+    this.save(state);
+  },
+  getAnswer(index) {
+    return this.load().answers[index] || null;
+  },
+  clear() {
+    try { sessionStorage.removeItem(STORE_KEY); } catch (e) { /* ignore */ }
+  }
 };
 
-// ------------------------------------------------------
-// Main navigation
-// ------------------------------------------------------
-
-const NAV_ITEMS = [
-  { label: 'Home', id: 'hook', section: 'home' },
-  { label: 'Learn', id: 'concept-bst', section: 'learn' },
-  { label: 'Explorer', id: 'worked-example', section: 'explorer' },
-  { label: 'Practice', id: 'practice', section: 'practice' },
-  { label: 'Quiz', id: 'quiz', section: 'quiz' }
-];
-
-
-const LEARNING_SCREENS = [
-  'concept-bst',
-  'concept-idea'
-];
-
-
-function getSection(screenId) {
-  if (screenId === 'hook') {
-    return 'home';
-  }
-
-  if ([
-    'concept-bst',
-    'concept-idea',
-    'concept-stack',
-    'concept-steps',
-    'concept-not',
-    'goals',
-    'warmup'
-  ].includes(screenId)) {
-    return 'learn';
-  }
-
-  if ([
-    'concept-orders',
-    'worked-example',
-    'sandbox'
-  ].includes(screenId)) {
-    return 'explorer';
-  }
-
-  if (screenId === 'practice') {
-    return 'practice';
-  }
-
-  if (screenId === 'quiz') {
-    return 'quiz';
-  }
-
-  return null;
+// ---------- URL helper: ?q=2 -> index 1 (clamped) ----------
+function questionIndexFromUrl() {
+  const n = parseInt(new URLSearchParams(location.search).get("q"), 10);
+  if (Number.isNaN(n)) return 0;
+  return Math.min(Math.max(n, 1), QUESTIONS.length) - 1;
 }
 
-function setupTopNavigation() {
-  const header = document.querySelector('.app-header');
+// ---------- Tree SVG renderer ----------
+// opts: { visited: [values], current: value }
+function renderTree(container, opts = {}) {
+  const visited = new Set(opts.visited || []);
+  const current = opts.current ?? null;
+  const NS = "http://www.w3.org/2000/svg";
 
-  if (!header || header.querySelector('.top-nav')) {
-    return;
-  }
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", "0 0 400 240");
+  svg.setAttribute("class", "tree");
+  svg.setAttribute("role", "img");
+  const visitedText = visited.size ? ` Visited so far: ${[...visited].join(", ")}.` : "";
+  svg.setAttribute("aria-label",
+    `Binary search tree: root 50; 50 has children 30 and 70; 30 has children 20 and 40; 70 has children 60 and 80.${visitedText}`);
 
-  const nav = document.createElement('nav');
-
-  nav.className = 'top-nav';
-  nav.setAttribute('aria-label', 'Main navigation');
-
-  NAV_ITEMS.forEach(({ label, id, section }) => {
-    const link = document.createElement('a');
-
-    link.textContent = label;
-    link.href = `#/${id}`;
-    link.dataset.section = section;
-
-    nav.appendChild(link);
+  EDGES.forEach(([a, b]) => {
+    const [x1, y1] = NODE_POS[a];
+    const [x2, y2] = NODE_POS[b];
+    const line = document.createElementNS(NS, "line");
+    line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+    line.setAttribute("class", "edge" + (visited.has(a) && visited.has(b) ? " edge--visited" : ""));
+    svg.appendChild(line);
   });
 
-  const progress = header.querySelector('.app-header__progress');
+  Object.entries(NODE_POS).forEach(([value, [x, y]]) => {
+    const v = Number(value);
+    const g = document.createElementNS(NS, "g");
+    let cls = "node";
+    if (v === current) cls += " node--current";
+    else if (visited.has(v)) cls += " node--visited";
+    g.setAttribute("class", cls);
 
-  if (progress) {
-    header.insertBefore(nav, progress);
-  } else {
-    header.appendChild(nav);
-  }
-}
+    const c = document.createElementNS(NS, "circle");
+    c.setAttribute("cx", x); c.setAttribute("cy", y); c.setAttribute("r", 22);
+    const t = document.createElementNS(NS, "text");
+    t.setAttribute("x", x); t.setAttribute("y", y);
+    t.textContent = value;
+    g.append(c, t);
 
-
-function updateTopNavigation(screenId) {
-  const activeSection = getSection(screenId);
-
-  document.querySelectorAll('.top-nav a').forEach((link) => {
-    const active = link.dataset.section === activeSection;
-
-    link.classList.toggle('top-nav__link--active', active);
-
-    if (active) {
-      link.setAttribute('aria-current', 'page');
-    } else {
-      link.removeAttribute('aria-current');
+    // check badge on visited nodes
+    if (visited.has(v)) {
+      const badge = document.createElementNS(NS, "g");
+      badge.setAttribute("class", "badge");
+      const bc = document.createElementNS(NS, "circle");
+      bc.setAttribute("cx", x + 18); bc.setAttribute("cy", y - 18); bc.setAttribute("r", 9);
+      const bp = document.createElementNS(NS, "path");
+      bp.setAttribute("d", `M${x + 14} ${y - 18} l3 3 l5 -6`);
+      badge.append(bc, bp);
+      g.appendChild(badge);
     }
-  });
-}
-
-// ------------------------------------------------------
-// Learning progress
-// ------------------------------------------------------
-
-
-function setupLearningProgress() {
-  const header = document.querySelector('.app-header');
-
-  if (!header || document.getElementById('learning-progress')) {
-    return;
-  }
-
-  const section = document.createElement('section');
-
-  section.id = 'learning-progress';
-  section.className = 'learning-progress';
-  section.hidden = true;
-
-  section.innerHTML = `
-    <div class="learning-progress__heading">
-      <div>
-        <span class="learning-progress__eyebrow">
-          LEARN / LESSON 1 OF 2
-        </span>
-        <h2 id="learning-progress-title"></h2>
-      </div>
-
-      <span id="learning-progress-percent"></span>
-    </div>
-
-    <div
-      class="learning-progress__track"
-      role="progressbar"
-      aria-label="Learning module position"
-      aria-valuemin="0"
-      aria-valuemax="2"
-      aria-valuenow="0"
-    >
-      <div class="learning-progress__bar"></div>
-    </div>
-
-   <div class="learning-progress__labels">
-  <a href="#/concept-bst">BST Introduction</a>
-  <a href="#/concept-idea">DFS Introduction</a>
-</div>
-  `;
-
-  header.after(section);
-}
-
-
-
-function updateLearningProgress(screenId) {
-  const section = document.getElementById('learning-progress');
-  if (!section) return;
-
-  const lessons = [
-    {
-      id: 'concept-bst',
-      title: 'Binary Search Trees'
-    },
-    {
-      id: 'concept-idea',
-      title: 'Depth-First Search'
-    }
-  ];
-
-  const index = lessons.findIndex(
-    lesson => lesson.id === screenId
-  );
-
-  if (index === -1) {
-    section.hidden = true;
-    return;
-  }
-
-  section.hidden = false;
-
-  const lessonNumber = index + 1;
-  const progress = (lessonNumber / lessons.length) * 100;
-
-  section.querySelector(
-    '.learning-progress__eyebrow'
-  ).textContent = `LEARN / LESSON ${lessonNumber} OF 2`;
-
-  section.querySelector(
-    '#learning-progress-title'
-  ).textContent = lessons[index].title;
-
-  section.querySelector(
-    '#learning-progress-percent'
-  ).textContent = `${lessonNumber} / 2`;
-
-  section.querySelector(
-    '.learning-progress__bar'
-  ).style.width = `${progress}%`;
-
-  const track = section.querySelector(
-    '.learning-progress__track'
-  );
-
-  track.setAttribute('aria-valuenow', lessonNumber);
-  track.setAttribute('aria-valuetext',
-    `Lesson ${lessonNumber} of 2`);
-
-  section.querySelectorAll(
-    '.learning-progress__labels a'
-  ).forEach((link, i) => {
-    link.classList.toggle('is-current', i === index);
-
-    if (i === index) {
-      link.setAttribute('aria-current', 'step');
-    } else {
-      link.removeAttribute('aria-current');
-    }
-  });
-}
-
-
-// ------------------------------------------------------
-// Screen navigation
-// ------------------------------------------------------
-
-
-function indexFromHash() {
-  const id = decodeURIComponent(
-    window.location.hash.replace(/^#\/?/, '')
-  );
-
-  const index = state.lesson.screens.findIndex(
-    (screen) => screen.id === id
-  );
-
-  return index >= 0 ? index : 0;
-}
-
-
-function go(index) {
-  if (index < 0 || index >= state.lesson.screens.length) {
-    return;
-  }
-
-  window.location.hash =
-    `#/${state.lesson.screens[index].id}`;
-}
-
-/**
- * Adds a bottom action only to the BST and DFS lessons.
- * Other screens use the top navigation.
- */
-
-function addLearningAction(screenId) {
-  // Navigation buttons only appear on learning pages.
-  if (
-    screenId !== 'concept-bst' &&
-    screenId !== 'concept-idea'
-  ) {
-    return;
-  }
-
-  const actions = document.createElement('nav');
-  actions.className = 'lesson-actions';
-  actions.setAttribute('aria-label', 'Lesson navigation');
-
-  function createLink(label, target, className) {
-    const link = document.createElement('a');
-
-    link.href = `#/${target}`;
-    link.textContent = label;
-    link.className = `lesson-action ${className}`;
-
-    return link;
-  }
-
-  if (screenId === 'concept-bst') {
-    // PAGE 2: BST Introduction
-    // Next lesson on the right, as in Figma.
-    actions.classList.add('lesson-actions--next-only');
-
-    actions.appendChild(
-      createLink(
-        'Next Lesson →',
-        'concept-idea',
-        'lesson-action--primary'
-      )
-    );
-  }
-
-  if (screenId === 'concept-idea') {
-    // PAGE 3: DFS Introduction
-    // BST Basics on the left, Explorer on the right.
-    actions.append(
-      createLink(
-        '← BST Basics',
-        'concept-bst',
-        'lesson-action--secondary'
-      ),
-      createLink(
-        'Go to Explorer →',
-        'worked-example',
-        'lesson-action--primary'
-      )
-    );
-  }
-
-  screenEl.appendChild(actions);
-}
-
- 
-
-
-function show(index) {
-
-  if (typeof state.cleanup === 'function') {
-    state.cleanup();
-  }
-
-  state.cleanup = null;
-  state.index = index;
-
-  const screens = state.lesson.screens;
-  const screen = screens[index];
-
-
-  progressEl.setAttribute(
-    'aria-valuemax',
-    String(screens.length)
-  );
-
-  progressEl.setAttribute(
-    'aria-valuenow',
-    String(index + 1)
-  );
-
-  const progressPercentage =
-    ((index + 1) / screens.length) * 100;
-
-  progressEl.querySelector('.progress__bar').style.width =
-    `${progressPercentage}%`;
-
-  progressLabel.textContent ='';
-
-  document.title = `${screen.title} · COS212 DFS Tutor`;
-
-
-  updateTopNavigation(screen.id);
-  updateLearningProgress(screen.id);
-
- 
-  backBtn.disabled = index === 0;
-  nextBtn.disabled = index === screens.length - 1;
-
-
-  const ctx = {
-    trees: state.trees,
-    lesson: state.lesson,
-    goNext: () => go(state.index + 1),
-
-    setNextEnabled: (enabled) => {
-      nextBtn.disabled =
-        !enabled || index === screens.length - 1;
-    },
-  };
-
-
-  screenEl.replaceChildren();
-
-  state.cleanup =
-    renderScreen(screen, screenEl, ctx) ?? null;
-addLearningAction(screen.id);
- 
-  const heading = screenEl.querySelector('h1');
-
-  if (heading) {
-    heading.setAttribute('tabindex', '-1');
-    heading.focus();
-  }
-}
-
-// ------------------------------------------------------
-// Application startup
-// ------------------------------------------------------
-
-async function start() {
-  try {
-    const [lesson, trees] = await Promise.all([
-      loadData('lesson'),
-      loadData('trees')
-    ]);
-
-    state.lesson = lesson;
-    state.trees = trees;
-  } catch (error) {
-    screenEl.replaceChildren(
-      el(
-        'div',
-        {
-          class: 'message message--error',
-          role: 'alert'
-        },
-        'The lesson could not be loaded. ' +
-        'Check that the server is running and reload the page. ',
-        el('code', {}, String(error.message))
-      )
-    );
-
-    backBtn.disabled = true;
-    nextBtn.disabled = true;
-
-    return;
-  }
-
-  setupTopNavigation();
-  setupLearningProgress();
-
-  backBtn.addEventListener('click', () => {
-    go(state.index - 1);
+    svg.appendChild(g);
   });
 
-  nextBtn.addEventListener('click', () => {
-    go(state.index + 1);
-  });
-
-  window.addEventListener('hashchange', () => {
-    show(indexFromHash());
-  });
-
- 
-  show(indexFromHash());
-  mainEl.focus();
+  container.innerHTML = "";
+  container.appendChild(svg);
 }
 
-start();
+// ---------- Small DOM helper ----------
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  Object.entries(attrs).forEach(([k, v]) => {
+    if (k === "class") node.className = v;
+    else if (k === "text") node.textContent = v;
+    else node.setAttribute(k, v);
+  });
+  children.forEach(c => node.append(c));
+  return node;
+}
