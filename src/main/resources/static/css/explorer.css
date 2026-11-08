@@ -1,0 +1,68 @@
+ :root { --ink:#1f2430; --muted:#6b7280; --line:#e3e6eb; --panel:#f1f4f7; --good:#1f7a4d; --bad:#b42318; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#e6e6e6; font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); }
+  .page { max-width:1000px; margin:16px auto; background:#fff; min-height:600px; }
+
+  header { display:flex; justify-content:space-between; align-items:center; padding:18px 56px; border-bottom:1px solid var(--line); }
+  .brand { font-weight:700; letter-spacing:.02em; }
+  nav { display:flex; gap:32px; font-size:13px; }
+  nav a { color:var(--ink); text-decoration:none; }
+  nav a.active { font-weight:700; }
+  nav a:hover { text-decoration:underline; }
+
+  main { padding:28px 56px 32px; }
+  .crumb { font-size:11px; font-weight:600; color:var(--muted); letter-spacing:.04em; text-transform:uppercase; }
+  h1 { font-size:32px; margin:18px 0 8px; }
+  .sub { color:var(--muted); font-size:14px; margin:0 0 22px; }
+
+  /* Toolbar */
+  .toolbar { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px 16px; display:flex; flex-wrap:wrap; gap:10px 14px; align-items:center; }
+  .group { display:flex; align-items:center; gap:8px; }
+  .group label { font-size:11px; font-weight:700; max-width:60px; line-height:1.2; }
+  input[type=text] { font:inherit; font-size:12px; width:90px; padding:10px 12px; border:1px solid var(--line); border-radius:6px; background:#fff; }
+  input[type=text]:focus { outline:2px solid #2563eb; outline-offset:1px; }
+  button { font:inherit; font-size:12px; font-weight:600; padding:10px 16px; border:1px solid var(--line); border-radius:6px; background:#fff; color:var(--ink); cursor:pointer; }
+  button:hover:not(:disabled) { border-color:var(--ink); }
+  button:focus-visible, a:focus-visible { outline:2px solid #2563eb; outline-offset:2px; }
+  button.dark { background:var(--ink); color:#fff; border-color:var(--ink); }
+  button:disabled { opacity:.45; cursor:default; }
+  #status { font-size:12px; color:var(--muted); min-height:18px; margin:8px 2px 12px; }
+  #status.err { color:var(--bad); }
+
+  /* Panels */
+  .grid { display:grid; grid-template-columns:1fr 292px; gap:18px; }
+  .card { border:1px solid var(--line); border-radius:8px; padding:16px; }
+  .card h3 { margin:0 0 8px; font-size:16px; }
+  .side { background:var(--panel); display:flex; flex-direction:column; }
+  .treebox { overflow-x:auto; }
+  svg { width:100%; min-width:300px; height:auto; display:block; }
+  .edge { stroke:#9aa1ad; stroke-width:1.5; }
+  .node circle { fill:#fff; stroke:var(--ink); stroke-width:1.5; transition:fill .2s; }
+  .node text.val { font-size:13px; font-weight:600; text-anchor:middle; dominant-baseline:central; fill:var(--ink); }
+  .node text.tick { font-size:11px; fill:var(--ink); }
+  .node.current circle { fill:var(--ink); }
+  .node.current text.val { fill:#fff; }
+  .node.target circle { stroke-dasharray:3 2; }
+  .node.found circle { fill:var(--good); stroke:var(--good); }
+  .visited-line { font-size:12px; font-weight:600; margin:10px 0 0; }
+
+  /* Stack */
+  #stack { list-style:none; margin:6px 0 14px; padding:0; }
+  #stack li { background:#fff; border:1px solid var(--line); border-radius:6px; padding:12px 14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:baseline; font-weight:700; font-size:14px; }
+  #stack li small { font-weight:400; color:var(--muted); margin-left:6px; }
+  #stack li .tag { font-size:10px; font-weight:600; letter-spacing:.06em; color:var(--muted); }
+  #stack li.empty { color:var(--muted); font-weight:400; font-size:13px; }
+  #explain { font-size:12px; line-height:1.5; margin:auto 0 0; }
+
+  footer { display:flex; align-items:center; gap:10px; margin-top:18px; flex-wrap:wrap; }
+  footer .counter { margin-left:auto; margin-right:24px; font-size:12px; font-weight:600; letter-spacing:.04em; color:var(--muted); }
+  footer button { padding:14px 20px; font-weight:700; }
+  .practice { font-size:12px; font-weight:700; color:var(--ink); }
+
+  @media (max-width:760px) {
+    header, main { padding-left:20px; padding-right:20px; }
+    header { flex-direction:column; gap:10px; }
+    nav { gap:16px; flex-wrap:wrap; justify-content:center; }
+    .grid { grid-template-columns:1fr; }
+    footer .counter { margin:0; width:100%; order:-1; }
+  }
