@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COS212 DFS Tutor – Guided Practice</title>
+<link rel="stylesheet" href="css/practice.css">
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="brand">COS212 DFS TUTOR</div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="learn.html">Learn</a>
+      <a href="explorer.html">Explorer</a>
+      <a href="practice.html" class="active" aria-current="page">Practice</a>
+      <a href="quiz.html">Quiz</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="crumb" id="crumb">Guided practice / Search for 55</div>
+    <h1>Your turn: predict the next node</h1>
+    <p class="sub">Try a search on your own. The tutor will provide hints whenever you need them.</p>
+
+    <p class="notice" id="notice" role="status" hidden></p>
+
+    <section class="question" aria-live="polite">
+      <h2 id="question-title">DFS just visited 45. Which node will it visit next?</h2>
+      <p>Think about the stack before choosing your answer.</p>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <h3>Example practice tree (new values)</h3>
+        <svg id="tree" viewBox="0 0 520 320" role="img" aria-label="Binary tree used for DFS practice"></svg>
+        <div class="legend">Dark = just visited · Grey = already visited · Dashed outline = node we are searching for</div>
+      </section>
+
+      <section class="card answers">
+        <h3>Choose the next node</h3>
+        <div id="options"></div>
+        <button class="btn-hint" id="hintBtn">Get a hint</button>
+        <div id="feedback" aria-live="polite"></div>
+      </section>
+    </div>
+
+    <div class="hint-ladder" id="ladder">Hint ladder: <span>nudge</span> → <span>rule</span> → <span>worked answer</span></div>
+
+    <footer>
+      <a class="btn-outline" href="explorer.html">← Visualizer</a>
+      <div class="meta"><span>Self-paced learning</span><span>•</span><span>Your answers are not graded</span></div>
+      <a class="btn-primary" href="quiz.html">Readiness quiz →</a>
+    </footer>
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/practice.js"></script>
+</body>
+</html>
