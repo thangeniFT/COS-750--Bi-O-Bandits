@@ -26,7 +26,7 @@ import { renderHeader } from './common.js';
 import { placeholder } from '../util.js';
 
 /** @type {Record<string, (screen: any, container: HTMLElement, ctx: any) => (void|(() => void))>} */
-const RENDERERS = { welcome,bst, dfs, choice, explorer, warmup, practice, quiz };
+const RENDERERS = { welcome,bst, dfs, choice, explorer, warmup, practice, quiz,text };
 
 /** The screen types lesson.json may use. A test checks lesson.json against this list. */
 export const SCREEN_TYPES = Object.freeze(Object.keys(RENDERERS));
