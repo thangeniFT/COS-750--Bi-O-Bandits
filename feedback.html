@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback · COS212 DFS Tutor</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a class="brand" href="index.html">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="5" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M10.6 7.2 7.4 15.8M13.4 7.2l3.2 8.6"/></svg>
+        </span>
+        COS212 DFS TUTOR
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="learn.html">Learn</a>
+        <a href="explorer.html">Explorer</a>
+        <a href="practice.html">Practice</a>
+        <a href="quiz.html" aria-current="page">Quiz</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <p class="eyebrow" id="eyebrow">Feedback / Guided review</p>
+    <h1 class="page-title" id="fb-title">Not quite — let's work through it</h1>
+    <p class="lead">Feedback explains the misconception and provides support without penalising you.</p>
+
+    <section class="card" aria-labelledby="fb-title">
+      <p class="tag" id="q-tag"></p>
+      <h2 class="q-prompt" id="q-prompt"></h2>
+
+      <div class="result" id="result" role="status"></div>
+      <p class="explain" id="explain"></p>
+      <p class="explain-extra" id="explain-extra"></p>
+      <p class="confidence-note" id="confidence-note"></p>
+
+      <div class="fb-grid">
+        <div>
+          <h3 class="section-title" id="hints-title">Need a little more support?</h3>
+          <div class="hints" id="hints"></div>
+        </div>
+        <div class="review">
+          <h3 class="section-title">Recommended review</h3>
+          <div class="tree-wrap" id="tree"></div>
+          <p id="review-text"></p>
+          <div>
+            <button class="btn btn--soft" id="replay-btn" type="button" aria-expanded="false" aria-controls="worked">
+              ▶ Replay worked example
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Worked example: step-through stack animation -->
+    <section class="card worked" id="worked" hidden aria-labelledby="worked-title">
+      <h2 class="section-title" id="worked-title">Worked example: iterative DFS with a stack</h2>
+      <div class="worked__grid">
+        <div>
+          <div class="tree-wrap" id="worked-tree"></div>
+          <div class="step-note" id="step-note" aria-live="polite"></div>
+          <div class="step-controls">
+            <button class="btn btn--ghost btn--sm" id="step-prev" type="button">← Back</button>
+            <button class="btn btn--primary btn--sm" id="step-next" type="button">Next step →</button>
+            <button class="btn btn--ghost btn--sm" id="step-play" type="button">Auto-play</button>
+            <span class="step-count" id="step-count"></span>
+          </div>
+        </div>
+        <div>
+          <div class="visit-col">
+            <h3>Visit order</h3>
+            <p class="visit-order" id="visit-order"></p>
+          </div>
+          <div class="stack-col">
+            <h3>Stack (top ↑)</h3>
+            <div class="stack" id="stack"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="pager">
+      <a class="btn btn--ghost" href="quiz.html" id="back-btn">← Quiz</a>
+      <p class="pager__note">Self-paced learning • Your answers are not graded</p>
+      <a class="btn btn--primary" href="#" id="next-btn">Try again →</a>
+    </div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/feedback.js"></script>
+</body>
+</html>

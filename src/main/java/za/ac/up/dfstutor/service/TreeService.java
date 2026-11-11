@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.SessionScope;
 
 import za.ac.up.dfstutor.config.TutorProperties;
 import za.ac.up.dfstutor.dto.ErrorCode;
@@ -29,10 +30,10 @@ import za.ac.up.dfstutor.model.TraversalOrder;
  *   <li>Delegates the algorithm to {@link DepthFirstSearch}.</li>
  * </ul>
  *
- * <p><b>Note on sharing:</b> there are no user accounts (by design), so there is exactly one sandbox
- * tree per running server. That is fine when each student runs the app on their own laptop, which
- * is the prototype's deployment model. If the app is ever hosted for a whole class, students would
- * see each other's inserts; backlog ticket B-04 (a tree per browser session) addresses that.
+ * <p><b>Session isolation:</b> each HTTP session receives its own service instance and sandbox
+ * tree. Changes made in one browser session are therefore not visible in another session.
+ * Temporary lesson trees remain stateless because they are built from the values supplied with
+ * each request and are never stored in the sandbox.
  *
  * <p>Methods that touch the sandbox are {@code synchronized} because Spring may handle two
  * requests at the same time and {@link BinarySearchTree} is not thread-safe.
@@ -40,6 +41,7 @@ import za.ac.up.dfstutor.model.TraversalOrder;
  * <p><b>Status:</b> implemented. DFS calls will throw until tickets B-01 and B-02 are done.
  */
 @Service
+@SessionScope
 public class TreeService {
 
     private final TutorProperties properties;

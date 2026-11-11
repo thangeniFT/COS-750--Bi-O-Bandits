@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning Summary · COS212 DFS Tutor</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a class="brand" href="index.html">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="5" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M10.6 7.2 7.4 15.8M13.4 7.2l3.2 8.6"/></svg>
+        </span>
+        COS212 DFS TUTOR
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="learn.html">Learn</a>
+        <a href="explorer.html">Explorer</a>
+        <a href="practice.html">Practice</a>
+        <a href="quiz.html" aria-current="page">Quiz</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <p class="eyebrow">Learning summary / End of session</p>
+    <h1 class="page-title">You're ready to keep exploring</h1>
+    <p class="lead">Review what you've learned, revisit any tricky topics, or practise with your own tree.</p>
+
+    <div class="sum-grid">
+      <section class="card" aria-labelledby="can-do-title">
+        <h2 class="section-title" id="can-do-title">What you can now do</h2>
+        <ul class="can-do">
+          <li><span class="check" aria-hidden="true">✓</span>Explain how DFS explores a tree</li>
+          <li><span class="check" aria-hidden="true">✓</span>Follow a search using an explicit stack</li>
+          <li><span class="check" aria-hidden="true">✓</span>Identify pre-, in- and post-order traversals</li>
+        </ul>
+      </section>
+
+      <section class="card readiness" aria-labelledby="ready-title">
+        <p class="tag" id="ready-title">READINESS CHECK</p>
+        <div class="ring">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="ring__track" cx="60" cy="60" r="52"/>
+            <circle class="ring__fill" id="ring-fill" cx="60" cy="60" r="52"/>
+          </svg>
+          <div class="ring__label">
+            <span class="ring__score" id="score">0 / 6</span>
+            <span class="ring__sub">CORRECT</span>
+          </div>
+        </div>
+        <p class="readiness__msg" id="ready-msg"></p>
+        <ul class="review-list" id="review-list"></ul>
+      </section>
+    </div>
+
+    <h2 class="next-title">Choose what to do next</h2>
+    <div class="next-grid">
+      <a class="card next-card" href="learn.html#worked-example">
+        <span class="next-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="m10 9 5 3-5 3z"/></svg>
+        </span>
+        <h3>Replay DFS</h3>
+        <p>Review the worked example and watch each stack change.</p>
+        <span class="next-card__go">Open worked example →</span>
+      </a>
+      <a class="card next-card" href="explorer.html">
+        <span class="next-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M10.6 7.2 7.4 15.8M13.4 7.2l3.2 8.6"/></svg>
+        </span>
+        <h3>Try another tree</h3>
+        <p>Insert your own values and observe the visit order.</p>
+        <span class="next-card__go">Open explorer →</span>
+      </a>
+      <a class="card next-card" href="learn.html#bst-ordering">
+        <span class="next-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2"/><path d="M8 7h7M8 11h5"/></svg>
+        </span>
+        <h3>Prepare for lecture</h3>
+        <p>Reflect on DFS and the BST ordering rule.</p>
+        <span class="next-card__go">Start reflecting →</span>
+      </a>
+    </div>
+
+    <div class="pager">
+      <a class="btn btn--ghost" href="quiz.html?q=6">← Back to quiz</a>
+      <button class="btn btn--ghost" id="restart-btn" type="button">Retake quiz</button>
+      <a class="btn btn--primary" href="index.html">Return home →</a>
+    </div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/summary.js"></script>
+</body>
+</html>
