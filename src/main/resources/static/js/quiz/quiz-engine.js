@@ -1,14 +1,4 @@
 /**
- * Rule-based quiz logic: which questions to ask, how to grade an answer, the score, and what to
- * review afterwards. No DOM and no server calls; the quiz screen (js/screens/quiz-screen.js) uses
- * these functions and draws the results.
- *
- * "Rule-based feedback" means every message comes from data/quiz-bank.json: each wrong option, or
- * each known wrong ordering, carries its own feedback and the misconception (M1-M5) it reveals.
- * Nothing is generated at run time.
- *
- * Status: SKELETON. Backlog ticket F-06. The tests that define the behaviour are in
- * src/test/js/quiz-engine.test.js and are skipped until the ticket is picked up.
  * @module quiz/quiz-engine
  */
 
@@ -79,8 +69,21 @@ export const CONFIDENCE = Object.freeze(['guessing', 'fairly-sure', 'certain']);
  * @returns {QuizItem[]}
  */
 export function selectItems(bank, seenIds = []) {
-  // TODO(F-06)
-  throw new Error('selectItems is not implemented yet (backlog ticket F-06).');
+  const seen = new Set(seenIds);
+
+  const bySlot = new Map();
+  for (const item of bank.items) {
+    if (!bySlot.has(item.slot)) bySlot.set(item.slot, []);
+    bySlot.get(item.slot).push(item);
+  }
+
+  return [...bySlot.keys()]
+    .sort((a, b) => a - b)
+    .map((slot) => {
+      // Copy before sorting so the bank itself is not reordered.
+      const variants = [...bySlot.get(slot)].sort((a, b) => a.variant.localeCompare(b.variant));
+      return variants.find((item) => !seen.has(item.id)) ?? variants[0];
+    });
 }
 
 /**
@@ -105,10 +108,55 @@ export function selectItems(bank, seenIds = []) {
  * @returns {GradeResult}
  */
 export function gradeAnswer(item, answer) {
-  // TODO(F-06)
-  throw new Error('gradeAnswer is not implemented yet (backlog ticket F-06).');
+  if (item.type === 'choice') {
+    const option = item.options.find((o) => o.id === answer);
+    if (!option) {
+      throw new Error(`Item ${item.id} has no option "${answer}".`);
+    }
+    return {
+      correct: option.correct === true,
+      feedback: option.feedback,
+      misconception: option.misconception ?? null,
+    };
+  }
+  if (sameOrder(answer, item.answer)) {
+    return { correct: true, feedback: item.correctFeedback, misconception: null };
+  }
+
+  // A known wrong order, such as in-order instead of pre-order, has its own targeted feedback.
+  const rule = (item.rules ?? []).find((r) => sameOrder(answer, r.match));
+  if (rule) {
+    return { correct: false, feedback: rule.feedback, misconception: rule.misconception ?? null };
+  }
+
+  // Anything else: point at the first place the answer goes wrong.
+  const index = firstDifference(answer, item.answer);
+  const feedback = item.fallbackFeedback
+    .replaceAll('{position}', String(index + 1))
+    .replaceAll('{expected}', index < item.answer.length ? String(item.answer[index]) : 'nothing');
+  return { correct: false, feedback, misconception: null };
 }
 
+function sameOrder(a, b) {
+  return a.length === b.length && a.every((value, i) => value === b[i]);
+}
+
+/**
+ * Finds the 0-based index of the first position where `answer` differs from `expected`.
+ * A missing value (answer too short) or an extra value (answer too long) counts as a difference.
+ * Only called when the two are known to differ.
+ *
+ * @param {number[]} answer
+ * @param {number[]} expected
+ * @returns {number}
+ */
+function firstDifference(answer, expected) {
+  const longest = Math.max(answer.length, expected.length);
+  for (let i = 0; i < longest; i++) {
+    if (answer[i] !== expected[i]) return i;
+  }
+  return longest;
+}
 /**
  * Totals a finished attempt.
  *
@@ -117,8 +165,8 @@ export function gradeAnswer(item, answer) {
  * @returns {{correct: number, total: number, passed: boolean}} passed is correct >= passMark
  */
 export function scoreQuiz(responses, passMark = PASS_MARK) {
-  // TODO(F-06)
-  throw new Error('scoreQuiz is not implemented yet (backlog ticket F-06).');
+  const correct = responses.filter((r) => r.result.correct).length;
+  return { correct, total: responses.length, passed: correct >= passMark };
 }
 
 /**
@@ -138,6 +186,24 @@ export function scoreQuiz(responses, passMark = PASS_MARK) {
  * }}
  */
 export function planReview(responses) {
-  // TODO(F-06)
-  throw new Error('planReview is not implemented yet (backlog ticket F-06).');
+  // Higher rank = more sure. CONFIDENCE runs from least to most sure
+  const rank = (confidence) => CONFIDENCE.indexOf(confidence);
+
+  const review = responses
+    .filter((r) => !r.result.correct)
+    .sort((a, b) => rank(b.confidence) - rank(a.confidence) || a.item.slot - b.item.slot)
+    .map((r) => ({
+      itemId: r.item.id,
+      slot: r.item.slot,
+      outcome: r.item.outcome,
+      confidence: r.confidence,
+      misconception: r.result.misconception,
+    }));
+
+  const worthALook = responses
+    .filter((r) => r.result.correct && r.confidence === 'guessing')
+    .sort((a, b) => a.item.slot - b.item.slot)
+    .map((r) => ({ itemId: r.item.id, slot: r.item.slot, outcome: r.item.outcome }));
+
+  return { review, worthALook };
 }
