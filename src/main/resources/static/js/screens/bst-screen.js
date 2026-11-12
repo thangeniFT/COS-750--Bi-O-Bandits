@@ -1,33 +1,36 @@
 
 /**
- * BST Introduction — Figma Page 2.
- * Diagnostic warm-up, interactive tree and assessment.
+ * COS212 DFS Tutor — BST Introduction
+ * Figma Page 2
  *
- * The example runs locally in the browser.
- * The backend-powered DFS explorer is separate.
+ * Sections:
+ * 01 Warm-up
+ * 02 Vocabulary
+ * 03 Explore the tree
+ * 04 Knowledge check
+ *
+ * Warm-up questions come from lesson.json.
  */
 
-
-
-const EXAMPLE = [50, 30, 70, 20, 40, 60, 80];
+const INITIAL_VALUES = [50, 30, 70, 20, 40, 60, 80];
 const MAX_NODES = 15;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 function el(tag, className = '', text = '') {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  node.textContent = text;
-  return node;
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  element.textContent = text;
+  return element;
 }
 
 function svgEl(tag, attributes = {}) {
-  const node = document.createElementNS(SVG_NS, tag);
+  const element = document.createElementNS(SVG_NS, tag);
 
-  for (const [key, value] of Object.entries(attributes)) {
-    node.setAttribute(key, String(value));
-  }
+  Object.entries(attributes).forEach(([name, value]) => {
+    element.setAttribute(name, String(value));
+  });
 
-  return node;
+  return element;
 }
 
 function createNode(value, parent = null) {
@@ -39,87 +42,124 @@ function createNode(value, parent = null) {
   };
 }
 
-function buildExample() {
-  const root = createNode(EXAMPLE[0]);
+function insertNode(root, value) {
+  if (!root) return createNode(value);
 
-  for (const value of EXAMPLE.slice(1)) {
-    let current = root;
+  let current = root;
 
-    while (true) {
-      const side = value < current.value ? 'left' : 'right';
+  while (true) {
+    if (value === current.value) return root;
 
-      if (current[side]) {
-        current = current[side];
-      } else {
-        current[side] = createNode(value, current);
-        break;
-      }
+    const side = value < current.value
+      ? 'left'
+      : 'right';
+
+    if (current[side]) {
+      current = current[side];
+    } else {
+      current[side] = createNode(value, current);
+      break;
     }
   }
 
   return root;
 }
 
-function countNodes(node) {
-  return node
-    ? 1 + countNodes(node.left) + countNodes(node.right)
-    : 0;
+function buildExample() {
+  let root = null;
+
+  INITIAL_VALUES.forEach(value => {
+    root = insertNode(root, value);
+  });
+
+  return root;
+}
+
+function findNode(root, value) {
+  let current = root;
+
+  while (current) {
+    if (current.value === value) return current;
+
+    current = value < current.value
+      ? current.left
+      : current.right;
+  }
+
+  return null;
+}
+
+function countNodes(root) {
+  if (!root) return 0;
+
+  return (
+    1 +
+    countNodes(root.left) +
+    countNodes(root.right)
+  );
 }
 
 function describeNode(node) {
+  if (!node) return 'No node selected.';
+
   const facts = [];
 
   if (!node.parent) {
     facts.push(`${node.value} is the root of the tree.`);
   } else {
     const parent = node.parent;
-    const side = parent.left === node ? 'left' : 'right';
+
+    const side = parent.left === node
+      ? 'left'
+      : 'right';
 
     facts.push(
       `${node.value} is the ${side} child of ${parent.value}.`
     );
 
-    facts.push(`${parent.value} is its parent.`);
+    facts.push(`Parent: ${parent.value}.`);
 
     const sibling = side === 'left'
       ? parent.right
       : parent.left;
 
     if (sibling) {
-      facts.push(`${sibling.value} is its sibling.`);
+      facts.push(`Sibling: ${sibling.value}.`);
     }
   }
 
-  if (!node.left && !node.right) {
+  const children = [
+    node.left,
+    node.right
+  ].filter(Boolean);
+
+  if (children.length === 0) {
     facts.push('It is a leaf because it has no children.');
   } else {
-    if (node.left) {
-      facts.push(`${node.left.value} is its left child.`);
-    }
-
-    if (node.right) {
-      facts.push(`${node.right.value} is its right child.`);
-    }
+    facts.push(
+      `Children: ${children.map(child => child.value).join(', ')}.`
+    );
 
     facts.push(
-      'This node and all its descendants form a subtree.'
+      'This node and its descendants form a subtree.'
     );
   }
 
   return facts.join(' ');
 }
 
-/**
- * Draws the tree using an in-order layout.
- * All SVG colours come from styles.css.
- */
-function drawTree(svg, root, selected, active, newValue, onSelect) {
+/* ==========================================
+   INTERACTIVE SVG TREE
+   ========================================== */
+
+function drawTree(svg, root, state, onSelect) {
   svg.replaceChildren();
 
   const entries = [];
 
   function collect(node, depth = 0) {
     if (!node) return;
+
     collect(node.left, depth + 1);
     entries.push({ node, depth });
     collect(node.right, depth + 1);
@@ -127,31 +167,37 @@ function drawTree(svg, root, selected, active, newValue, onSelect) {
 
   collect(root);
 
+  if (!entries.length) return;
+
   const maxDepth = Math.max(
-    0,
-    ...entries.map(item => item.depth)
+    ...entries.map(entry => entry.depth)
   );
 
-  const width = Math.max(760, entries.length * 88);
-  const height = Math.max(320, 125 + maxDepth * 106);
+  const width = Math.max(760, entries.length * 92);
+  const height = Math.max(355, 150 + maxDepth * 110);
 
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-  svg.setAttribute('aria-label', 'Interactive binary search tree');
+  svg.setAttribute('role', 'group');
+  svg.setAttribute(
+    'aria-label',
+    'Interactive Binary Search Tree diagram'
+  );
 
   const positions = new Map();
 
   entries.forEach(({ node, depth }, index) => {
     const x = entries.length === 1
       ? width / 2
-      : 65 + index * (width - 130) / (entries.length - 1);
+      : 65 + index * (width - 130) /
+        (entries.length - 1);
 
     positions.set(node, {
       x,
-      y: 65 + depth * 106
+      y: 65 + depth * 110
     });
   });
 
-  // Draw connections before circles.
+  // Connections are drawn behind the nodes.
   entries.forEach(({ node }) => {
     if (!node.parent) return;
 
@@ -160,8 +206,15 @@ function drawTree(svg, root, selected, active, newValue, onSelect) {
 
     const classes = ['bst-tree-edge'];
 
-    if (node.value === newValue) {
+    if (node.value === state.newValue) {
       classes.push('bst-tree-edge--new');
+    }
+
+    if (
+      state.answerPath.has(node.value) &&
+      state.answerPath.has(node.parent.value)
+    ) {
+      classes.push('is-answer-path');
     }
 
     svg.appendChild(svgEl('line', {
@@ -173,23 +226,40 @@ function drawTree(svg, root, selected, active, newValue, onSelect) {
     }));
   });
 
-  // Draw clickable nodes.
   entries.forEach(({ node }) => {
     const { x, y } = positions.get(node);
 
     const classes = ['bst-tree-node'];
 
-    if (node === selected) classes.push('is-selected');
-    if (node === active) classes.push('is-active');
-    if (node.value === newValue) classes.push('is-new');
+    if (node === state.selected) {
+      classes.push('is-selected');
+    }
 
-  const group = svgEl('g', {
-  class: classes.join(' '),
-  'data-value': node.value,
-  tabindex: 0,
-  role: 'button',
-  'aria-label': `Node ${node.value}. ${describeNode(node)}`
-});
+    if (node === state.active) {
+      classes.push('is-active');
+    }
+
+    if (node === state.highlighted) {
+      classes.push('is-rule-highlight');
+    }
+
+    if (node.value === state.newValue) {
+      classes.push('is-new');
+    }
+
+    if (state.answerPath.has(node.value)) {
+      classes.push('is-answer-path');
+    }
+
+    const group = svgEl('g', {
+      class: classes.join(' '),
+      'data-value': node.value,
+      tabindex: '0',
+      role: 'button',
+      'aria-pressed': String(node === state.selected),
+      'aria-label':
+        `Select node ${node.value}. ${describeNode(node)}`
+    });
 
     const circle = svgEl('circle', {
       cx: x,
@@ -197,43 +267,49 @@ function drawTree(svg, root, selected, active, newValue, onSelect) {
       r: 27
     });
 
-    const value = svgEl('text', {
+    const number = svgEl('text', {
       x,
       y,
       class: 'bst-tree-value'
     });
 
-    value.textContent = String(node.value);
-    group.append(circle, value);
+    number.textContent = String(node.value);
 
-    // Show the structural role beneath or above nodes.
-    let labelText = '';
+    group.append(circle, number);
 
-    if (!node.parent) {
-      labelText = 'ROOT';
-    } else if (!node.left && !node.right) {
-      labelText = 'LEAF';
-    } else {
-      labelText = node.parent.left === node
-        ? 'LEFT CHILD'
-        : 'RIGHT CHILD';
+    // Only ROOT and LEAF labels.
+    // This prevents child labels overlapping branches.
+    if (!node.parent || (!node.left && !node.right)) {
+      const label = svgEl('text', {
+        x,
+        y: node.parent ? y + 45 : y - 41,
+        class: 'bst-tree-role'
+      });
+
+      label.textContent = node.parent ? 'LEAF' : 'ROOT';
+
+      group.appendChild(label);
     }
 
-    const label = svgEl('text', {
-      x,
-      y: node.parent ? y + 45 : y - 39,
-      class: 'bst-tree-role'
+    if (node.value === state.newValue) {
+      const tag = svgEl('text', {
+        x: x + 37,
+        y: y - 28,
+        class: 'bst-tree-new-label'
+      });
+
+      tag.textContent = 'NEW';
+      group.appendChild(tag);
+    }
+
+    group.addEventListener('click', () => {
+      onSelect(node);
     });
-
-    label.textContent = labelText;
-    group.appendChild(label);
-
-    group.addEventListener('click', () => onSelect(node));
 
     group.addEventListener('keydown', event => {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
-        onSelect(node);
+        onSelect(node, true);
       }
     });
 
@@ -241,384 +317,717 @@ function drawTree(svg, root, selected, active, newValue, onSelect) {
   });
 }
 
-function createWarmup(data) {
-  const section = el('section', 'bst-card bst-warmup-card');
+/* ==========================================
+   MAIN SCREEN
+   ========================================== */
 
-  section.append(
-    el('span', 'bst-eyebrow', '01 / BEFORE WE BEGIN'),
+export function render(screen, container) {
+  const page = el('div', 'bst-page');
+
+  let root = buildExample();
+
+  const treeState = {
+    selected: root,
+    active: null,
+    highlighted: null,
+    newValue: null,
+    answerPath: new Set()
+  };
+
+  let pendingInsertion = null;
+  let playbackTimer = null;
+  let playing = false;
+  let destroyed = false;
+
+  const timeoutTasks = new Set();
+  const completedSections = new Set();
+
+  // ------------------------------------------
+  // ANIMATION HELPERS
+  // ------------------------------------------
+
+  function wait(ms) {
+    return new Promise(resolve => {
+      const task = {
+        id: null,
+        resolve
+      };
+
+      task.id = setTimeout(() => {
+        timeoutTasks.delete(task);
+        resolve();
+      }, ms);
+
+      timeoutTasks.add(task);
+    });
+  }
+
+  function stopPlayback() {
+    if (playbackTimer !== null) {
+      clearInterval(playbackTimer);
+      playbackTimer = null;
+    }
+
+    playing = false;
+  }
+
+  // ------------------------------------------
+  // STICKY HEADER OFFSET
+  // ------------------------------------------
+
+  const appHeader = document.querySelector('.app-header');
+
+  let headerObserver = null;
+
+  function updateHeaderHeight() {
+    if (!appHeader) return;
+
+    const height = Math.ceil(
+      appHeader.getBoundingClientRect().height
+    );
+
+    document.documentElement.style.setProperty(
+      '--app-header-height',
+      `${height}px`
+    );
+  }
+
+  updateHeaderHeight();
+
+  if (appHeader && typeof ResizeObserver !== 'undefined') {
+    headerObserver = new ResizeObserver(updateHeaderHeight);
+    headerObserver.observe(appHeader);
+  }
+
+  // ==========================================
+  // STICKY ACTIVITY PROGRESS
+  // ==========================================
+
+  const progress = el('div', 'lesson-progress');
+
+  const progressHeader = el(
+    'div',
+    'lesson-progress__header'
+  );
+
+  const progressTitle = el(
+    'strong',
+    '',
+    'BINARY SEARCH TREES'
+  );
+
+  const progressLabel = el(
+    'span',
+    '',
+    'Step 0 of 4'
+  );
+
+  progressHeader.append(progressTitle, progressLabel);
+
+  const progressTrack = el(
+    'div',
+    'lesson-progress__track'
+  );
+
+  progressTrack.setAttribute('role', 'progressbar');
+  progressTrack.setAttribute(
+    'aria-label',
+    'BST activity progress'
+  );
+  progressTrack.setAttribute('aria-valuemin', '0');
+  progressTrack.setAttribute('aria-valuemax', '4');
+  progressTrack.setAttribute('aria-valuenow', '0');
+
+  const progressFill = el(
+    'div',
+    'lesson-progress__fill'
+  );
+
+  progressFill.style.width = '0%';
+
+  progressTrack.appendChild(progressFill);
+
+  progress.append(
+    progressHeader,
+    progressTrack
+  );
+
+  function markComplete(section) {
+    if (completedSections.has(section)) return;
+
+    completedSections.add(section);
+
+    const count = completedSections.size;
+
+    progressLabel.textContent = `Step ${count} of 4`;
+
+    progressFill.style.width = `${count * 25}%`;
+
+    progressTrack.setAttribute(
+      'aria-valuenow',
+      String(count)
+    );
+  }
+
+  // ==========================================
+  // 01 — WARM-UP
+  // ==========================================
+
+  const warmup = el(
+    'section',
+    'bst-card bst-warmup-card'
+  );
+
+  warmup.id = 'bst-warmup';
+
+  warmup.append(
+    el('span', 'bst-eyebrow', '01 / WARM-UP'),
     el('h2', '', 'Quick warm-up'),
     el(
       'p',
       'bst-muted',
-      'Check your knowledge of trees and stacks. ' +
-      'If something is new, we will explain it.'
+      'Check what you already know about trees ' +
+      'and stacks. You can ask for help and try again.'
     )
   );
 
-  if (!data?.questions) return section;
+  const warmupGrid = el('div', 'bst-warmup-grid');
 
-  const questions = el('div', 'bst-warmup-grid');
+  const warmupResult = el(
+    'div',
+    'bst-warmup-result'
+  );
 
-  data.questions.forEach((question, index) => {
-    const card = el('article', 'bst-warmup-question');
+  warmupResult.hidden = true;
+  warmupResult.setAttribute('aria-live', 'polite');
 
-    card.appendChild(
-      el('h3', '', `${index + 1}. ${question.prompt}`)
+  const questions = screen.warmup?.questions || [];
+  const refreshers = screen.warmup?.refreshers || {};
+
+  const warmupCorrect = new Set();
+  const warmupAttempted = new Set();
+  const warmupNeedsReview = new Set();
+
+  function updateWarmupResult() {
+    if (warmupAttempted.size !== questions.length) return;
+    if (questions.length === 0) return;
+
+    warmupResult.hidden = false;
+
+    if (warmupCorrect.size === questions.length) {
+      warmupResult.className =
+        'bst-warmup-result is-ready';
+
+      warmupResult.textContent =
+        "You're ready! You've recalled the basics " +
+        'of trees and stacks. Continue to vocabulary.';
+
+      markComplete('warmup');
+      return;
+    }
+
+    warmupResult.className =
+      'bst-warmup-result is-review';
+
+    if (warmupNeedsReview.has('stacks')) {
+      warmupResult.textContent =
+        'Review stacks first. Watch the short ' +
+        'animation and retry the question.';
+    } else {
+      warmupResult.textContent =
+        'Review the tree explanation and try again. ' +
+        'This activity is not graded.';
+    }
+  }
+
+  questions.forEach((question, questionIndex) => {
+    const questionCard = el(
+      'article',
+      'bst-warmup-question'
     );
 
-    const choices = el('div', 'bst-answer-options');
-    const feedback = el('p', 'bst-answer-feedback');
+    const heading = el(
+      'h3',
+      '',
+      `${questionIndex + 1}. ${question.prompt}`
+    );
 
-    feedback.setAttribute('role', 'status');
+    const answers = el('div', 'bst-answer-options');
 
-    question.options.forEach(option => {
-      const button = el('button', 'btn bst-answer', option.text);
+    const feedback = el(
+      'div',
+      'bst-answer-feedback'
+    );
+
+    feedback.setAttribute('aria-live', 'polite');
+
+    // Extra explanation with a mini visual.
+    const help = el('div', 'bst-warmup-help');
+    help.hidden = true;
+
+    if (question.refresher === 'trees') {
+      const diagram = el('div', 'bst-mini-diagram');
+
+      diagram.innerHTML = `
+        <svg viewBox="0 0 180 110"
+             role="img"
+             aria-label="A root node 50 connected to children 30 and 70">
+          <line x1="90" y1="25" x2="40" y2="85"/>
+          <line x1="90" y1="25" x2="140" y2="85"/>
+          <circle cx="90" cy="25" r="18"/>
+          <circle cx="40" cy="85" r="18"/>
+          <circle cx="140" cy="85" r="18"/>
+          <text x="90" y="30">50</text>
+          <text x="40" y="90">30</text>
+          <text x="140" y="90">70</text>
+        </svg>
+      `;
+
+      help.append(
+        diagram,
+        el(
+          'p',
+          '',
+          refreshers.trees ||
+          'A tree has a root, connected child nodes and no cycles.'
+        )
+      );
+    }
+
+    if (question.refresher === 'stacks') {
+      const demo = el('div', 'bst-stack-demo');
+
+      const stackTitle = el(
+        'strong',
+        '',
+        'Watch how a stack works'
+      );
+
+      const stackVisual = el(
+        'div',
+        'bst-stack-demo__items'
+      );
+
+      const stackMessage = el(
+        'p',
+        'bst-stack-demo__message',
+        'Push 1, then 2, then 3.'
+      );
+
+      stackMessage.setAttribute('aria-live', 'polite');
+
+      const watchButton = el(
+        'button',
+        'bst-demo-button',
+        'Watch stack animation'
+      );
+
+      watchButton.type = 'button';
+
+      let demoRunning = false;
+
+      watchButton.addEventListener('click', async () => {
+        if (demoRunning || destroyed) return;
+
+        demoRunning = true;
+        watchButton.disabled = true;
+
+        let stack = [];
+
+        function renderStack() {
+          stackVisual.replaceChildren();
+
+          [...stack].reverse().forEach((value, index) => {
+            const item = el(
+              'div',
+              'bst-stack-demo__item',
+              String(value)
+            );
+
+            if (index === 0) {
+              item.classList.add('is-top');
+            }
+
+            stackVisual.appendChild(item);
+          });
+        }
+
+        for (const value of [1, 2, 3]) {
+          if (destroyed) return;
+
+          stack.push(value);
+          stackMessage.textContent = `Push ${value}.`;
+          renderStack();
+
+          await wait(700);
+        }
+
+        if (destroyed) return;
+
+        stackMessage.textContent =
+          'The last value pushed is 3, ' +
+          'so 3 is popped first.';
+
+        await wait(950);
+
+        if (destroyed) return;
+
+        stack.pop();
+        renderStack();
+
+        stackMessage.textContent =
+          '3 came off first. This is Last In, First Out (LIFO).';
+
+        demoRunning = false;
+        watchButton.disabled = false;
+      });
+
+      demo.append(
+        stackTitle,
+        stackVisual,
+        stackMessage,
+        watchButton
+      );
+
+      help.append(
+        demo,
+        el(
+          'p',
+          '',
+          refreshers.stacks ||
+          'A stack follows Last In, First Out.'
+        )
+      );
+    }
+
+    // Real questions are loaded from lesson.json.
+    const questionOptions = [
+      ...question.options,
+      {
+        id: 'unsure',
+        text: 'Not sure',
+        unsure: true
+      }
+    ];
+
+    questionOptions.forEach(option => {
+      const button = el(
+        'button',
+        'bst-answer',
+        option.text
+      );
+
       button.type = 'button';
       button.setAttribute('aria-pressed', 'false');
 
       button.addEventListener('click', () => {
-        choices.querySelectorAll('button').forEach(other => {
+        warmupAttempted.add(question.id);
+
+        answers.querySelectorAll('button').forEach(other => {
           other.setAttribute(
             'aria-pressed',
             String(other === button)
           );
         });
 
-        feedback.className = option.correct
-          ? 'bst-answer-feedback is-correct'
-          : 'bst-answer-feedback is-review';
+        const correct = option.correct === true;
 
-        feedback.textContent = option.correct
-          ? 'Correct! Good work.'
-          : data.refreshers[question.refresher] ||
-            'Review this concept before continuing.';
+        if (correct) {
+          warmupCorrect.add(question.id);
+          warmupNeedsReview.delete(question.refresher);
+
+          feedback.className =
+            'bst-answer-feedback is-correct';
+
+          feedback.textContent =
+            question.refresher === 'stacks'
+              ? 'Correct! The last item pushed comes off first.'
+              : 'Correct! A tree has connected nodes and no cycles.';
+
+          help.hidden = true;
+        } else {
+          warmupCorrect.delete(question.id);
+          warmupNeedsReview.add(question.refresher);
+
+          feedback.className =
+            'bst-answer-feedback is-review';
+
+          feedback.textContent = option.unsure
+            ? "That's okay. Read the explanation below, " +
+              'then try again.'
+            : 'Not quite. Use the explanation below ' +
+              'to work through the answer.';
+
+          help.hidden = false;
+        }
+
+        updateWarmupResult();
       });
 
-      choices.appendChild(button);
+      answers.appendChild(button);
     });
 
-    card.append(choices, feedback);
-    questions.appendChild(card);
+    questionCard.append(
+      heading,
+      answers,
+      feedback,
+      help
+    );
+
+    warmupGrid.appendChild(questionCard);
   });
 
-  section.appendChild(questions);
-  return section;
-}
+  if (questions.length === 0) {
+    warmupResult.hidden = false;
+    warmupResult.textContent =
+      'Warm-up questions are unavailable. ' +
+      'Check the warmup section in lesson.json.';
+  }
 
-function createRules() {
-  const card = el('aside', 'bst-card bst-rules-card');
+  warmup.append(
+    warmupGrid,
+    warmupResult
+  );
 
-  card.append(
-    el('span', 'bst-eyebrow', 'THE MAIN IDEA'),
-    el('h2', '', 'BST ordering rule'),
+  // ==========================================
+  // INTRODUCTION
+  // ==========================================
+
+  const intro = el(
+    'section',
+    'bst-card bst-intro-card'
+  );
+
+  intro.append(
+    el('h2', '', 'Binary Search Trees'),
     el(
       'p',
-      'bst-muted',
-      'Every node follows these rules, not just the root.'
+      '',
+      'A Binary Search Tree (BST) stores values ' +
+      'in connected nodes. Each node has at most ' +
+      'two children. Smaller values belong to the ' +
+      'left subtree and larger values to the right.'
     )
   );
 
-  const rules = [
+  // ==========================================
+  // 02 — VOCABULARY
+  // ==========================================
+
+  const vocabulary = el(
+    'section',
+    'bst-card bst-vocabulary'
+  );
+
+  vocabulary.id = 'bst-vocabulary';
+
+  vocabulary.append(
+    el('span', 'bst-eyebrow', '02 / VOCABULARY'),
+    el('h2', '', 'Meet the tree'),
+    el(
+      'p',
+      'bst-muted',
+      'Select each term to learn what it means. ' +
+      'The matching node will be highlighted below.'
+    )
+  );
+
+  const vocabularyChips = el(
+    'div',
+    'bst-vocabulary__chips'
+  );
+
+  const vocabularyFeedback = el(
+    'p',
+    'bst-vocabulary__feedback',
+    'Choose a term to begin.'
+  );
+
+  vocabularyFeedback.setAttribute('aria-live', 'polite');
+
+  const vocabularySeen = new Set();
+
+  const vocabularyTerms = [
     {
-      sign: '←',
-      title: 'Smaller goes left',
-      detail: '30 is smaller than 50, so 30 goes left.'
+      term: 'Root',
+      node: 50,
+      explanation:
+        'The root is the top node where the tree starts. ' +
+        'In this example, it is 50.'
     },
     {
-      sign: '→',
-      title: 'Larger goes right',
-      detail: '70 is larger than 50, so 70 goes right.'
+      term: 'Parent',
+      node: 30,
+      explanation:
+        'A parent has at least one child. ' +
+        'Node 30 is the parent of 20 and 40.'
     },
     {
-      sign: '=',
-      title: 'No duplicates',
-      detail: 'This BST stores each value only once.'
+      term: 'Leaf',
+      node: 20,
+      explanation:
+        'A leaf has no children. Node 20 is a leaf.'
+    },
+    {
+      term: 'Subtree',
+      node: 70,
+      explanation:
+        'A subtree is a node and all its descendants. ' +
+        'The subtree rooted at 70 contains 70, 60 and 80.'
     }
   ];
 
-  rules.forEach(rule => {
-    const item = el('div', 'bst-rule-item');
-
-    item.append(
-      el('span', 'bst-rule-icon', rule.sign),
-      el('h3', '', rule.title),
-      el('p', '', rule.detail)
+  vocabularyTerms.forEach(item => {
+    const chip = el(
+      'button',
+      'bst-vocabulary__chip',
+      item.term
     );
 
-    card.appendChild(item);
-  });
+    chip.type = 'button';
+    chip.setAttribute('aria-pressed', 'false');
 
-  return card;
-}
+    chip.addEventListener('click', () => {
+      vocabularySeen.add(item.term);
 
-function createKnowledgeCheck() {
-  const section = el('section', 'bst-card bst-check-card');
+      vocabularyChips.querySelectorAll('button')
+        .forEach(other => {
+          other.setAttribute(
+            'aria-pressed',
+            String(other === chip)
+          );
+        });
 
-  section.append(
-    el('span', 'bst-eyebrow', '04 / CHECK YOUR KNOWLEDGE'),
-    el('h2', '', 'Can you apply the BST rule?'),
-    el(
-      'p',
-      '',
-      'In the original example tree, where would 65 be inserted?'
-    )
-  );
+      vocabularyFeedback.textContent = item.explanation;
 
-  const choices = el('div', 'bst-answer-options');
-  const feedback = el('p', 'bst-answer-feedback');
+      const node = findNode(root, item.node);
 
-  feedback.setAttribute('role', 'status');
+      if (node) {
+        treeState.selected = node;
+        treeState.highlighted = node;
+        refreshTree();
+        updateSelectedPanel();
+      }
 
-  const answers = [
-    ['Left child of 60', false],
-    ['Right child of 60', true],
-    ['Right child of 80', false]
-  ];
-
-  answers.forEach(([label, correct]) => {
-    const button = el('button', 'btn bst-answer', label);
-    button.type = 'button';
-
-    button.addEventListener('click', () => {
-      choices.querySelectorAll('button').forEach(other => {
-        other.setAttribute(
-          'aria-pressed',
-          String(other === button)
-        );
-      });
-
-      feedback.className = correct
-        ? 'bst-answer-feedback is-correct'
-        : 'bst-answer-feedback is-review';
-
-      feedback.textContent = correct
-        ? 'Correct! 65 is greater than 50, smaller than 70, ' +
-          'and greater than 60. It becomes the right child of 60.'
-        : 'Follow the comparisons: 65 > 50, ' +
-          '65 < 70 and 65 > 60. Try again.';
+      if (vocabularySeen.size === vocabularyTerms.length) {
+        markComplete('vocabulary');
+      }
     });
 
-    choices.appendChild(button);
+    vocabularyChips.appendChild(chip);
   });
 
-  section.append(choices, feedback);
-  return section;
-}
-
-export function render(screen, container) {
-
-
-  const page = el('div', 'bst-page');
-
-  let root = buildExample();
-  let selected = root;
-  let active = null;
-  let busy = false;
-  let destroyed = false;
-
-  const timers = new Set();
-
-  // Cancel pending animation work on screen changes.
-  function pause(ms) {
-    return new Promise(resolve => {
-      const task = { id: null, resolve };
-
-      task.id = setTimeout(() => {
-        timers.delete(task);
-        resolve();
-      }, ms);
-
-      timers.add(task);
-    });
-  }
-
-  // Introduction
-  const intro = el('section', 'bst-card bst-intro-card');
-
-  intro.append(
-    el('span', 'bst-eyebrow', 'LEARN / LESSON 1 OF 2'),
-    el('h2', '', 'Understanding Binary Search Trees'),
-    el(
-      'p',
-      '',
-      'A Binary Search Tree (BST) is a binary tree. ' +
-      'Each node stores a value and has at most two children.'
-    ),
-    el(
-      'p',
-      'bst-muted',
-      'The top node is the root. A parent is connected ' +
-      'to its children. A leaf has no children. ' +
-      'A subtree is a node together with all its descendants.'
-    )
+  vocabulary.append(
+    vocabularyChips,
+    vocabularyFeedback
   );
 
-  const title = el('div', 'bst-section-title');
+  // ==========================================
+  // 03 — EXPLORE
+  // ==========================================
 
-  title.append(
-    el('span', 'bst-eyebrow', '02 / EXPLORE'),
+  const exploreHeading = el(
+    'div',
+    'bst-section-title'
+  );
+
+  exploreHeading.append(
+    el('span', 'bst-eyebrow', '03 / EXPLORE'),
     el('h2', '', 'Explore the tree'),
     el(
       'p',
       'bst-muted',
-      'Select a node to discover its relationships, ' +
-      'or insert a value to see how a BST grows.'
+      'Select a node to learn about its relationships, ' +
+      'or insert a value to see how the tree grows.'
     )
   );
 
-  // Interactive tree card
-  const treeCard = el('section', 'bst-card bst-tree-card');
+  const treeCard = el(
+    'section',
+    'bst-card bst-tree-card'
+  );
 
+  const treeHeading = el(
+    'div',
+    'bst-tree-heading'
+  );
 
-const treeHeading = el('div', 'bst-tree-heading');
-const treeHeadingText = el('div', 'bst-tree-heading__text');
-const nodeCount = el('span', 'bst-node-count');
+  const treeHeadingText = el(
+    'div',
+    'bst-tree-heading__text'
+  );
 
-treeHeadingText.append(
-  el('span', 'bst-eyebrow', 'GET TO KNOW THE TREE'),
-  el('h3', '', 'Understanding the Tree Structure'),
-  el(
-    'p',
-    'bst-tree-description',
-    'A Binary Search Tree starts at the root. ' +
-    'Each node can have a left child and a right child. ' +
-    'Nodes without children are called leaves. ' +
-    'Select any node below to discover its relationships.'
-  )
-);
+  const nodeCount = el('span', 'bst-node-count');
 
-treeHeading.append(treeHeadingText, nodeCount);
+  treeHeadingText.append(
+    el('h3', '', 'Interactive tree'),
+    el(
+      'p',
+      'bst-tree-description',
+      'Click a node to inspect its parent, children and siblings.'
+    )
+  );
 
+  treeHeading.append(treeHeadingText, nodeCount);
+
+  const treeViewport = el(
+    'div',
+    'bst-tree-viewport'
+  );
 
   const svg = svgEl('svg', {
     class: 'bst-lesson-svg'
   });
 
- 
-const treeViewport = el('div', 'bst-tree-viewport');
-treeViewport.appendChild(svg);
+  treeViewport.appendChild(svg);
 
-// Popup shown when a student clicks a tree node.
-const nodePopup = el('div', 'bst-node-popup');
-nodePopup.hidden = true;
-nodePopup.setAttribute('role', 'dialog');
-nodePopup.setAttribute('aria-label', 'Node explanation');
-
-const popupHeader = el('div', 'bst-node-popup__header');
-const popupTitle = el('strong', 'bst-node-popup__title');
-const popupClose = el('button', 'bst-node-popup__close', '×');
-
-popupClose.type = 'button';
-popupClose.setAttribute('aria-label', 'Close node explanation');
-
-const popupBody = el('p', 'bst-node-popup__body');
-
-popupHeader.append(popupTitle, popupClose);
-nodePopup.append(popupHeader, popupBody);
-treeViewport.appendChild(nodePopup);
-
-popupClose.addEventListener('click', () => {
-  nodePopup.hidden = true;
-});
-
-
-  
-const treeNote = el('div', 'bst-tree-note');
-
-treeNote.append(
-  el('h4', '', 'How to read this tree'),
-  el(
-    'p',
-    '',
-    'The tree begins at 50, which is the root. ' +
-    'Values smaller than 50 belong in its left subtree, ' +
-    'while larger values belong in its right subtree. ' +
-    'For example, 30 is the left child of 50, ' +
-    'and 70 is the right child.'
-  ),
-  el(
-    'p',
-    '',
-    'Follow the branches to see how nodes are connected. ' +
-    'Click a node to identify its parent, children, ' +
-    'siblings, and whether it is a leaf.'
-  )
-);
-
-
-  // Legend
-  const legend = el('div', 'bst-tree-legend');
-
-  [
-    ['Normal', 'normal'],
-    ['Comparing', 'comparing'],
-    ['Selected', 'selected'],
-    ['New', 'new']
-  ].forEach(([label, type]) => {
-    const item = el('span', 'bst-legend-item');
-
-    item.append(
-      el('i', `bst-legend-dot bst-legend-dot--${type}`),
-      document.createTextNode(label)
-    );
-
-    legend.appendChild(item);
-  });
-
-const explanation = el(
-  'p',
-  'bst-insertion-explanation',
-  'Enter any whole number from 0 to 99 to see how ' +
-  'the tree compares values and finds the correct position.'
-);
-
-  explanation.setAttribute('role', 'status');
-
-  const details = el('div', 'bst-node-details');
-  details.setAttribute('role', 'status');
-
-  // Insertion controls
-  const form = el('form', 'bst-insert-form');
-
-  const label = el('label', '', 'Insert a value');
-  const input = document.createElement('input');
-
-  input.id = 'bst-insert-value';
-  input.type = 'number';
-  input.min = '0';
-  input.max = '99';
-  input.step = '1';
-input.value = '';
-input.placeholder = 'e.g. 65';
-  label.htmlFor = input.id;
-
-  const insertButton = el(
-    'button',
-    'btn btn--primary',
-    'Insert '
+  // Selected-node panel
+  const selectedPanel = el(
+    'section',
+    'bst-selected-panel'
   );
-  insertButton.type = 'submit';
 
-  const resetButton = el('button', 'btn', 'Reset tree');
-  resetButton.type = 'button';
+  const selectedPanelTitle = el(
+    'h4',
+    '',
+    'Selected node'
+  );
 
-  form.append(label, input, insertButton, resetButton);
+  const selectedDetails = el(
+    'p',
+    'bst-selected-panel__details'
+  );
 
- treeCard.append(
-  treeHeading,
-  treeViewport,
+  selectedDetails.setAttribute(
+    'aria-live',
+    'polite'
+  );
 
-  treeNote,
-  legend,
-  explanation,
-  form,
- 
-);
+  selectedPanel.append(
+    selectedPanelTitle,
+    selectedDetails
+  );
 
-  const layout = el('div', 'bst-content-grid');
-  layout.append(treeCard, createRules());
+  function updateSelectedPanel() {
+    selectedDetails.textContent =
+      describeNode(treeState.selected);
+  }
 
-  function refresh(newValue = null) {
+  function selectNode(node, restoreFocus = false) {
+    treeState.selected = node;
+    treeState.highlighted = null;
+
+    refreshTree();
+    updateSelectedPanel();
+
+    if (restoreFocus) {
+      svg.querySelector(
+        `[data-value="${node.value}"]`
+      )?.focus();
+    }
+  }
+
+  function refreshTree() {
     if (destroyed) return;
 
     nodeCount.textContent = `${countNodes(root)} nodes`;
@@ -626,180 +1035,658 @@ input.placeholder = 'e.g. 65';
     drawTree(
       svg,
       root,
-      selected,
-      active,
-      newValue,
+      treeState,
       selectNode
     );
   }
 
-  
-function showNodePopup(node) {
-  popupTitle.textContent = `Node ${node.value}`;
-  popupBody.textContent = describeNode(node);
-
-  nodePopup.hidden = false;
-
-  // Find the SVG node associated with this value.
-  const groups = svg.querySelectorAll('.bst-tree-node');
-
-  const selectedGroup = [...groups].find(group =>
-    group.getAttribute('data-value') === String(node.value)
+  // Legend
+  const legend = el(
+    'div',
+    'bst-tree-legend'
   );
 
-  if (!selectedGroup) return;
+  const legendItems = [
+    ['○', 'Normal', 'normal'],
+    ['◌', 'Comparing', 'comparing'],
+    ['●', 'Selected', 'selected'],
+    ['+', 'New', 'new']
+  ];
 
-  const viewportRect = treeViewport.getBoundingClientRect();
-  const nodeRect = selectedGroup.getBoundingClientRect();
+  legendItems.forEach(([symbol, label, type]) => {
+    const item = el('span', 'bst-legend-item');
 
-  // Position the popup in viewport-local coordinates.
-  const x = nodeRect.left - viewportRect.left +
-    treeViewport.scrollLeft +
-    nodeRect.width / 2;
+    item.append(
+      el(
+        'span',
+        `bst-legend-symbol bst-legend-symbol--${type}`,
+        symbol
+      ),
+      document.createTextNode(label)
+    );
 
-  const y = nodeRect.bottom - viewportRect.top + 12;
+    legend.appendChild(item);
+  });
 
-  nodePopup.style.left = `${x}px`;
-  nodePopup.style.top = `${y}px`;
-}
+  // Short, expandable explanation.
+  const treeNote = el(
+    'details',
+    'bst-tree-note'
+  );
 
-  function selectNode(node) {
-     if (busy) return;
+  treeNote.append(
+    el('summary', '', 'How to read this tree — More'),
+    el(
+      'p',
+      '',
+      'Start at 50. Smaller values go left and ' +
+      'larger values go right. Follow each branch ' +
+      'to see how nodes are connected.'
+    )
+  );
 
-  selected = node;
-  refresh();
-  showNodePopup(node);
-  }
+  // Insertion explanation
+  const explanation = el(
+    'p',
+    'bst-insertion-explanation',
+    'Try inserting 65 into the tree.'
+  );
 
-  function setBusy(value) {
-    busy = value;
+  explanation.setAttribute('aria-live', 'polite');
+  explanation.setAttribute('aria-atomic', 'true');
 
-    input.disabled = value;
-    insertButton.disabled = value;
-    resetButton.disabled = value;
-  }
+  // Insertion form
+  const form = el('form', 'bst-insert-form');
 
-  async function insert(value) {
-    if (busy || destroyed) return;
+  const inputLabel = el(
+    'label',
+    '',
+    'Insert a value (0–99)'
+  );
 
+  const input = el('input');
 
-    nodePopup.hidden = true;
-    if (!Number.isInteger(value) || value < 0 || value > 99) {
-      explanation.textContent =
-        'Please enter a whole number between 0 and 99.';
-      return;
+  input.id = 'bst-insert-value';
+  input.type = 'number';
+  input.min = '0';
+  input.max = '99';
+  input.step = '1';
+  input.placeholder = 'e.g. 65';
+
+  inputLabel.htmlFor = input.id;
+
+  const insertButton = el(
+    'button',
+    'btn btn--primary',
+    'Start insertion'
+  );
+
+  insertButton.type = 'submit';
+
+  const resetButton = el(
+    'button',
+    'btn',
+    'Reset tree'
+  );
+
+  resetButton.type = 'button';
+
+  form.append(
+    inputLabel,
+    input,
+    insertButton,
+    resetButton
+  );
+
+  // ------------------------------------------
+  // INSERTION PLAYER
+  // ------------------------------------------
+
+  const player = el(
+    'div',
+    'bst-insertion-player'
+  );
+
+  const nextButton = el(
+    'button',
+    'btn btn--primary',
+    'Next →'
+  );
+
+  nextButton.type = 'button';
+
+  const playButton = el(
+    'button',
+    'btn',
+    'Play'
+  );
+
+  playButton.type = 'button';
+
+  const speedLabel = el(
+    'label',
+    '',
+    'Speed'
+  );
+
+  const speedSelect = el(
+    'select',
+    'bst-speed'
+  );
+
+  const speeds = [
+    ['1500', 'Slow'],
+    ['850', 'Normal'],
+    ['400', 'Fast']
+  ];
+
+  speeds.forEach(([value, text]) => {
+    const option = el('option', '', text);
+
+    option.value = value;
+
+    if (value === '850') {
+      option.selected = true;
     }
 
-    // Check duplicates first.
+    speedSelect.appendChild(option);
+  });
+
+  speedLabel.appendChild(speedSelect);
+
+  player.append(
+    nextButton,
+    playButton,
+    speedLabel
+  );
+
+  function updatePlayer() {
+    const hasPending = pendingInsertion !== null;
+
+    nextButton.disabled = !hasPending || playing;
+    playButton.disabled = !hasPending;
+
+    input.disabled = hasPending;
+    insertButton.disabled = hasPending;
+
+    playButton.textContent = playing ? 'Pause' : 'Play';
+  }
+
+  function getInsertionPath(value) {
+    const path = [];
     let current = root;
 
     while (current) {
-      if (value === current.value) {
-        explanation.textContent =
-          `${value} already exists. Duplicates are not allowed.`;
-        return;
-      }
+      const direction = value < current.value
+        ? 'left'
+        : 'right';
 
-      current = value < current.value
-        ? current.left
-        : current.right;
+      path.push({
+        node: current,
+        direction
+      });
+
+      current = current[direction];
+    }
+
+    return path;
+  }
+
+  function prepareInsertion(value) {
+    stopPlayback();
+
+    if (!Number.isInteger(value) || value < 0 || value > 99) {
+      explanation.textContent =
+        'Please enter a whole number between 0 and 99.';
+      return false;
+    }
+
+    if (findNode(root, value)) {
+      explanation.textContent =
+        `${value} already exists in the tree. ` +
+        'Try another number.';
+      return false;
     }
 
     if (countNodes(root) >= MAX_NODES) {
       explanation.textContent =
-        'The tree already contains 15 nodes. Reset to begin again.';
+        'The tree has reached its practice limit of 15 nodes. ' +
+        'Reset the tree to start again.';
+      return false;
+    }
+
+    treeState.active = null;
+    treeState.newValue = null;
+    treeState.highlighted = null;
+    treeState.answerPath.clear();
+
+    pendingInsertion = {
+      value,
+      path: getInsertionPath(value),
+      index: 0
+    };
+
+    explanation.textContent =
+      `Ready to insert ${value}. ` +
+      'Use Next to compare values one at a time, ' +
+      'or Play to watch automatically.';
+
+    refreshTree();
+    updatePlayer();
+
+    return true;
+  }
+
+  function advanceInsertion() {
+    if (!pendingInsertion) return;
+
+    const { value, path, index } = pendingInsertion;
+    const step = path[index];
+
+    treeState.active = step.node;
+    treeState.selected = step.node;
+
+    const symbol = step.direction === 'left'
+      ? '<'
+      : '>';
+
+    const comparison =
+      `${value} ${symbol} ${step.node.value}: ` +
+      `go ${step.direction}.`;
+
+    pendingInsertion.index += 1;
+
+    if (pendingInsertion.index >= path.length) {
+      const added = createNode(value, step.node);
+
+      step.node[step.direction] = added;
+
+      treeState.selected = added;
+      treeState.active = null;
+      treeState.newValue = value;
+
+      pendingInsertion = null;
+
+      stopPlayback();
+
+      explanation.textContent =
+        `${comparison} Success! ${value} is now the ` +
+        `${step.direction} child of ${step.node.value}.`;
+
+      markComplete('explore');
+    } else {
+      explanation.textContent = comparison;
+    }
+
+    refreshTree();
+    updateSelectedPanel();
+    updatePlayer();
+  }
+
+  nextButton.addEventListener('click', () => {
+    if (!playing) advanceInsertion();
+  });
+
+  playButton.addEventListener('click', () => {
+    if (playing) {
+      stopPlayback();
+      updatePlayer();
       return;
     }
 
-    setBusy(true);
-    current = root;
+    if (!pendingInsertion) return;
 
-    while (current && !destroyed) {
-      selected = current;
-      active = current;
+    playing = true;
+    updatePlayer();
 
-      const direction = value < current.value ? 'left' : 'right';
-      const symbol = direction === 'left' ? '<' : '>';
+    playbackTimer = setInterval(() => {
+      advanceInsertion();
+    }, Number(speedSelect.value));
+  });
 
-      explanation.textContent =
-        `${value} ${symbol} ${current.value}: move ${direction}.`;
+  speedSelect.addEventListener('change', () => {
+    if (!playing) return;
 
-      details.textContent = describeNode(current);
-      refresh();
+    clearInterval(playbackTimer);
 
-      await pause(850);
-      if (destroyed) return;
-
-      if (!current[direction]) {
-        const added = createNode(value, current);
-        current[direction] = added;
-
-        selected = added;
-        active = null;
-
-        explanation.textContent =
-          `Success! ${value} is the ${direction} child ` +
-          `of ${current.value}.`;
-
-        details.textContent = describeNode(added);
-        refresh(value);
-
-        setBusy(false);
-        return;
-      }
-
-      current = current[direction];
-    }
-  }
+    playbackTimer = setInterval(() => {
+      advanceInsertion();
+    }, Number(speedSelect.value));
+  });
 
   form.addEventListener('submit', event => {
     event.preventDefault();
 
-    if (input.value.trim() === '') {
-      explanation.textContent = 'Enter a value first.';
+    const raw = input.value.trim();
+
+    if (raw === '') {
+      explanation.textContent =
+        'Enter a value first. Try 65 as an example.';
       return;
     }
 
-    insert(Number(input.value));
+    prepareInsertion(Number(raw));
   });
 
-  resetButton.addEventListener('click', () => {
-    if (busy) return;
-nodePopup.hidden = true;
+  function resetTree() {
+    stopPlayback();
+
     root = buildExample();
-    selected = root;
-    active = null;
-   input.value = '';
 
-explanation.textContent =
-  'Tree reset. Enter any whole number from 0 to 99 ' +
-  'to explore how insertion works.';
+    treeState.selected = root;
+    treeState.active = null;
+    treeState.highlighted = null;
+    treeState.newValue = null;
+    treeState.answerPath.clear();
 
-    refresh();
+    pendingInsertion = null;
+    input.value = '';
+
+    explanation.textContent =
+      'The original tree has been restored. ' +
+      'Enter a number to begin.';
+
+    refreshTree();
+    updateSelectedPanel();
+    updatePlayer();
+  }
+
+  resetButton.addEventListener('click', resetTree);
+
+  // ------------------------------------------
+  // BST ORDERING RULES
+  // ------------------------------------------
+
+  const rulesCard = el(
+    'aside',
+    'bst-card bst-rules-card'
+  );
+
+  rulesCard.append(
+    el('span', 'bst-eyebrow', 'THE MAIN IDEA'),
+    el('h2', '', 'BST ordering rule'),
+    el(
+      'p',
+      'bst-muted',
+      'Each node follows these rules.'
+    )
+  );
+
+  const rules = [
+    {
+      symbol: '←',
+      title: 'Smaller goes left',
+      description: '30 is smaller than 50.',
+      value: 30
+    },
+    {
+      symbol: '→',
+      title: 'Larger goes right',
+      description: '70 is larger than 50.',
+      value: 70
+    },
+    {
+      symbol: '=',
+      title: 'No duplicates',
+      description: 'Each value appears only once.',
+      value: 50
+    }
+  ];
+
+  rules.forEach(rule => {
+    const item = el(
+      'button',
+      'bst-rule-item'
+    );
+
+    item.type = 'button';
+
+    item.append(
+      el('span', 'bst-rule-icon', rule.symbol),
+      el('strong', '', rule.title),
+      el(
+        'span',
+        'bst-rule-description',
+        rule.description
+      )
+    );
+
+    const highlight = () => {
+      treeState.highlighted = findNode(root, rule.value);
+      refreshTree();
+    };
+
+    const clearHighlight = () => {
+      treeState.highlighted = null;
+      refreshTree();
+    };
+
+    item.addEventListener('mouseenter', highlight);
+    item.addEventListener('mouseleave', clearHighlight);
+
+    item.addEventListener('focus', highlight);
+    item.addEventListener('blur', clearHighlight);
+
+    item.addEventListener('click', () => {
+      const node = findNode(root, rule.value);
+
+      if (node) {
+        treeState.selected = node;
+        updateSelectedPanel();
+        refreshTree();
+      }
+    });
+
+    rulesCard.appendChild(item);
   });
 
-  // Assemble the lesson.
+  // Assemble tree card.
+  treeCard.append(
+    treeHeading,
+    treeViewport,
+    selectedPanel,
+    legend,
+    treeNote,
+    explanation,
+    form,
+    player
+  );
+
+  const layout = el(
+    'div',
+    'bst-content-grid'
+  );
+
+  layout.append(
+    treeCard,
+    rulesCard
+  );
+
+  // ==========================================
+  // 04 — KNOWLEDGE CHECK
+  // ==========================================
+
+  const check = el(
+    'section',
+    'bst-card bst-check-card'
+  );
+
+  check.id = 'bst-knowledge-check';
+
+  check.append(
+    el('span', 'bst-eyebrow', '04 / CHECK'),
+    el('h2', '', 'Can you apply the BST rule?'),
+    el(
+      'p',
+      '',
+      'In the original example tree, ' +
+      'where would 65 be inserted?'
+    )
+  );
+
+  const checkAnswers = el(
+    'div',
+    'bst-answer-options'
+  );
+
+  const checkFeedback = el(
+    'div',
+    'bst-answer-feedback'
+  );
+
+  checkFeedback.setAttribute('aria-live', 'polite');
+
+  const checkOptions = [
+    { text: 'Left child of 60', correct: false },
+    { text: 'Right child of 60', correct: true },
+    { text: 'Right child of 80', correct: false },
+    { text: 'Not sure', correct: false }
+  ];
+
+  checkOptions.forEach(option => {
+    const button = el(
+      'button',
+      'bst-answer',
+      option.text
+    );
+
+    button.type = 'button';
+    button.setAttribute('aria-pressed', 'false');
+
+    button.addEventListener('click', () => {
+      checkAnswers.querySelectorAll('button').forEach(other => {
+        other.setAttribute(
+          'aria-pressed',
+          String(other === button)
+        );
+      });
+
+      if (option.correct) {
+        checkFeedback.className =
+          'bst-answer-feedback is-correct';
+
+        checkFeedback.textContent =
+          'Correct! Compare 65 with 50, then 70, then 60. ' +
+          'It becomes the right child of 60.';
+
+        treeState.answerPath = new Set([50, 70, 60]);
+
+        markComplete('check');
+      } else {
+        checkFeedback.className =
+          'bst-answer-feedback is-review';
+
+        checkFeedback.textContent =
+          option.text === 'Not sure'
+            ? 'That is okay. Follow 65 through the tree: ' +
+              'start at 50, then compare with 70 and 60. ' +
+              'Use Show me if you want to watch.'
+            : 'Not quite. Compare 65 with 50, then 70, ' +
+              'then 60. Try again, or select Show me.';
+
+        treeState.answerPath.clear();
+      }
+
+      refreshTree();
+    });
+
+    checkAnswers.appendChild(button);
+  });
+
+  const showMeButton = el(
+    'button',
+    'bst-show-me',
+    'Show me →'
+  );
+
+  showMeButton.type = 'button';
+
+  showMeButton.addEventListener('click', () => {
+    resetTree();
+
+    input.value = '65';
+
+    if (!prepareInsertion(65)) return;
+
+    playing = true;
+    updatePlayer();
+
+    playbackTimer = setInterval(() => {
+      advanceInsertion();
+    }, Number(speedSelect.value));
+
+    treeCard.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  });
+
+  check.append(
+    checkAnswers,
+    checkFeedback,
+    showMeButton
+  );
+
+  // ==========================================
+  // NEXT LESSON
+  // ==========================================
+
+  const lessonNavigation = el(
+    'nav',
+    'bst-lesson-navigation'
+  );
+
+  lessonNavigation.setAttribute(
+    'aria-label',
+    'BST lesson navigation'
+  );
+
+  const nextLesson = el(
+  'a',
+  'bst-next-button',
+  'Next Lesson →'
+);
+
+nextLesson.href = '#/concept-idea';
+
+lessonNavigation.appendChild(nextLesson);
+
+  // ==========================================
+  // ASSEMBLE PAGE
+  // ==========================================
+
   page.append(
-    createWarmup(screen.warmup),
+    progress,
+    warmup,
     intro,
-    title,
+    vocabulary,
+    exploreHeading,
     layout,
-    createKnowledgeCheck()
+    check,
+    lessonNavigation
   );
 
   container.appendChild(page);
 
-  details.textContent = describeNode(root);
-  refresh();
+  refreshTree();
+  updateSelectedPanel();
+  updatePlayer();
 
+  // Cleanup when navigating to another screen.
   return () => {
     destroyed = true;
 
-    for (const task of timers) {
+    stopPlayback();
+
+    if (headerObserver) {
+      headerObserver.disconnect();
+    }
+
+    for (const task of timeoutTasks) {
       clearTimeout(task.id);
       task.resolve();
     }
 
-    timers.clear();
+    timeoutTasks.clear();
   };
 }

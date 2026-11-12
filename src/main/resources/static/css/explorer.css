@@ -1,0 +1,933 @@
+
+/* ============================================
+   COS212 DFS TUTOR — INTERACTIVE EXPLORER
+   FIGMA PAGE 4
+   ============================================ */
+
+.explorer-page {
+  --exp-ink: #242b33;
+  --exp-muted: #4b5563;
+  --exp-border: #dce1e5;
+  --exp-light: #f5f6f8;
+  --exp-success: #216b46;
+  --exp-success-bg: #e8f5ec;
+  --exp-warning: #8b541b;
+  --exp-warning-bg: #fff4e6;
+
+  width: min(1270px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 80px;
+
+  color: var(--exp-ink);
+  font-family: Inter, Arial, sans-serif;
+  line-height: 1.6;
+  overflow: visible;
+}
+
+.explorer-page *,
+.explorer-page *::before,
+.explorer-page *::after {
+  box-sizing: border-box;
+}
+
+.explorer-page [hidden] {
+  display: none !important;
+}
+
+.explorer-page button,
+.explorer-page input,
+.explorer-page select {
+  font: inherit;
+}
+
+.explorer-page button:focus-visible,
+.explorer-page input:focus-visible,
+.explorer-page select:focus-visible,
+.explorer-page a:focus-visible {
+  outline: 3px solid #6086b5;
+  outline-offset: 3px;
+}
+
+.explorer-page section {
+  scroll-margin-top:
+    calc(var(--app-header-height, 72px) + 125px);
+}
+
+/* ============================================
+   STICKY PROGRESS
+   ============================================ */
+
+.explorer-page .lesson-progress {
+  position: sticky;
+  top: calc(var(--app-header-height, 72px) + 8px);
+  z-index: 40;
+
+  width: 100%;
+  margin-bottom: 28px;
+  padding: 17px 22px;
+
+  border: 1px solid var(--exp-border);
+  border-radius: 12px;
+  background: #ffffff;
+
+  box-shadow: 0 4px 16px rgba(30, 40, 50, 0.08);
+}
+
+.explorer-page .lesson-progress__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.explorer-page .lesson-progress__track {
+  width: 100%;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #e3e7eb;
+}
+
+.explorer-page .lesson-progress__fill {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--exp-ink);
+  transition: width 0.3s ease;
+}
+
+/* ============================================
+   GENERAL COMPONENTS
+   ============================================ */
+
+.explorer-page .explorer-card {
+  min-width: 0;
+  padding: 28px;
+
+  border: 1px solid var(--exp-border);
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.explorer-page h1,
+.explorer-page h2,
+.explorer-page h3 {
+  color: var(--exp-ink);
+  line-height: 1.35;
+}
+
+.explorer-page .explorer-card h2 {
+  margin: 7px 0 14px;
+  font-size: 23px;
+  font-weight: 700;
+}
+
+.explorer-page .explorer-eyebrow {
+  display: inline-block;
+  margin-bottom: 12px;
+
+  color: var(--exp-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+}
+
+.explorer-page .explorer-muted {
+  color: var(--exp-muted);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* Buttons */
+
+.explorer-page .explorer-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 46px;
+  padding: 10px 18px;
+
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.explorer-page .explorer-button:hover:not(:disabled) {
+  background: #e8edf2;
+}
+
+.explorer-page .explorer-button--primary {
+  background: #242b33;
+  color: #ffffff;
+}
+
+.explorer-page
+.explorer-button--primary:hover:not(:disabled) {
+  background: #414b56;
+  color: #ffffff;
+}
+
+.explorer-page .explorer-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Feedback */
+
+.explorer-page .explorer-feedback {
+  margin: 14px 0 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.explorer-page .explorer-feedback:empty {
+  display: none;
+}
+
+.explorer-page .explorer-feedback.is-correct {
+  padding: 13px 16px;
+  border: 1px solid #c9e5d3;
+  border-radius: 9px;
+  background: var(--exp-success-bg);
+  color: var(--exp-success);
+}
+
+.explorer-page .explorer-feedback.is-review {
+  padding: 13px 16px;
+  border: 1px solid #ead5b5;
+  border-radius: 9px;
+  background: var(--exp-warning-bg);
+  color: var(--exp-warning);
+}
+
+/* ============================================
+   INTRODUCTION
+   ============================================ */
+
+.explorer-page .explorer-intro {
+  margin-bottom: 30px;
+}
+
+.explorer-page .explorer-intro h1 {
+  margin: 4px 0 14px;
+
+  font-size: clamp(30px, 3.6vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.8px;
+}
+
+.explorer-page .explorer-intro p {
+  max-width: 930px;
+  margin: 0;
+  color: var(--exp-muted);
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+/* ============================================
+   01 — CONFIGURATION
+   ============================================ */
+
+.explorer-page .explorer-setup {
+  margin-bottom: 25px;
+  background: var(--exp-light);
+}
+
+.explorer-page .explorer-config-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 1.5fr)
+    minmax(180px, 1fr)
+    minmax(115px, 0.6fr)
+    auto;
+
+  gap: 15px;
+  align-items: end;
+  margin-top: 20px;
+}
+
+.explorer-page .explorer-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.explorer-page .explorer-field input,
+.explorer-page .explorer-field select {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 13px;
+
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
+
+  background: white;
+  color: #242b33;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* ============================================
+   INTERACTIVE WORKSPACE
+   ============================================ */
+
+.explorer-page .explorer-layout {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.8fr)
+    minmax(290px, 1fr);
+
+  gap: 24px;
+  align-items: start;
+}
+
+.explorer-page .explorer-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.explorer-page .explorer-count {
+  flex-shrink: 0;
+  padding: 7px 12px;
+
+  border: 1px solid var(--exp-border);
+  border-radius: 20px;
+  background: var(--exp-light);
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ============================================
+   TREE VISUALIZATION
+   ============================================ */
+
+.explorer-page .explorer-tree-viewport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-height: 340px;
+  margin: 18px 0;
+  padding: 15px 6px;
+
+  border: 1px solid var(--exp-border);
+  border-radius: 12px;
+  background: #fcfcfd;
+
+  overflow-x: auto;
+}
+
+.explorer-page .explorer-svg {
+  display: block;
+  width: 100%;
+  min-width: 560px;
+  height: auto;
+  margin: auto;
+  overflow: visible;
+}
+
+.explorer-page .explorer-edge {
+  stroke: #98a4af;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.explorer-page .explorer-node circle {
+  fill: #ffffff;
+  stroke: #242b33;
+  stroke-width: 2.5;
+  transition:
+    fill 0.2s ease,
+    stroke 0.2s ease;
+}
+
+.explorer-page .explorer-node-value {
+  fill: #242b33;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.explorer-page .explorer-node-symbol {
+  fill: #374151;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  text-anchor: middle;
+  letter-spacing: 0.5px;
+}
+
+/* Current node */
+
+.explorer-page .explorer-node.is-current circle {
+  fill: #242b33;
+  stroke: #242b33;
+  stroke-width: 4;
+}
+
+.explorer-page
+.explorer-node.is-current .explorer-node-value {
+  fill: #ffffff;
+}
+
+/* Visited node */
+
+.explorer-page .explorer-node.is-visited circle {
+  fill: #e8f5ec;
+  stroke: #216b46;
+  stroke-width: 3;
+}
+
+.explorer-page
+.explorer-node.is-visited .explorer-node-value {
+  fill: #185c39;
+}
+
+/* Pending node — dashed ring */
+
+.explorer-page .explorer-node.is-pending circle {
+  fill: #fff0d6;
+  stroke: #9a641c;
+  stroke-width: 3;
+  stroke-dasharray: 5 4;
+}
+
+.explorer-page
+.explorer-node.is-pending .explorer-node-value {
+  fill: #684412;
+}
+
+/* ============================================
+   LEGEND
+   ============================================ */
+
+.explorer-page .explorer-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin: 19px 0 24px;
+}
+
+.explorer-page .explorer-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  color: #374151;
+  font-size: 13px;
+}
+
+.explorer-page .explorer-legend-symbol {
+  display: grid;
+  place-items: center;
+
+  width: 24px;
+  height: 24px;
+
+  border: 1px solid #475569;
+  border-radius: 6px;
+
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.explorer-page .explorer-legend-symbol--default {
+  background: white;
+}
+
+.explorer-page .explorer-legend-symbol--current {
+  background: #242b33;
+  color: white;
+}
+
+.explorer-page .explorer-legend-symbol--visited {
+  background: #e8f5ec;
+  color: #216b46;
+}
+
+.explorer-page .explorer-legend-symbol--pending {
+  border-style: dashed;
+  background: #fff0d6;
+  color: #805019;
+}
+
+/* ============================================
+   PREDICTION ACTIVITY
+   ============================================ */
+
+.explorer-page .explorer-prediction {
+  margin: 15px 0 23px;
+  padding: 22px;
+
+  border: 1px solid #cbd5df;
+  border-radius: 11px;
+  background: #f4f6f8;
+}
+
+.explorer-page .explorer-prediction h3 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+.explorer-page .explorer-prediction-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.explorer-page .explorer-answer {
+  min-height: 48px;
+  padding: 11px 15px;
+
+  border: 1px solid #cbd3da;
+  border-radius: 9px;
+
+  background: white;
+  color: #242b33;
+
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+}
+
+.explorer-page .explorer-answer:hover {
+  background: #e8edf2;
+}
+
+.explorer-page .explorer-answer[aria-pressed="true"] {
+  border-color: #334155;
+  background: #e1e8ef;
+}
+
+/* ============================================
+   CURRENT STEP EXPLANATION
+   ============================================ */
+
+.explorer-page .explorer-explanation {
+  margin: 18px 0 23px;
+  padding: 19px 22px;
+
+  border: 1px solid var(--exp-border);
+  border-left: 4px solid #334155;
+  border-radius: 10px;
+  background: var(--exp-light);
+}
+
+.explorer-page .explorer-explanation strong {
+  display: block;
+  margin-bottom: 9px;
+  font-size: 17px;
+}
+
+.explorer-page .explorer-explanation p {
+  margin: 0;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* ============================================
+   VISITED SEQUENCE
+   ============================================ */
+
+.explorer-page .explorer-traversal {
+  padding-top: 18px;
+  border-top: 1px solid var(--exp-border);
+}
+
+.explorer-page .explorer-traversal h3 {
+  margin: 0 0 15px;
+  font-size: 17px;
+}
+
+.explorer-page .explorer-visited-list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 42px;
+}
+
+.explorer-page .explorer-visit-chip {
+  display: grid;
+  place-items: center;
+
+  min-width: 40px;
+  min-height: 40px;
+  padding: 7px 11px;
+
+  border: 1px solid var(--exp-border);
+  border-radius: 8px;
+  background: var(--exp-light);
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.explorer-page .explorer-visit-arrow {
+  color: var(--exp-muted);
+  font-size: 17px;
+}
+
+.explorer-page .explorer-visit-empty {
+  color: var(--exp-muted);
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* ============================================
+   PLAYBACK CONTROLS
+   ============================================ */
+
+.explorer-page .explorer-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 11px;
+
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid var(--exp-border);
+}
+
+.explorer-page .explorer-speed {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  color: #374151;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.explorer-page .explorer-speed select {
+  min-height: 44px;
+  padding: 8px 11px;
+
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
+  background: white;
+  color: #242b33;
+}
+
+.explorer-page .explorer-step-counter {
+  margin-left: auto;
+  color: var(--exp-muted);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ============================================
+   OPERATION STACK
+   ============================================ */
+
+.explorer-page .explorer-stack-card {
+  background: var(--exp-light);
+}
+
+.explorer-page .explorer-stack-card p {
+  margin-top: 0;
+}
+
+.explorer-page .explorer-stack-status {
+  margin: 22px 0 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.explorer-page .explorer-stack-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 135px;
+}
+
+.explorer-page .explorer-stack-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  min-height: 54px;
+  padding: 12px 17px;
+
+  border: 1px solid var(--exp-border);
+  border-radius: 9px;
+  background: #ffffff;
+
+  font-size: 17px;
+  animation: explorer-stack-enter 0.25s ease;
+}
+
+.explorer-page .explorer-stack-item.is-top {
+  border: 2px dashed #334155;
+  background: #e8edf2;
+}
+
+.explorer-page .explorer-stack-item span {
+  color: #4b5563;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.explorer-page .explorer-stack-empty {
+  margin: 0;
+  padding: 28px 14px;
+
+  border: 1px dashed #cbd5df;
+  border-radius: 9px;
+  background: white;
+
+  color: #4b5563;
+  text-align: center;
+  font-size: 14px;
+}
+
+.explorer-page .explorer-stack-note {
+  margin-top: 25px;
+  padding: 18px;
+
+  border: 1px solid var(--exp-border);
+  border-radius: 10px;
+  background: white;
+
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* ============================================
+   02 — COMPARE
+   ============================================ */
+
+.explorer-page .explorer-info-card {
+  margin-top: 32px;
+}
+
+.explorer-page .explorer-info-card p {
+  max-width: 900px;
+  margin-bottom: 0;
+}
+
+/* ============================================
+   03 — EXPERIMENT
+   ============================================ */
+
+.explorer-page .explorer-experiment {
+  margin-top: 26px;
+}
+
+.explorer-page .explorer-insert-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 13px;
+  margin-top: 24px;
+}
+
+.explorer-page .explorer-insert-form .explorer-field {
+  flex: 1 1 190px;
+}
+
+/* ============================================
+   04 — REFLECT
+   ============================================ */
+
+.explorer-page .explorer-reflect {
+  margin-top: 26px;
+}
+
+.explorer-page .explorer-reflect-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.explorer-page .explorer-reflect .explorer-answer {
+  min-height: 56px;
+  text-align: left;
+}
+
+/* ============================================
+   PAGE NAVIGATION
+   ============================================ */
+
+.explorer-page .explorer-page-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  margin-top: 35px;
+  padding: 27px 0;
+  border-top: 1px solid var(--exp-border);
+}
+
+.explorer-page .explorer-page-navigation a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 52px;
+  padding: 13px 25px;
+
+  border: 1px solid #242b33;
+  border-radius: 9px;
+
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.explorer-page .explorer-page-navigation__back {
+  background: white;
+  color: #242b33;
+}
+
+.explorer-page .explorer-page-navigation__back:hover {
+  background: #f5f6f8;
+  color: #242b33;
+}
+
+.explorer-page .explorer-page-navigation__next {
+  margin-left: auto;
+  background: #242b33;
+  color: white;
+}
+
+.explorer-page .explorer-page-navigation__next:hover {
+  background: #414b56;
+  color: white;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes explorer-stack-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 1080px) {
+  .explorer-page .explorer-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .explorer-page .explorer-config-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 750px) {
+  .explorer-page {
+    width: calc(100% - 28px);
+    padding: 24px 0 55px;
+  }
+
+  .explorer-page .explorer-card {
+    padding: 20px;
+  }
+
+  .explorer-page .lesson-progress {
+    padding: 14px;
+  }
+
+  .explorer-page .explorer-intro h1 {
+    font-size: 30px;
+  }
+
+  .explorer-page .explorer-prediction-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .explorer-page .explorer-controls .explorer-button {
+    flex: 1 1 120px;
+  }
+
+  .explorer-page .explorer-step-counter {
+    flex-basis: 100%;
+    margin-left: 0;
+    text-align: center;
+  }
+
+  .explorer-page .explorer-tree-viewport {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 550px) {
+  .explorer-page .explorer-config-grid,
+  .explorer-page .explorer-reflect-options {
+    grid-template-columns: 1fr;
+  }
+
+  .explorer-page .explorer-page-navigation {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .explorer-page .explorer-page-navigation a {
+    width: 100%;
+  }
+
+  .explorer-page .explorer-insert-form .explorer-button {
+    flex: 1 1 130px;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .explorer-page .explorer-stack-item {
+    animation: none;
+  }
+
+  .explorer-page .lesson-progress__fill,
+  .explorer-page .explorer-node circle,
+  .explorer-page .explorer-button {
+    transition: none;
+  }
+}

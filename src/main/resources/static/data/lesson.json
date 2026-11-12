@@ -136,7 +136,7 @@
     {
       "id": "review",
       "gagneEvent": 7,
-      "type": "text",
+      "type": "review",
       "title": "Feedback and Guided Review",
       "body": [
         "Review any concepts you found difficult during the quiz.",
@@ -150,7 +150,7 @@
     {
       "id": "summary",
       "gagneEvent": 9,
-      "type": "text",
+      "type": "summary",
       "title": "Learning Summary",
       "body": [
         "**What you have learned**",

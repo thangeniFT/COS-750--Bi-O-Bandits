@@ -1,0 +1,1228 @@
+
+/* ============================================
+   COS212 DFS TUTOR — BST INTRODUCTION
+   FIGMA PAGE 2
+   ============================================ */
+
+.bst-page {
+  --bst-ink: #242b33;
+  --bst-muted: #4b5563;
+  --bst-border: #dce1e5;
+  --bst-light: #f5f6f8;
+  --bst-white: #ffffff;
+  --bst-success: #216b46;
+  --bst-success-bg: #e8f5ec;
+  --bst-warning: #8b541b;
+  --bst-warning-bg: #fff4e6;
+
+  width: min(1270px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 80px;
+
+  color: var(--bst-ink);
+  font-family: Inter, Arial, sans-serif;
+  line-height: 1.6;
+  overflow: visible;
+}
+
+.bst-page *,
+.bst-page *::before,
+.bst-page *::after {
+  box-sizing: border-box;
+}
+
+.bst-page [hidden] {
+  display: none !important;
+}
+
+.bst-page button,
+.bst-page input,
+.bst-page select {
+  font-family: inherit;
+}
+
+.bst-page button:focus-visible,
+.bst-page input:focus-visible,
+.bst-page select:focus-visible,
+.bst-page a:focus-visible {
+  outline: 3px solid #6086b5;
+  outline-offset: 3px;
+}
+
+/* ============================================
+   STICKY ACTIVITY PROGRESS
+   ============================================ */
+
+.bst-page .lesson-progress {
+  position: sticky;
+  top: calc(var(--app-header-height, 72px) + 8px);
+  z-index: 40;
+
+  width: 100%;
+  margin-bottom: 28px;
+  padding: 17px 22px;
+
+  background: #ffffff;
+  border: 1px solid var(--bst-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(30, 40, 50, 0.08);
+}
+
+.bst-page .lesson-progress__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 12px;
+
+  color: var(--bst-ink);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.bst-page .lesson-progress__track {
+  width: 100%;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #e3e7eb;
+}
+
+.bst-page .lesson-progress__fill {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--bst-ink);
+  transition: width 0.3s ease;
+}
+
+/* ============================================
+   SHARED CARDS AND TYPOGRAPHY
+   ============================================ */
+
+.bst-page .bst-card {
+  min-width: 0;
+  padding: 28px;
+
+  border: 1px solid var(--bst-border);
+  border-radius: 14px;
+  background: var(--bst-white);
+}
+
+.bst-page .bst-card h2 {
+  margin: 8px 0 14px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.bst-page .bst-card h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.bst-page .bst-card p {
+  line-height: 1.7;
+}
+
+.bst-page .bst-eyebrow {
+  display: inline-block;
+  color: var(--bst-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+}
+
+.bst-page .bst-muted {
+  color: var(--bst-muted);
+  font-size: 15px;
+}
+
+/* Keep scrolled-to content below sticky elements */
+
+.bst-page section,
+.bst-page .bst-section-title {
+  scroll-margin-top:
+    calc(var(--app-header-height, 72px) + 125px);
+}
+
+/* ============================================
+   01 — WARM-UP
+   ============================================ */
+
+.bst-page .bst-warmup-card {
+  margin-bottom: 28px;
+  background: var(--bst-light);
+}
+
+.bst-page .bst-warmup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: stretch;
+  margin-top: 25px;
+}
+
+.bst-page .bst-warmup-question {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 22px;
+
+  border: 1px solid var(--bst-border);
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.bst-page .bst-warmup-question h3 {
+  min-height: 58px;
+  margin-bottom: 16px;
+  font-size: 17px;
+}
+
+.bst-page .bst-answer-options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.bst-page .bst-answer {
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  min-height: 56px;
+  padding: 13px 16px;
+
+  border: 1px solid #cbd3da;
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: var(--bst-ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.bst-page .bst-answer:hover {
+  background: #eef1f4;
+  border-color: #7b8794;
+}
+
+.bst-page .bst-answer[aria-pressed="true"] {
+  border-color: #334155;
+  background: #e8edf2;
+}
+
+/* Feedback shown immediately after answering */
+
+.bst-page .bst-answer-feedback {
+  min-height: 22px;
+  margin: 15px 0 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.bst-page .bst-answer-feedback.is-correct {
+  padding: 13px 16px;
+  border: 1px solid #c9e5d3;
+  border-radius: 9px;
+  background: var(--bst-success-bg);
+  color: var(--bst-success);
+}
+
+.bst-page .bst-answer-feedback.is-review {
+  padding: 13px 16px;
+  border: 1px solid #ead5b5;
+  border-radius: 9px;
+  background: var(--bst-warning-bg);
+  color: var(--bst-warning);
+}
+
+/* Overall warm-up result */
+
+.bst-page .bst-warmup-result {
+  margin-top: 23px;
+  padding: 17px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.7;
+}
+
+.bst-page .bst-warmup-result.is-ready {
+  border: 1px solid #c9e5d3;
+  background: var(--bst-success-bg);
+  color: var(--bst-success);
+}
+
+.bst-page .bst-warmup-result.is-review {
+  border: 1px solid #ead5b5;
+  background: var(--bst-warning-bg);
+  color: var(--bst-warning);
+}
+
+/* ============================================
+   WARM-UP SCAFFOLDING
+   ============================================ */
+
+.bst-page .bst-warmup-help {
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid #d5dfe8;
+  border-radius: 10px;
+  background: #f5f8fb;
+}
+
+.bst-page .bst-warmup-help p {
+  margin: 10px 0 0;
+  color: #374151;
+  font-size: 13px;
+}
+
+/* Mini tree diagram */
+
+.bst-page .bst-mini-diagram svg {
+  display: block;
+  width: 180px;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.bst-page .bst-mini-diagram line {
+  stroke: #64748b;
+  stroke-width: 2;
+}
+
+.bst-page .bst-mini-diagram circle {
+  fill: #ffffff;
+  stroke: #334155;
+  stroke-width: 2;
+}
+
+.bst-page .bst-mini-diagram text {
+  fill: #1f2937;
+  font-size: 14px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+/* ============================================
+   STACK ANIMATION
+   ============================================ */
+
+.bst-page .bst-stack-demo {
+  text-align: center;
+}
+
+.bst-page .bst-stack-demo strong {
+  display: block;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.bst-page .bst-stack-demo__items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-height: 120px;
+}
+
+.bst-page .bst-stack-demo__item {
+  display: grid;
+  place-items: center;
+  width: 120px;
+  min-height: 36px;
+
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #ffffff;
+
+  color: var(--bst-ink);
+  font-size: 16px;
+  font-weight: 700;
+
+  animation: bst-stack-enter 0.25s ease;
+}
+
+.bst-page .bst-stack-demo__item.is-top {
+  border-width: 2px;
+  background: #e4ebf2;
+}
+
+.bst-page .bst-stack-demo__message {
+  margin: 14px 0;
+  font-size: 13px;
+}
+
+.bst-page .bst-demo-button {
+  min-height: 42px;
+  padding: 10px 16px;
+
+  border: 1px solid #334155;
+  border-radius: 8px;
+
+  background: #334155;
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bst-page .bst-demo-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   INTRODUCTION
+   ============================================ */
+
+.bst-page .bst-intro-card {
+  margin-bottom: 28px;
+  padding: 28px 32px;
+}
+
+.bst-page .bst-intro-card h2 {
+  font-size: clamp(25px, 3vw, 32px);
+}
+
+.bst-page .bst-intro-card p {
+  max-width: 900px;
+  margin: 0;
+  color: var(--bst-muted);
+  font-size: 16px;
+}
+
+/* ============================================
+   02 — VOCABULARY
+   ============================================ */
+
+.bst-page .bst-vocabulary {
+  margin-bottom: 32px;
+}
+
+.bst-page .bst-vocabulary__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.bst-page .bst-vocabulary__chip {
+  min-height: 46px;
+  padding: 10px 20px;
+
+  border: 1px solid #cbd5df;
+  border-radius: 24px;
+
+  background: #ffffff;
+  color: #334155;
+
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bst-page .bst-vocabulary__chip:hover,
+.bst-page .bst-vocabulary__chip[aria-pressed="true"] {
+  border-color: #334155;
+  background: #e8eef3;
+}
+
+.bst-page .bst-vocabulary__feedback {
+  min-height: 45px;
+  margin: 20px 0 0;
+  padding: 14px 17px;
+
+  border-radius: 9px;
+  background: #f3f5f7;
+
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* ============================================
+   03 — EXPLORE HEADING
+   ============================================ */
+
+.bst-page .bst-section-title {
+  margin: 34px 0 24px;
+}
+
+.bst-page .bst-section-title h2 {
+  margin: 9px 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.bst-page .bst-section-title p {
+  margin: 0;
+  color: var(--bst-muted);
+}
+
+/* ============================================
+   TREE AND RULES LAYOUT
+   ============================================ */
+
+.bst-page .bst-content-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.8fr)
+    minmax(300px, 1fr);
+
+  align-items: start;
+  gap: 24px;
+}
+
+.bst-page .bst-tree-card {
+  min-width: 0;
+}
+
+.bst-page .bst-tree-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.bst-page .bst-tree-heading__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.bst-page .bst-tree-heading h3 {
+  margin-bottom: 8px;
+  font-size: 21px;
+}
+
+.bst-page .bst-tree-description {
+  margin: 0;
+  color: var(--bst-muted);
+  font-size: 14px;
+}
+
+.bst-page .bst-node-count {
+  flex-shrink: 0;
+  padding: 7px 12px;
+
+  border: 1px solid var(--bst-border);
+  border-radius: 20px;
+  background: var(--bst-light);
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ============================================
+   SVG TREE
+   ============================================ */
+
+.bst-page .bst-tree-viewport {
+  position: relative;
+  width: 100%;
+  min-height: 345px;
+  margin: 18px 0;
+  padding: 18px 8px;
+
+  border: 1px solid var(--bst-border);
+  border-radius: 12px;
+  background: #fcfcfd;
+
+  overflow-x: auto;
+}
+
+.bst-page .bst-lesson-svg {
+  display: block;
+  width: 100%;
+  min-width: 600px;
+  height: auto;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.bst-page .bst-tree-edge {
+  stroke: #9aa5b1;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.bst-page .bst-tree-edge--new {
+  stroke: var(--bst-success);
+  stroke-width: 3.5;
+  stroke-dasharray: 7 5;
+  animation: bst-edge-appear 0.5s ease;
+}
+
+.bst-page .bst-tree-edge.is-answer-path {
+  stroke: #2563eb;
+  stroke-width: 4;
+  stroke-dasharray: 6 4;
+}
+
+/* Nodes */
+
+.bst-page .bst-tree-node {
+  cursor: pointer;
+  outline: none;
+}
+
+.bst-page .bst-tree-node circle {
+  fill: #ffffff;
+  stroke: #242b33;
+  stroke-width: 2.5;
+
+  transition:
+    fill 0.2s ease,
+    stroke 0.2s ease;
+}
+
+.bst-page .bst-tree-value {
+  fill: #242b33;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+.bst-page .bst-tree-role {
+  fill: #475569;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+/* Selected node */
+
+.bst-page .bst-tree-node.is-selected circle {
+  fill: #242b33;
+}
+
+.bst-page .bst-tree-node.is-selected .bst-tree-value {
+  fill: #ffffff;
+}
+
+/* Comparing node — dashed outline */
+
+.bst-page .bst-tree-node.is-active circle {
+  fill: #fff0d6;
+  stroke: #9a641c;
+  stroke-width: 4;
+  stroke-dasharray: 5 4;
+}
+
+.bst-page .bst-tree-node.is-active .bst-tree-value {
+  fill: #684412;
+}
+
+/* Highlighted by vocabulary or rules */
+
+.bst-page .bst-tree-node.is-rule-highlight circle {
+  fill: #dce9f5;
+  stroke: #32618c;
+  stroke-width: 4;
+}
+
+.bst-page .bst-tree-node.is-rule-highlight
+.bst-tree-value {
+  fill: #1e4268;
+}
+
+/* Newly added node */
+
+.bst-page .bst-tree-node.is-new circle {
+  fill: #e8f5ec;
+  stroke: var(--bst-success);
+  stroke-width: 4;
+}
+
+.bst-page .bst-tree-node.is-new .bst-tree-value {
+  fill: var(--bst-success);
+}
+
+.bst-page .bst-tree-new-label {
+  fill: var(--bst-success);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+/* Correct-answer path */
+
+.bst-page .bst-tree-node.is-answer-path circle {
+  stroke: #2563eb;
+  stroke-width: 4;
+  stroke-dasharray: 6 3;
+}
+
+.bst-page .bst-tree-node.is-answer-path:not(.is-selected) circle {
+  fill: #eff6ff;
+}
+
+.bst-page .bst-tree-node.is-answer-path:not(.is-selected)
+.bst-tree-value {
+  fill: #1e40af;
+}
+
+/* Keyboard access */
+
+.bst-page .bst-tree-node:focus-visible circle {
+  stroke: #2563eb;
+  stroke-width: 5;
+}
+
+/* ============================================
+   SELECTED NODE PANEL
+   ============================================ */
+
+.bst-page .bst-selected-panel {
+  margin-top: 18px;
+  padding: 19px 21px;
+
+  border: 1px solid #cbd5df;
+  border-left: 4px solid #334155;
+  border-radius: 10px;
+
+  background: #f4f6f8;
+}
+
+.bst-page .bst-selected-panel h4 {
+  margin: 0 0 9px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.bst-page .bst-selected-panel__details {
+  margin: 0;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* ============================================
+   TREE LEGEND
+   ============================================ */
+
+.bst-page .bst-tree-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 17px;
+  margin: 23px 0;
+}
+
+.bst-page .bst-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  color: #374151;
+  font-size: 13px;
+}
+
+.bst-page .bst-legend-symbol {
+  display: grid;
+  place-items: center;
+
+  width: 24px;
+  height: 24px;
+  border: 1px solid #475569;
+  border-radius: 6px;
+
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.bst-page .bst-legend-symbol--normal {
+  background: white;
+}
+
+.bst-page .bst-legend-symbol--comparing {
+  border-style: dashed;
+  background: #fff0d6;
+  color: #805019;
+}
+
+.bst-page .bst-legend-symbol--selected {
+  background: #334155;
+  color: white;
+}
+
+.bst-page .bst-legend-symbol--new {
+  background: #e8f5ec;
+  color: #216b46;
+}
+
+/* ============================================
+   COLLAPSIBLE TREE EXPLANATION
+   ============================================ */
+
+.bst-page .bst-tree-note {
+  margin: 20px 0;
+}
+
+.bst-page .bst-tree-note summary {
+  padding: 14px 17px;
+
+  border: 1px solid var(--bst-border);
+  border-radius: 9px;
+
+  background: var(--bst-light);
+  color: var(--bst-ink);
+
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bst-page .bst-tree-note p {
+  margin: 0;
+  padding: 14px 17px;
+  color: var(--bst-muted);
+  font-size: 14px;
+}
+
+/* ============================================
+   INSERTION EXPLANATION
+   ============================================ */
+
+.bst-page .bst-insertion-explanation {
+  min-height: 55px;
+  margin: 20px 0;
+  padding: 16px 18px;
+
+  border: 1px solid var(--bst-border);
+  border-radius: 9px;
+  background: var(--bst-light);
+
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* ============================================
+   INSERT FORM
+   ============================================ */
+
+.bst-page .bst-insert-form {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  margin-top: 22px;
+  padding-top: 22px;
+
+  border-top: 1px solid var(--bst-border);
+}
+
+.bst-page .bst-insert-form label {
+  flex-basis: 100%;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.bst-page .bst-insert-form input {
+  flex: 1 1 140px;
+  min-width: 0;
+  min-height: 46px;
+  padding: 0 14px;
+
+  border: 1px solid #cbd3da;
+  border-radius: 8px;
+
+  background: white;
+  color: #242b33;
+  font-size: 15px;
+}
+
+.bst-page .bst-insert-form .btn {
+  min-height: 46px;
+  padding: 10px 19px;
+
+  border: 1px solid #334155;
+  border-radius: 8px;
+
+  background: #ffffff;
+  color: #334155;
+
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bst-page .bst-insert-form .btn--primary {
+  background: #334155;
+  color: white;
+}
+
+.bst-page .bst-insert-form .btn:hover:not(:disabled) {
+  background: #e8edf2;
+}
+
+.bst-page .bst-insert-form
+.btn--primary:hover:not(:disabled) {
+  background: #475569;
+  color: white;
+}
+
+.bst-page .bst-insert-form .btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   STEP-BY-STEP INSERTION PLAYER
+   ============================================ */
+
+.bst-page .bst-insertion-player {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  margin-top: 18px;
+}
+
+.bst-page .bst-insertion-player .btn {
+  min-height: 44px;
+  padding: 10px 21px;
+
+  border: 1px solid #334155;
+  border-radius: 8px;
+
+  background: #ffffff;
+  color: #334155;
+
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bst-page .bst-insertion-player .btn--primary {
+  background: #334155;
+  color: white;
+}
+
+.bst-page .bst-insertion-player .btn:hover:not(:disabled) {
+  background: #e8edf2;
+}
+
+.bst-page .bst-insertion-player
+.btn--primary:hover:not(:disabled) {
+  background: #475569;
+  color: white;
+}
+
+.bst-page .bst-insertion-player .btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.bst-page .bst-insertion-player label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-left: auto;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.bst-page .bst-speed {
+  min-height: 44px;
+  padding: 8px 12px;
+
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
+
+  background: white;
+  color: #334155;
+  font-size: 14px;
+}
+
+/* ============================================
+   INTERACTIVE BST RULES
+   ============================================ */
+
+.bst-page .bst-rules-card {
+  background: var(--bst-light);
+}
+
+.bst-page .bst-rule-item {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: start;
+  gap: 5px 14px;
+
+  width: 100%;
+  padding: 21px 6px;
+
+  border: none;
+  border-bottom: 1px solid var(--bst-border);
+
+  background: transparent;
+  color: var(--bst-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.bst-page .bst-rule-item:last-child {
+  border-bottom: none;
+}
+
+.bst-page .bst-rule-item:hover,
+.bst-page .bst-rule-item:focus-visible {
+  background: #e7edf3;
+}
+
+.bst-page .bst-rule-icon {
+  grid-row: 1 / span 2;
+
+  display: grid;
+  place-items: center;
+
+  width: 40px;
+  height: 40px;
+
+  border: 1px solid var(--bst-border);
+  border-radius: 9px;
+
+  background: white;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.bst-page .bst-rule-item strong {
+  grid-column: 2;
+  align-self: end;
+  font-size: 16px;
+}
+
+.bst-page .bst-rule-description {
+  grid-column: 2;
+  color: var(--bst-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ============================================
+   04 — KNOWLEDGE CHECK
+   ============================================ */
+
+.bst-page .bst-check-card {
+  margin-top: 32px;
+}
+
+.bst-page .bst-check-card .bst-answer-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.bst-page .bst-check-card .bst-answer {
+  width: 100%;
+  min-height: 58px;
+}
+
+.bst-page .bst-show-me {
+  min-height: 44px;
+  margin-top: 20px;
+  padding: 10px 21px;
+
+  border: 1px solid #334155;
+  border-radius: 8px;
+
+  background: #ffffff;
+  color: #334155;
+
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bst-page .bst-show-me:hover {
+  background: #e8edf2;
+}
+
+/* ============================================
+   NEXT LESSON NAVIGATION
+   ============================================ */
+
+.bst-page .bst-lesson-navigation {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+
+  margin-top: 36px;
+  padding: 25px 0;
+
+  border-top: 1px solid var(--bst-border);
+}
+
+.bst-page .bst-next-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 52px;
+  padding: 13px 27px;
+
+  border: 1px solid #242b33;
+  border-radius: 9px;
+
+  background: #242b33;
+  color: white;
+
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.bst-page .bst-next-button:hover {
+  background: #414b56;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes bst-stack-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bst-edge-appear {
+  from {
+    opacity: 0;
+    stroke-dashoffset: 30;
+  }
+
+  to {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ============================================
+   RESPONSIVE — TABLETS
+   ============================================ */
+
+@media (max-width: 980px) {
+  .bst-page .bst-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 800px) {
+  .bst-page .bst-warmup-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bst-page .bst-check-card .bst-answer-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================
+   RESPONSIVE — PHONES
+   ============================================ */
+
+@media (max-width: 600px) {
+  .bst-page {
+    width: calc(100% - 28px);
+    padding: 24px 0 55px;
+  }
+
+  .bst-page .bst-card {
+    padding: 20px;
+  }
+
+  .bst-page .lesson-progress {
+    padding: 14px;
+  }
+
+  .bst-page .lesson-progress__header {
+    font-size: 12px;
+  }
+
+  .bst-page .bst-tree-heading {
+    flex-direction: column;
+  }
+
+  .bst-page .bst-insert-form input {
+    flex-basis: 100%;
+  }
+
+  .bst-page .bst-insertion-player label {
+    margin-left: 0;
+  }
+
+  .bst-page .bst-next-button {
+    width: 100%;
+  }
+
+  .bst-page .bst-intro-card h2 {
+    font-size: 26px;
+  }
+
+  .bst-page .bst-section-title h2 {
+    font-size: 25px;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .bst-page .bst-stack-demo__item,
+  .bst-page .bst-tree-edge--new {
+    animation: none;
+  }
+
+  .bst-page .lesson-progress__fill,
+  .bst-page .bst-next-button,
+  .bst-page .bst-tree-node circle {
+    transition: none;
+  }
+
+  .bst-page .bst-next-button:hover {
+    transform: none;
+  }
+}
