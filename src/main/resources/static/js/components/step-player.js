@@ -6,9 +6,8 @@
  * The player never works out DFS itself. Everything comes from the DfsResult sent by the server
  * (NFR-03). Its only logic is turning "we are at step i" into node states, in {@link stateForStep}.
  *
- * Status: SKELETON. Backlog ticket F-02. {@link StepPlayer#load} currently shows a text summary so
- * the explorer screen works end to end; next/back/restart do nothing yet. The expected behaviour of
- * {@link stateForStep} is already written as tests in src/test/js/step-player.test.js (skipped).
+ * Status: implemented (ticket F-02). The behaviour of {@link stateForStep} and of the player's
+ * next/back/restart is covered by src/test/js/step-player.test.js.
  * @module components/step-player
  */
 
@@ -36,8 +35,21 @@
  * @returns {Map<number, 'current'|'visited'|'on-stack'|'found'>}
  */
 export function stateForStep(result, index, rootValue) {
-  // TODO(F-02): implement the rules above, then remove { skip } from step-player.test.js.
-  throw new Error('stateForStep is not implemented yet (backlog ticket F-02).');
+  /** @type {Map<number, 'current'|'visited'|'on-stack'|'found'>} */
+  const states = new Map();
+
+  if (index === -1) {
+    if (rootValue !== null && rootValue !== undefined) states.set(rootValue, 'on-stack');
+    return states;
+  }
+
+  // Lowest precedence first, so each later rule overwrites the one before it.
+  for (const value of result.steps[index].stackAfter) states.set(value, 'on-stack');
+  for (let i = 0; i < index; i++) states.set(result.steps[i].node, 'visited');
+
+  const isLastStep = index === result.steps.length - 1;
+  states.set(result.steps[index].node, isLastStep && result.found ? 'found' : 'current');
+  return states;
 }
 
 export class StepPlayer {
@@ -47,14 +59,17 @@ export class StepPlayer {
    * @param {import('./stack-panel.js').StackPanel} parts.stack - the stack panel
    * @param {HTMLElement} parts.explanation - where the step's sentence goes (should be aria-live)
    * @param {HTMLElement} parts.status - short status such as "Step 2 of 6"
-   * @param {(index: number) => void} [parts.onStep] - called after every move, for predict mode
+   * @param {(index: number) => void} [parts.onStep] - called after every move, for the visited line
+   * @param {number|null} [parts.rootValue] - the tree's root value (view.root?.value); shown on the
+   *        stack before the first step
    */
-  constructor({ tree, stack, explanation, status, onStep }) {
+  constructor({ tree, stack, explanation, status, onStep, rootValue }) {
     this.tree = tree;
     this.stack = stack;
     this.explanation = explanation;
     this.status = status;
     this.onStep = onStep ?? (() => {});
+    this.rootValue = rootValue ?? null;
     /** @type {import('../api.js').DfsResult|null} */
     this.result = null;
     /** Current step index; -1 means "before the first step". */
@@ -79,57 +94,60 @@ export class StepPlayer {
   /**
    * Loads a new result and shows the start position (before step 1).
    *
-   * Finished behaviour (F-02): store the result, set index to -1 and call render().
-   *
    * @param {import('../api.js').DfsResult} result
    */
   load(result) {
     this.result = result;
     this.index = -1;
-    // TODO(F-02): replace this placeholder with this.render().
-    const outcome = result.target === null
-      ? `${result.order.replace('_', '-').toLowerCase()} visit order`
-      : (result.found ? `found ${result.target}` : `${result.target} not found`);
-    this.explanation.textContent =
-      `${outcome}: ${result.visitOrder.join(', ')} (${result.nodesVisited} nodes visited). `
-      + 'Step-by-step playback is not built yet (F-02).';
-    this.status.textContent = '';
+    this.render();
   }
 
-  /**
-   * Shows the next step. Does nothing at the last step.
-   * Finished behaviour (F-02): if canNext, increment index and render().
-   */
+  /** Shows the next step. Does nothing at the last step. */
   next() {
-    // TODO(F-02)
+    if (!this.canNext) return;
+    this.index += 1;
+    this.render();
   }
 
   /**
-   * Shows the previous step, or the start position. The display must be exactly what it was
-   * before (acceptance check "Step backwards" in the SE document).
-   * Finished behaviour (F-02): if canBack, decrement index and render().
+   * Shows the previous step, or the start position. Because render() draws everything from
+   * `index` alone, the display is exactly what it was before (acceptance check "Step backwards"
+   * in the SE document).
    */
   back() {
-    // TODO(F-02)
+    if (!this.canBack) return;
+    this.index -= 1;
+    this.render();
   }
 
-  /** Goes back to the start position. Finished behaviour (F-02): index = -1, render(). */
+  /** Goes back to the start position. */
   restart() {
-    // TODO(F-02)
+    if (this.result === null) return;
+    this.index = -1;
+    this.render();
   }
 
-  /**
-   * Draws the current position.
-   *
-   * Finished behaviour (F-02):
-   *  - tree.setStates(stateForStep(result, index, rootValue))
-   *  - stack.show(index === -1 ? [root] : result.steps[index].stackAfter)
-   *  - explanation: "Press Next to start." at -1, otherwise steps[index].explanation; after the last
-   *    step of a search, add "Found after N visits." or "Not in the tree: all N nodes visited."
-   *  - status: "Step i of n"
-   *  - call onStep(index)
-   */
+  /** Draws the current position: node states, stack, explanation and status. */
   render() {
-    // TODO(F-02)
+    const { result, index } = this;
+    if (result === null) return;
+
+    this.tree.setStates(stateForStep(result, index, this.rootValue));
+    this.stack.show(index === -1 ? (this.rootValue === null ? [] : [this.rootValue]) : result.steps[index].stackAfter);
+
+    if (index === -1) {
+      this.explanation.textContent = 'Press Next to start.';
+    } else {
+      let text = result.steps[index].explanation;
+      if (index === this.stepCount - 1 && result.target !== null) {
+        text += result.found
+          ? ` Found after ${result.nodesVisited} visits.`
+          : ` Not in the tree: all ${result.nodesVisited} nodes visited.`;
+      }
+      this.explanation.textContent = text;
+    }
+    this.status.textContent = `Step ${index + 1} of ${this.stepCount}`;
+    this.onStep(index);
   }
 }
+
