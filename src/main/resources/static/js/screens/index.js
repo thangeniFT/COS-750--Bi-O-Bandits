@@ -22,11 +22,15 @@ import { render as practice } from './practice-screen.js';
 import { render as quiz } from './quiz-screen.js';
 import { render as text } from './text-screen.js';
 import { render as warmup } from './warmup-screen.js';
+import { render as review } from './review-screen.js';
 import { renderHeader } from './common.js';
+import { render as summary } from './summary-screen.js';
 import { placeholder } from '../util.js';
 
+
+
 /** @type {Record<string, (screen: any, container: HTMLElement, ctx: any) => (void|(() => void))>} */
-const RENDERERS = { welcome,bst, dfs, choice, explorer, warmup, practice, quiz,text };
+const RENDERERS = { welcome,bst, dfs, choice, explorer, warmup, practice, quiz,text, review, summary };
 
 /** The screen types lesson.json may use. A test checks lesson.json against this list. */
 export const SCREEN_TYPES = Object.freeze(Object.keys(RENDERERS));

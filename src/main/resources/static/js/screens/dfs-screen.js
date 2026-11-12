@@ -1,10 +1,15 @@
 
 /**
- * DFS Introduction — Figma Page 3
+ * COS212 DFS Tutor — DFS Introduction
+ * Figma Page 3
  *
- * Demonstrates iterative, left-first DFS using a stack.
- * This is a local teaching animation; the backend
- * explorer remains on Page 4.
+ * 01 Vocabulary
+ * 02 Interactive walkthrough
+ * 03 Four ideas behind DFS
+ * 04 Knowledge check
+ *
+ * Uses iterative, left-first DFS.
+ * No backend changes required.
  */
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -19,17 +24,13 @@ const TREE = [
   { value: 80, x: 525, y: 275, left: null, right: null }
 ];
 
-const NODE_BY_VALUE = new Map(
+const NODE_MAP = new Map(
   TREE.map(node => [node.value, node])
 );
 
 function el(tag, className = '', text = '') {
   const element = document.createElement(tag);
-
-  if (className) {
-    element.className = className;
-  }
-
+  if (className) element.className = className;
   element.textContent = text;
   return element;
 }
@@ -37,90 +38,81 @@ function el(tag, className = '', text = '') {
 function svgEl(tag, attributes = {}) {
   const element = document.createElementNS(SVG_NS, tag);
 
-  for (const [name, value] of Object.entries(attributes)) {
-    element.setAttribute(name, String(value));
-  }
+  Object.entries(attributes).forEach(([key, value]) => {
+    element.setAttribute(key, String(value));
+  });
 
   return element;
 }
 
-/**
- * Generate correct DFS states from the tree structure.
- *
- * The internal stack stores its top at the end.
- * The visual stack shows its top first.
- */
+/* ==========================================
+   GENERATE DFS TRAVERSAL
+   ========================================== */
+
 function createDfsSteps() {
   const stack = [50];
   const visited = [];
-  const steps = [
-    {
-      current: null,
-      visited: [],
-      stack: [50],
-      explanation:
-        'DFS begins with the root node, 50, on the stack. ' +
-        'Press Next Step to begin.'
-    }
-  ];
+
+  const steps = [{
+    current: null,
+    visited: [],
+    stack: [50],
+    explanation:
+      'Node 50 is waiting on the stack. ' +
+      'A stack is a list where the last item added ' +
+      'is the first one removed.'
+  }];
 
   while (stack.length > 0) {
     const value = stack.pop();
-    const node = NODE_BY_VALUE.get(value);
+    const node = NODE_MAP.get(value);
 
     visited.push(value);
 
-    const added = [];
+    const pushed = [];
 
-    // Push right first, so left will be processed first.
+    // Push the right child first so the left
+    // child is removed from the stack first.
     if (node.right !== null) {
       stack.push(node.right);
-      added.push(node.right);
+      pushed.push(node.right);
     }
 
     if (node.left !== null) {
       stack.push(node.left);
-      added.push(node.left);
+      pushed.push(node.left);
     }
 
-    let explanation = '';
-
-    if (value === 50) {
-      explanation =
-        'Visit 50. Push 70, then 30. Because the stack is ' +
-        'Last In, First Out, 30 will be visited next.';
-    } else if (value === 30) {
-      explanation =
-        'Visit 30. Push its right child 40, then its ' +
-        'left child 20. DFS will explore 20 first.';
-    } else if (value === 20) {
-      explanation =
-        'Visit 20. It is a leaf, so there are no children ' +
-        'to add. DFS will backtrack using the stack.';
-    } else if (value === 40) {
-      explanation =
-        'Visit 40. This branch is complete. The next ' +
-        'pending node is 70, from the right subtree.';
-    } else if (value === 70) {
-      explanation =
-        'Visit 70. Push 80, then 60. The stack will ' +
-        'process 60 before 80.';
-    } else if (value === 60) {
-      explanation =
-        'Visit 60. It is a leaf. Node 80 is still ' +
-        'waiting on the stack.';
-    } else if (value === 80) {
-      explanation =
-        'Visit 80. No nodes remain on the stack. ' +
-        'The DFS traversal is complete.';
-    }
+    const explanationByNode = {
+      50:
+        'Visit 50. Push 70, then 30. ' +
+        'Because 30 was pushed last, it is next.',
+      30:
+        'Visit 30. Push 40, then 20. ' +
+        'The next node is 20.',
+      20:
+        'Visit 20. It has no children, ' +
+        'so continue with the next node on the stack.',
+      40:
+        'Visit 40. This branch is finished. ' +
+        'Node 70 is still waiting on the stack.',
+      70:
+        'Visit 70. Push 80, then 60. ' +
+        'Node 60 will be visited before 80.',
+      60:
+        'Visit 60. It has no children. ' +
+        'Node 80 is still waiting.',
+      80:
+        'Visit 80. The stack is empty. ' +
+        'Every node has now been visited.'
+    };
 
     steps.push({
       current: value,
       visited: [...visited],
       stack: [...stack].reverse(),
-      added,
-      explanation
+      pushed,
+      explanation: explanationByNode[value]
     });
   }
 
@@ -129,34 +121,36 @@ function createDfsSteps() {
 
 const DFS_STEPS = createDfsSteps();
 
+/* ==========================================
+   TREE VISUALIZATION
+   ========================================== */
+
 function createTreeSvg() {
   const svg = svgEl('svg', {
     class: 'dfs-lesson-svg',
     viewBox: '0 0 600 345',
     role: 'img',
-    'aria-label': 'Depth-first search tree animation'
+    'aria-label':
+      'Depth-First Search demonstration on a tree with seven nodes'
   });
 
-  // Draw edges behind the nodes.
+  // Connections first, then nodes.
   TREE.forEach(node => {
     [node.left, node.right].forEach(childValue => {
       if (childValue === null) return;
 
-      const child = NODE_BY_VALUE.get(childValue);
+      const child = NODE_MAP.get(childValue);
 
-      const line = svgEl('line', {
+      svg.appendChild(svgEl('line', {
         x1: node.x,
         y1: node.y,
         x2: child.x,
         y2: child.y,
         class: 'dfs-lesson-edge'
-      });
-
-      svg.appendChild(line);
+      }));
     });
   });
 
-  // Draw each node.
   TREE.forEach(node => {
     const group = svgEl('g', {
       class: 'dfs-lesson-node',
@@ -169,118 +163,537 @@ function createTreeSvg() {
       r: 29
     });
 
-    const label = svgEl('text', {
+    const value = svgEl('text', {
       x: node.x,
       y: node.y,
       class: 'dfs-lesson-value'
     });
 
-    label.textContent = String(node.value);
+    value.textContent = String(node.value);
 
-    group.append(circle, label);
+    // Non-colour indication of node state.
+    const stateLabel = svgEl('text', {
+      x: node.x,
+      y: node.y + 45,
+      class: 'dfs-lesson-node-state'
+    });
+
+    group.append(circle, value, stateLabel);
     svg.appendChild(group);
   });
 
   return svg;
 }
 
-function createConceptCard(number, heading, explanation) {
-  const card = el('article', 'dfs-concept-card');
-
-  card.append(
-    el('span', 'dfs-concept-number', number),
-    el('h3', '', heading),
-    el('p', '', explanation)
-  );
-
-  return card;
-}
+/* ==========================================
+   MAIN PAGE
+   ========================================== */
 
 export function render(screen, container) {
-  // Deliberately do not call renderHeader().
-  // It would repeat the lesson.json paragraphs
-  // above our custom Figma page.
-
   const page = el('div', 'dfs-lesson-page');
 
+  let stepIndex = 0;
+  let predictionChoice = null;
+  let predictionMade = false;
+
+  const milestones = new Set();
+
+  // ------------------------------------------
+  // MEASURE HEADER HEIGHT
+  // ------------------------------------------
+
+  const appHeader = document.querySelector('.app-header');
+
+  let headerObserver = null;
+
+  function updateHeaderHeight() {
+    if (!appHeader) return;
+
+    document.documentElement.style.setProperty(
+      '--app-header-height',
+      `${Math.ceil(appHeader.getBoundingClientRect().height)}px`
+    );
+  }
+
+  updateHeaderHeight();
+
+  if (appHeader && typeof ResizeObserver !== 'undefined') {
+    headerObserver = new ResizeObserver(updateHeaderHeight);
+    headerObserver.observe(appHeader);
+  }
+
+  // ==========================================
+  // STICKY ACTIVITY PROGRESS
+  // ==========================================
+
+  const progress = el('div', 'lesson-progress');
+
+  const progressHeader = el(
+    'div',
+    'lesson-progress__header'
+  );
+
+  const progressTitle = el(
+    'strong',
+    '',
+    'DEPTH-FIRST SEARCH'
+  );
+
+  const progressLabel = el(
+    'span',
+    '',
+    'Step 0 of 4'
+  );
+
+  progressHeader.append(
+    progressTitle,
+    progressLabel
+  );
+
+  const progressTrack = el(
+    'div',
+    'lesson-progress__track'
+  );
+
+  progressTrack.setAttribute('role', 'progressbar');
+  progressTrack.setAttribute(
+    'aria-label',
+    'DFS lesson activity progress'
+  );
+  progressTrack.setAttribute('aria-valuemin', '0');
+  progressTrack.setAttribute('aria-valuemax', '4');
+  progressTrack.setAttribute('aria-valuenow', '0');
+
+  const progressFill = el(
+    'div',
+    'lesson-progress__fill'
+  );
+
+  progressFill.style.width = '0%';
+
+  progressTrack.appendChild(progressFill);
+  progress.append(progressHeader, progressTrack);
+
+  function markComplete(milestone) {
+    if (milestones.has(milestone)) return;
+
+    milestones.add(milestone);
+
+    const count = milestones.size;
+
+    progressLabel.textContent = `Step ${count} of 4`;
+    progressFill.style.width = `${count * 25}%`;
+
+    progressTrack.setAttribute(
+      'aria-valuenow',
+      String(count)
+    );
+  }
+
+  // ==========================================
   // INTRODUCTION
-  const intro = el('section', 'dfs-lesson-intro');
+  // ==========================================
+
+  const intro = el(
+    'section',
+    'dfs-lesson-card dfs-lesson-intro'
+  );
 
   intro.append(
-    el('span', 'dfs-lesson-eyebrow', 'LEARN / LESSON 2 OF 2'),
     el('h1', '', 'Introduction to Depth-First Search'),
     el(
       'p',
       'dfs-lesson-lead',
-      'Depth-First Search (DFS) is a tree traversal algorithm ' +
-      'that explores one branch as deeply as possible ' +
-      'before moving to another branch.'
+      'Depth-First Search (DFS) is a way of visiting ' +
+      'nodes in a tree. It follows one path as far as ' +
+      'possible before going back to explore another.'
     ),
     el(
       'p',
       'dfs-lesson-muted',
-      'In this lesson, we use a stack to show exactly ' +
-      'which node DFS visits next and why.'
+      'A tree contains connected nodes. The root is ' +
+      'the starting node, and a branch is a path ' +
+      'connecting nodes. Visiting nodes in a chosen ' +
+      'order is called a traversal.'
     )
   );
 
-  // ANIMATION SECTION HEADING
-  const sectionHeading = el('div', 'dfs-section-heading');
+  const bstReminder = el(
+    'div',
+    'dfs-prerequisite'
+  );
 
-  sectionHeading.append(
-    el('span', 'dfs-lesson-eyebrow', '01 / WATCH HOW IT WORKS'),
+  bstReminder.append(
+    el(
+      'p',
+      '',
+      'New to roots, children or leaves? ' +
+      'Review the tree basics first.'
+    )
+  );
+
+  const bstLink = el(
+    'a',
+    '',
+    'Review BST Basics →'
+  );
+
+  bstLink.href = '#/concept-bst';
+
+  bstReminder.appendChild(bstLink);
+  intro.appendChild(bstReminder);
+
+  // ==========================================
+  // 01 — VOCABULARY
+  // ==========================================
+
+  const vocabulary = el(
+    'section',
+    'dfs-lesson-card dfs-vocabulary'
+  );
+
+  vocabulary.append(
+    el('span', 'dfs-lesson-eyebrow', '01 / VOCABULARY'),
+    el('h2', '', 'Words to know'),
+    el(
+      'p',
+      'dfs-lesson-muted',
+      'Select every term to learn what it means. ' +
+      'These ideas will appear in the animation.'
+    )
+  );
+
+  const vocabularyChips = el(
+    'div',
+    'dfs-vocabulary__chips'
+  );
+
+  const vocabularyFeedback = el(
+    'p',
+    'dfs-vocabulary__feedback',
+    'Choose a term to begin.'
+  );
+
+  vocabularyFeedback.setAttribute('aria-live', 'polite');
+
+  const visitedTerms = new Set();
+
+  const vocabularyTerms = [
+    {
+      term: 'Root',
+      explanation:
+        'The root is the starting node of a tree. ' +
+        'Here, the root is 50.'
+    },
+    {
+      term: 'Traversal',
+      explanation:
+        'A traversal means visiting nodes in a ' +
+        'particular order.'
+    },
+    {
+      term: 'Stack',
+      explanation:
+        'A stack is a collection where the last ' +
+        'item added is the first one removed. ' +
+        'This is called Last In, First Out (LIFO).'
+    },
+    {
+      term: 'Backtracking',
+      explanation:
+        'Backtracking means returning to a previous ' +
+        'choice when there is no further path ' +
+        'to explore.'
+    }
+  ];
+
+  vocabularyTerms.forEach(item => {
+    const chip = el(
+      'button',
+      'dfs-vocabulary__chip',
+      item.term
+    );
+
+    chip.type = 'button';
+    chip.setAttribute('aria-pressed', 'false');
+
+    chip.addEventListener('click', () => {
+      visitedTerms.add(item.term);
+
+      vocabularyChips.querySelectorAll('button')
+        .forEach(other => {
+          other.setAttribute(
+            'aria-pressed',
+            String(other === chip)
+          );
+        });
+
+      vocabularyFeedback.textContent = item.explanation;
+
+      if (visitedTerms.size === vocabularyTerms.length) {
+        markComplete('vocabulary');
+      }
+    });
+
+    vocabularyChips.appendChild(chip);
+  });
+
+  vocabulary.append(
+    vocabularyChips,
+    vocabularyFeedback
+  );
+
+  // ==========================================
+  // 02 — INTERACTIVE WALKTHROUGH
+  // ==========================================
+
+  const walkthroughHeading = el(
+    'div',
+    'dfs-section-heading'
+  );
+
+  walkthroughHeading.append(
+    el(
+      'span',
+      'dfs-lesson-eyebrow',
+      '02 / INTERACTIVE WALKTHROUGH'
+    ),
     el('h2', '', 'Follow DFS step by step'),
     el(
       'p',
       'dfs-lesson-muted',
-      'Use the controls to advance through the tree ' +
+      'Make a prediction, reveal the next node, ' +
       'and watch the stack change.'
     )
   );
 
   const layout = el('div', 'dfs-lesson-layout');
 
-  // LEFT CARD: TREE
-  const treeCard = el('section', 'dfs-lesson-card dfs-tree-card');
+  const treeCard = el(
+    'section',
+    'dfs-lesson-card dfs-tree-card'
+  );
 
   treeCard.append(
     el('h3', '', 'Tree traversal'),
     el(
       'p',
       'dfs-lesson-muted',
-      'DFS visits the left branch first in this example.'
+      'This example visits the left side before ' +
+      'the right side.'
     )
   );
 
   const svg = createTreeSvg();
 
-  const treeViewport = el('div', 'dfs-tree-viewport');
+  const treeViewport = el(
+    'div',
+    'dfs-tree-viewport'
+  );
+
   treeViewport.appendChild(svg);
 
-  // Tree legend
-  const legend = el('div', 'dfs-lesson-legend');
+  // ------------------------------------------
+  // ACCESSIBLE LEGEND
+  // ------------------------------------------
 
-  [
-    ['Not visited', 'default'],
-    ['Current node', 'current'],
-    ['Visited', 'visited'],
-    ['On stack', 'pending']
-  ].forEach(([label, type]) => {
+  const legend = el(
+    'div',
+    'dfs-lesson-legend'
+  );
+
+  const legendItems = [
+    ['○', 'Not visited', 'default'],
+    ['●', 'Current node', 'current'],
+    ['✓', 'Visited', 'visited'],
+    ['◌', 'On stack', 'pending']
+  ];
+
+  legendItems.forEach(([symbol, label, type]) => {
     const item = el('span', 'dfs-legend-item');
 
     item.append(
-      el('i', `dfs-legend-dot dfs-legend-dot--${type}`),
+      el(
+        'span',
+        `dfs-legend-symbol dfs-legend-symbol--${type}`,
+        symbol
+      ),
       document.createTextNode(label)
     );
 
     legend.appendChild(item);
   });
 
-  // Step explanation
+  // ------------------------------------------
+  // PREDICT BEFORE REVEAL
+  // ------------------------------------------
+
+  const prediction = el(
+    'section',
+    'dfs-prediction'
+  );
+
+  prediction.append(
+    el(
+      'span',
+      'dfs-lesson-eyebrow',
+      'YOUR TURN'
+    ),
+    el(
+      'h4',
+      '',
+      'Which node will DFS visit next?'
+    ),
+    el(
+      'p',
+      'dfs-prediction__hint',
+      'Look at the node at the top of the stack.'
+    )
+  );
+
+  const predictionOptions = el(
+    'div',
+    'dfs-prediction__options'
+  );
+
+  const predictionFeedback = el(
+    'p',
+    'dfs-prediction__feedback'
+  );
+
+  predictionFeedback.setAttribute(
+    'aria-live',
+    'polite'
+  );
+
+  prediction.append(
+    predictionOptions,
+    predictionFeedback
+  );
+
+  function renderPrediction() {
+    predictionOptions.replaceChildren();
+    predictionFeedback.textContent = '';
+    predictionChoice = null;
+
+    const current = DFS_STEPS[stepIndex];
+    const nextValue = current.stack[0];
+
+    if (nextValue === undefined) {
+      prediction.hidden = true;
+      return;
+    }
+
+    prediction.hidden = false;
+
+    // Include the correct answer and distractors.
+    const options = [
+      nextValue,
+      ...TREE.map(node => node.value)
+        .filter(value =>
+          value !== nextValue &&
+          !current.visited.includes(value)
+        )
+        .slice(0, 2)
+    ];
+
+    // At late steps, use visited nodes as distractors
+    // if fewer than three unvisited nodes remain.
+    for (const node of TREE) {
+      if (options.length >= 3) break;
+      if (!options.includes(node.value)) {
+        options.push(node.value);
+      }
+    }
+
+    options.forEach(value => {
+      const button = el(
+        'button',
+        'dfs-prediction__option',
+        String(value)
+      );
+
+      button.type = 'button';
+      button.setAttribute('aria-pressed', 'false');
+
+      button.addEventListener('click', () => {
+        predictionChoice = value;
+        predictionMade = true;
+
+        predictionOptions.querySelectorAll('button')
+          .forEach(other => {
+            other.setAttribute(
+              'aria-pressed',
+              String(other === button)
+            );
+          });
+
+        if (value === nextValue) {
+          predictionFeedback.className =
+            'dfs-prediction__feedback is-correct';
+
+          predictionFeedback.textContent =
+            `Correct! ${nextValue} is on top of the stack.`;
+        } else {
+          predictionFeedback.className =
+            'dfs-prediction__feedback is-review';
+
+          predictionFeedback.textContent =
+            'Good try. The stack follows Last In, ' +
+            'First Out. Look at the TOP label.';
+        }
+
+        markComplete('prediction');
+        updateControls();
+      });
+
+      predictionOptions.appendChild(button);
+    });
+
+    const unsureButton = el(
+      'button',
+      'dfs-prediction__option',
+      'Not sure'
+    );
+
+    unsureButton.type = 'button';
+
+    unsureButton.addEventListener('click', () => {
+      predictionChoice = 'unsure';
+      predictionMade = true;
+
+      predictionOptions.querySelectorAll('button')
+        .forEach(other => {
+          other.setAttribute(
+            'aria-pressed',
+            String(other === unsureButton)
+          );
+        });
+
+      predictionFeedback.className =
+        'dfs-prediction__feedback is-review';
+
+      predictionFeedback.textContent =
+        `The next node is ${nextValue}, because it ` +
+        'is the top item on the stack.';
+
+      markComplete('prediction');
+      updateControls();
+    });
+
+    predictionOptions.appendChild(unsureButton);
+  }
+
+  // ------------------------------------------
+  // STEP EXPLANATION
+  // ------------------------------------------
+
   const explanationBox = el(
     'div',
     'dfs-step-explanation'
   );
+
+  explanationBox.setAttribute('aria-live', 'polite');
 
   const stepHeading = el(
     'strong',
@@ -293,33 +706,50 @@ export function render(screen, container) {
   );
 
   explanationBox.append(stepHeading, stepMessage);
-  explanationBox.setAttribute('role', 'status');
 
-  // Traversal sequence
-  const visitSection = el('div', 'dfs-visited-section');
+  // ------------------------------------------
+  // TRAVERSAL ORDER
+  // ------------------------------------------
 
-  visitSection.appendChild(
+  const visitedSection = el(
+    'div',
+    'dfs-visited-section'
+  );
+
+  visitedSection.appendChild(
     el('strong', '', 'Traversal order')
   );
 
-  const visitList = el('div', 'dfs-visited-list');
-  visitSection.appendChild(visitList);
+  const visitedList = el(
+    'div',
+    'dfs-visited-list'
+  );
 
-  // Player controls
-  const controls = el('div', 'dfs-lesson-controls');
+  visitedSection.appendChild(visitedList);
+
+  // ------------------------------------------
+  // PLAYER CONTROLS
+  // ------------------------------------------
+
+  const controls = el(
+    'div',
+    'dfs-lesson-controls'
+  );
 
   const previousButton = el(
     'button',
     'btn',
     '← Previous Step'
   );
+
   previousButton.type = 'button';
 
   const nextButton = el(
     'button',
     'btn btn--primary',
-    'Next Step →'
+    'Reveal Next Step →'
   );
+
   nextButton.type = 'button';
 
   const restartButton = el(
@@ -327,9 +757,13 @@ export function render(screen, container) {
     'btn',
     'Restart'
   );
+
   restartButton.type = 'button';
 
-  const counter = el('span', 'dfs-step-counter');
+  const counter = el(
+    'span',
+    'dfs-step-counter'
+  );
 
   controls.append(
     previousButton,
@@ -341,111 +775,66 @@ export function render(screen, container) {
   treeCard.append(
     treeViewport,
     legend,
+    prediction,
     explanationBox,
-    visitSection,
+    visitedSection,
     controls
   );
 
-  // RIGHT CARD: STACK
+  // ==========================================
+  // LIVE STACK
+  // ==========================================
+
   const stackCard = el(
     'aside',
     'dfs-lesson-card dfs-stack-card'
   );
 
   stackCard.append(
-    el('span', 'dfs-lesson-eyebrow', 'LIVE STACK'),
+    el(
+      'span',
+      'dfs-lesson-eyebrow',
+      'LIVE STACK'
+    ),
     el('h3', '', 'Stack (LIFO)'),
     el(
       'p',
       'dfs-lesson-muted',
-      'The last node pushed onto the stack ' +
-      'is the first node removed.'
+      'A stack is a list where the last item added ' +
+      'is the first one removed. ' +
+      'This is Last In, First Out (LIFO).'
     )
   );
 
-  const stackStatus = el('div', 'dfs-stack-status');
-  const stackList = el('div', 'dfs-lesson-stack');
+  const stackStatus = el(
+    'div',
+    'dfs-stack-status'
+  );
+
+  const stackList = el(
+    'div',
+    'dfs-lesson-stack'
+  );
 
   const stackNote = el(
     'div',
     'dfs-stack-note',
-    'To explore the left side first, DFS pushes ' +
-    'the right child before the left child.'
+    'The top item is removed first. ' +
+    'For left-first DFS, we push the right child ' +
+    'before the left child.'
   );
 
-  stackCard.append(stackStatus, stackList, stackNote);
+  stackCard.append(
+    stackStatus,
+    stackList,
+    stackNote
+  );
+
   layout.append(treeCard, stackCard);
 
-  // CONCEPT CARDS
-  const concepts = el('section', 'dfs-concepts');
-
-  concepts.append(
-    el('span', 'dfs-lesson-eyebrow', '02 / UNDERSTAND THE ALGORITHM'),
-    el('h2', '', 'The four ideas behind DFS')
-  );
-
-  const conceptGrid = el('div', 'dfs-concepts-grid');
-
-  [
-    [
-      '01',
-      'Start at the root',
-      'Begin at the root node. For this example, ' +
-      'we place 50 on the stack.'
-    ],
-    [
-      '02',
-      'Use a stack',
-      'The stack follows Last In, First Out (LIFO). ' +
-      'It remembers nodes that are waiting to be explored.'
-    ],
-    [
-      '03',
-      'Go deep',
-      'Follow one branch as far as possible before ' +
-      'exploring another branch.'
-    ],
-    [
-      '04',
-      'Backtrack',
-      'When a branch finishes, use the next pending ' +
-      'node on the stack to continue.'
-    ]
-  ].forEach(([number, title, text]) => {
-    conceptGrid.appendChild(
-      createConceptCard(number, title, text)
-    );
-  });
-
-  concepts.appendChild(conceptGrid);
-
-  // REMINDER CARD
-  const reminder = el(
-    'section',
-    'dfs-lesson-card dfs-reminder-card'
-  );
-
-  reminder.append(
-    el('span', 'dfs-lesson-eyebrow', 'REMEMBER'),
-    el('h2', '', 'DFS is not the same as BST lookup'),
-    el(
-      'p',
-      '',
-      'A BST lookup uses the ordering rule to choose ' +
-      'left or right. DFS is a traversal strategy: it ' +
-      'can visit the whole tree, even when a node is ' +
-      'not on the current branch.'
-    ),
-    el(
-      'p',
-      'dfs-lesson-muted',
-      'In the next section, you will explore DFS ' +
-      'and different traversal orders yourself.'
-    )
-  );
-
-  // ANIMATION STATE
-  let stepIndex = 0;
+  // ==========================================
+  // WALKTHROUGH STATE UPDATES
+  // ==========================================
 
   function updateTree(step) {
     svg.querySelectorAll('.dfs-lesson-node')
@@ -458,25 +847,43 @@ export function render(screen, container) {
           'is-pending'
         );
 
+        let stateLabel = '';
+        let stateDescription = 'Not visited';
+
         if (value === step.current) {
           group.classList.add('is-current');
+          stateLabel = 'NOW';
+          stateDescription = 'Currently being visited';
         } else if (step.visited.includes(value)) {
           group.classList.add('is-visited');
+          stateLabel = '✓';
+          stateDescription = 'Already visited';
         } else if (step.stack.includes(value)) {
           group.classList.add('is-pending');
+          stateLabel = 'WAIT';
+          stateDescription = 'Waiting on the stack';
         }
+
+        group.querySelector(
+          '.dfs-lesson-node-state'
+        ).textContent = stateLabel;
+
+        group.setAttribute(
+          'aria-label',
+          `Node ${value}. ${stateDescription}.`
+        );
       });
   }
 
   function updateStack(step) {
     stackList.replaceChildren();
 
-    const pendingCount = step.stack.length;
+    const count = step.stack.length;
 
     stackStatus.textContent =
-      `${pendingCount} pending node${pendingCount === 1 ? '' : 's'}`;
+      `${count} pending node${count === 1 ? '' : 's'}`;
 
-    if (pendingCount === 0) {
+    if (count === 0) {
       stackList.appendChild(
         el(
           'p',
@@ -497,13 +904,9 @@ export function render(screen, container) {
       if (index === 0) {
         item.classList.add('is-top');
 
-        const topLabel = el(
-          'span',
-          'dfs-stack-top-label',
-          'TOP'
+        item.appendChild(
+          el('span', 'dfs-stack-top-label', 'TOP')
         );
-
-        item.appendChild(topLabel);
       }
 
       stackList.appendChild(item);
@@ -511,10 +914,10 @@ export function render(screen, container) {
   }
 
   function updateVisited(step) {
-    visitList.replaceChildren();
+    visitedList.replaceChildren();
 
     if (step.visited.length === 0) {
-      visitList.appendChild(
+      visitedList.appendChild(
         el(
           'span',
           'dfs-visit-empty',
@@ -525,75 +928,418 @@ export function render(screen, container) {
     }
 
     step.visited.forEach((value, index) => {
-      visitList.appendChild(
+      visitedList.appendChild(
         el('span', 'dfs-visit-chip', String(value))
       );
 
       if (index < step.visited.length - 1) {
-        visitList.appendChild(
+        visitedList.appendChild(
           el('span', 'dfs-visit-arrow', '→')
         );
       }
     });
   }
 
-  function update() {
+  function updateControls() {
+    const complete =
+      stepIndex === DFS_STEPS.length - 1;
+
+    previousButton.disabled = stepIndex === 0;
+    nextButton.disabled =
+      complete || predictionChoice === null;
+
+    nextButton.textContent = complete
+      ? 'Traversal Complete ✓'
+      : 'Reveal Next Step →';
+
+    counter.textContent =
+      `Step ${stepIndex} of ${DFS_STEPS.length - 1}`;
+  }
+
+  function updateWalkthrough() {
     const step = DFS_STEPS[stepIndex];
-    const completed = stepIndex === DFS_STEPS.length - 1;
 
     updateTree(step);
     updateStack(step);
     updateVisited(step);
 
-    stepHeading.textContent = completed
-      ? 'Traversal complete!'
-      : stepIndex === 0
+    stepHeading.textContent =
+      stepIndex === 0
         ? 'Ready to begin'
-        : `Step ${stepIndex}: Visit ${step.current}`;
+        : stepIndex === DFS_STEPS.length - 1
+          ? 'Traversal complete!'
+          : `Step ${stepIndex}: Visit ${step.current}`;
 
     stepMessage.textContent = step.explanation;
 
-    counter.textContent =
-      `Step ${stepIndex} of ${DFS_STEPS.length - 1}`;
-
-    previousButton.disabled = stepIndex === 0;
-    nextButton.disabled = completed;
-
-    if (completed) {
-      nextButton.textContent = 'Completed ✓';
-    } else {
-      nextButton.textContent = 'Next Step →';
+    if (stepIndex === DFS_STEPS.length - 1) {
+      markComplete('walkthrough');
     }
+
+    // Restore the prediction question for this step.
+    renderPrediction();
+    updateControls();
   }
 
   previousButton.addEventListener('click', () => {
     if (stepIndex > 0) {
       stepIndex -= 1;
-      update();
+      updateWalkthrough();
     }
   });
 
   nextButton.addEventListener('click', () => {
-    if (stepIndex < DFS_STEPS.length - 1) {
+    if (
+      predictionChoice !== null &&
+      stepIndex < DFS_STEPS.length - 1
+    ) {
       stepIndex += 1;
-      update();
+      updateWalkthrough();
     }
   });
 
   restartButton.addEventListener('click', () => {
     stepIndex = 0;
-    update();
+    updateWalkthrough();
   });
 
+  // ==========================================
+  // 03 — FOUR IDEAS BEHIND DFS
+  // ==========================================
+
+  const concepts = el(
+    'section',
+    'dfs-concepts'
+  );
+
+  concepts.append(
+    el(
+      'span',
+      'dfs-lesson-eyebrow',
+      '03 / UNDERSTAND THE ALGORITHM'
+    ),
+    el('h2', '', 'The four ideas behind DFS')
+  );
+
+  const conceptGrid = el(
+    'div',
+    'dfs-concepts-grid'
+  );
+
+  const conceptData = [
+    [
+      '01',
+      'Start at the root',
+      'Begin with node 50, the top node of our tree.'
+    ],
+    [
+      '02',
+      'Use a stack',
+      'Keep track of the nodes waiting to be visited.'
+    ],
+    [
+      '03',
+      'Go deep',
+      'Explore one path before exploring another.'
+    ],
+    [
+      '04',
+      'Backtrack',
+      'Return to a waiting node when a path ends.'
+    ]
+  ];
+
+  conceptData.forEach(([number, title, text]) => {
+    const card = el(
+      'article',
+      'dfs-concept-card'
+    );
+
+    card.append(
+      el('span', 'dfs-concept-number', number),
+      el('h3', '', title),
+      el('p', '', text)
+    );
+
+    conceptGrid.appendChild(card);
+  });
+
+  concepts.appendChild(conceptGrid);
+
+  // A short connection to COS212 algorithms.
+  const algorithmCard = el(
+    'div',
+    'dfs-algorithm-card'
+  );
+
+  algorithmCard.append(
+    el('h3', '', 'How does the algorithm work?'),
+    el(
+      'p',
+      '',
+      'This version uses an explicit stack. ' +
+      'DFS can also be written recursively, ' +
+      'where function calls use the call stack.'
+    )
+  );
+
+  const pseudocode = el(
+    'pre',
+    'dfs-pseudocode'
+  );
+
+  pseudocode.textContent =
+`stack = [root]
+
+while stack is not empty:
+    node = stack.pop()
+    visit(node)
+
+    if node.right exists:
+        stack.push(node.right)
+
+    if node.left exists:
+        stack.push(node.left)`;
+
+  algorithmCard.appendChild(pseudocode);
+
+  // Reminder about BST lookup versus traversal.
+  const reminder = el(
+    'section',
+    'dfs-lesson-card dfs-reminder-card'
+  );
+
+  reminder.append(
+    el('span', 'dfs-lesson-eyebrow', 'REMEMBER'),
+    el('h2', '', 'DFS is not the same as BST lookup'),
+    el(
+      'p',
+      '',
+      'A BST lookup uses value comparisons to choose ' +
+      'a left or right path. DFS visits nodes in a ' +
+      'traversal order, even when their values do not ' +
+      'help locate a target.'
+    )
+  );
+
+  // ==========================================
+  // 04 — KNOWLEDGE CHECK
+  // ==========================================
+
+  const check = el(
+    'section',
+    'dfs-lesson-card dfs-check'
+  );
+
+  check.append(
+    el(
+      'span',
+      'dfs-lesson-eyebrow',
+      '04 / CHECK YOUR UNDERSTANDING'
+    ),
+    el('h2', '', 'Ready to explore DFS?'),
+    el(
+      'p',
+      'dfs-lesson-muted',
+      'Try two short questions. ' +
+      'You can use hints and retry without losing marks.'
+    )
+  );
+
+  const checkQuestions = [
+    {
+      id: 'stack',
+      prompt:
+        'A stack contains 70, then 30 on top. ' +
+        'Which node is removed first?',
+      options: ['70', '30', 'Both at once', 'Not sure'],
+      correct: '30',
+      hint:
+        'A stack uses Last In, First Out. ' +
+        'Look at the top item.',
+      explanation:
+        'Correct! Node 30 is on top, so it is removed first.'
+    },
+    {
+      id: 'order',
+      prompt:
+        'In the example tree, which node is visited after 30?',
+      options: ['70', '40', '20', 'Not sure'],
+      correct: '20',
+      hint:
+        'When 30 is visited, its right child 40 is pushed ' +
+        'before its left child 20.',
+      explanation:
+        'Correct! Node 20 is visited next because ' +
+        'it was pushed last and is on top of the stack.'
+    }
+  ];
+
+  const checkCorrect = new Set();
+
+  const checkGrid = el(
+    'div',
+    'dfs-check__grid'
+  );
+
+  const finalResult = el(
+    'div',
+    'dfs-check__result'
+  );
+
+  finalResult.hidden = true;
+  finalResult.setAttribute('aria-live', 'polite');
+
+  function updateCheckResult() {
+    if (checkCorrect.size === checkQuestions.length) {
+      finalResult.hidden = false;
+      finalResult.className =
+        'dfs-check__result is-ready';
+
+      finalResult.textContent =
+        "You're ready to explore DFS! " +
+        'You understand the stack and the next-node order.';
+
+      markComplete('check');
+    }
+  }
+
+  checkQuestions.forEach((question, index) => {
+    const card = el(
+      'article',
+      'dfs-check__question'
+    );
+
+    card.appendChild(
+      el(
+        'h3',
+        '',
+        `${index + 1}. ${question.prompt}`
+      )
+    );
+
+    const options = el(
+      'div',
+      'dfs-check__options'
+    );
+
+    const feedback = el(
+      'p',
+      'dfs-check__feedback'
+    );
+
+    feedback.setAttribute('aria-live', 'polite');
+
+    question.options.forEach(answer => {
+      const button = el(
+        'button',
+        'dfs-check__option',
+        answer
+      );
+
+      button.type = 'button';
+      button.setAttribute('aria-pressed', 'false');
+
+      button.addEventListener('click', () => {
+        options.querySelectorAll('button').forEach(other => {
+          other.setAttribute(
+            'aria-pressed',
+            String(other === button)
+          );
+        });
+
+        if (answer === question.correct) {
+          checkCorrect.add(question.id);
+
+          feedback.className =
+            'dfs-check__feedback is-correct';
+
+          feedback.textContent = question.explanation;
+        } else {
+          checkCorrect.delete(question.id);
+
+          feedback.className =
+            'dfs-check__feedback is-review';
+
+          feedback.textContent =
+            answer === 'Not sure'
+              ? `That's okay. ${question.hint}`
+              : `Not quite. ${question.hint} Try again.`;
+        }
+
+        updateCheckResult();
+      });
+
+      options.appendChild(button);
+    });
+
+    card.append(options, feedback);
+    checkGrid.appendChild(card);
+  });
+
+  check.append(
+    checkGrid,
+    finalResult
+  );
+
+  // ==========================================
+  // PAGE NAVIGATION
+  // ==========================================
+
+  const lessonNavigation = el(
+    'nav',
+    'dfs-page-navigation'
+  );
+
+  lessonNavigation.setAttribute(
+    'aria-label',
+    'DFS lesson navigation'
+  );
+
+  const backToBst = el(
+    'a',
+    'dfs-page-navigation__back',
+    '← BST Basics'
+  );
+
+  backToBst.href = '#/concept-bst';
+
+  const goToExplorer = el(
+    'a',
+    'dfs-page-navigation__next',
+    'Next: DFS Explorer →'
+  );
+
+  goToExplorer.href = '#/worked-example';
+
+  lessonNavigation.append(
+    backToBst,
+    goToExplorer
+  );
+
+  // ==========================================
   // ASSEMBLE PAGE
+  // ==========================================
+
   page.append(
+    progress,
     intro,
-    sectionHeading,
+    vocabulary,
+    walkthroughHeading,
     layout,
     concepts,
-    reminder
+    algorithmCard,
+    reminder,
+    check,
+    lessonNavigation
   );
 
   container.appendChild(page);
-  update();
+
+  updateWalkthrough();
+
+  // Cleanup when leaving this screen.
+  return () => {
+    headerObserver?.disconnect();
+  };
 }

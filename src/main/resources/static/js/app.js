@@ -381,7 +381,6 @@ function show(index) {
 
 
   updateTopNavigation(screen.id);
-  updateLearningProgress(screen.id);
 
  
   backBtn.disabled = index === 0;
@@ -404,7 +403,7 @@ function show(index) {
 
   state.cleanup =
     renderScreen(screen, screenEl, ctx) ?? null;
-addLearningAction(screen.id);
+
  
   const heading = screenEl.querySelector('h1');
 
@@ -414,11 +413,32 @@ addLearningAction(screen.id);
   }
 }
 
+
+
+function setupStickyHeaderHeight() {
+  const header = document.querySelector('.app-header');
+  if (!header) return;
+
+  const update = () => {
+    document.documentElement.style.setProperty(
+      '--app-header-height',
+      `${Math.ceil(header.getBoundingClientRect().height)}px`
+    );
+  };
+
+  update();
+
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(update).observe(header);
+  }
+}
+
 // ------------------------------------------------------
 // Application startup
 // ------------------------------------------------------
 
 async function start() {
+
   try {
     const [lesson, trees] = await Promise.all([
       loadData('lesson'),
@@ -448,7 +468,8 @@ async function start() {
   }
 
   setupTopNavigation();
-  setupLearningProgress();
+  setupStickyHeaderHeight();
+
 
   backBtn.addEventListener('click', () => {
     go(state.index - 1);
@@ -466,5 +487,7 @@ async function start() {
   show(indexFromHash());
   mainEl.focus();
 }
+
+
 
 start();
