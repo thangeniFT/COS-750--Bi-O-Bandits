@@ -7,6 +7,7 @@
    4. Tree drawing    - node states (ID document, figure 4)
    5. Stack panel
    6. Accessibility helpers
+   7. Explorer and practice extras (visited line, clickable nodes)
    Every node state differs by outline or mark as well as colour (NFR-06).
    ===================================================================== */
 
@@ -106,6 +107,8 @@ main:focus { outline: none; }
 .message--error { background: var(--red-fill); border: 1px solid var(--red-line); }
 .message--info { background: var(--blue-fill); border: 1px solid var(--blue-line); }
 .message--success { background: var(--green-fill); border: 1px solid var(--green-line); }
+.message p { margin: 0 0 6px; }
+.message p:last-child { margin-bottom: 0; }
 
 /* Shown where a screen or feature is still a backlog ticket. Remove once nothing uses it. */
 .placeholder { border: 2px dashed var(--grey-line); border-radius: var(--radius); padding: 16px; color: var(--text-muted); background: var(--surface); margin: 16px 0; }
@@ -170,3 +173,13 @@ main:focus { outline: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* 7. Explorer and practice extras ---------------------------------------- */
+/* "Visited: 50 -> 30 -> ..." under the tree (explorer screens) */
+.visited-line { margin: 8px 0 0; font-size: 14px; font-weight: 600; }
+
+/* Nodes the student can click in predict mode (practice screen) */
+.tree-node--clickable { cursor: pointer; }
+.tree-node--clickable:hover circle { stroke-width: 4; }
+.tree-node--clickable:focus-visible { outline: none; }
+.tree-node--clickable:focus-visible circle { stroke: var(--focus); stroke-width: 4; }

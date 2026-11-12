@@ -58,6 +58,16 @@ export function render(screen, container, ctx) {
   const nextBtn = el('button', { type: 'button', class: 'btn btn--primary', onclick: () => { player?.next(); updateStepButtons(); } }, 'Next step');
   const restartBtn = el('button', { type: 'button', class: 'btn', onclick: () => { player?.restart(); updateStepButtons(); } }, 'Restart');
 
+ /**
+   * Shows which nodes have been visited up to and including step `index`.
+   * @param {number} index - 0-based step index, or -1 before the first step
+   */
+  function showVisited(index) {
+    const visited = player?.result ? player.result.visitOrder.slice(0, index + 1) : [];
+    visitedLine.textContent = visited.length > 0 ? `Visited: ${visited.join(' \u2192 ')}` : 'Visited: none yet';
+  }
+
+  
   /** Enables the step buttons only when there is somewhere to go. */
   function updateStepButtons() {
     backBtn.disabled = !player?.canBack;
@@ -71,8 +81,9 @@ export function render(screen, container, ctx) {
    */
   function drawTree(view) {
     const tree = renderTree(svg, view);
-    player = new StepPlayer({ tree, stack, explanation, status });
+    player = new StepPlayer({ tree, stack, explanation, status,  onStep: showVisited, rootValue: view.root?.value ?? null });
     stack.clear();
+    visitedLine.textContent = '';
     updateStepButtons();
   }
 
@@ -168,6 +179,23 @@ export function render(screen, container, ctx) {
       afterRun,
       ...controls)));
 
+  // --- Keyboard shortcuts: left/right arrows step back and forward ------------------------
+  /** @param {KeyboardEvent} event */
+  const onKeydown = (event) => {
+    if (!showStepControls || !player) return;
+    if (event.target instanceof Element && event.target.closest('input, select, textarea')) return;
+    if (event.key === 'ArrowRight') {
+      player.next();
+    } else if (event.key === 'ArrowLeft') {
+      player.back();
+    } else {
+      return;
+    }
+    updateStepButtons();
+  };
+  document.addEventListener('keydown', onKeydown);
+
+
   // --- Initial load -----------------------------------------------------------------------
   (async () => {
     try {
@@ -179,4 +207,5 @@ export function render(screen, container, ctx) {
       showError(message, error);
     }
   })();
+  return () => document.removeEventListener('keydown', onKeydown);
 }
