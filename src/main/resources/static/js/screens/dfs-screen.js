@@ -490,7 +490,8 @@ export function render(screen, container) {
     link.type = 'button';
     link.append(
       el('strong', '', info.name),
-      el('span', '', info.rule.join(' → '))
+      el('span', '', info.rule.join(' → ')),
+      el('span', 'dfs-type-link__summary', info.summary)
     );
 
     link.addEventListener('click', () => {
@@ -657,6 +658,30 @@ export function render(screen, container) {
     compare.appendChild(row);
   });
 
+  // A direct comparison of all three orders together, instead of
+  // leaving the learner to click between them and remember the
+  // differences unaided.
+  const relate = el('div', 'dfs-compare dfs-relate');
+
+  relate.append(
+    el('strong', 'dfs-compare__title', 'How the three orders relate'),
+    el(
+      'p',
+      'dfs-relate__text',
+      'All three visit the same left subtree before the right ' +
+      'subtree - that part never changes. The only thing that ' +
+      'differs between them is when the root itself gets visited.'
+    ),
+    el(
+      'p',
+      'dfs-relate__text',
+      'Pre-order visits the root before its subtrees (root first). ' +
+      'In-order visits it between them (root in the middle)  - on a ' +
+      'BST that is exactly what produces the values in sorted ' +
+      'order. Post-order visits it after both subtrees (root last).'
+    )
+  );
+
   const travCaption = el('div', 'dfs-step-explanation');
   travCaption.setAttribute('aria-live', 'polite');
 
@@ -665,7 +690,15 @@ export function render(screen, container) {
 
   travCaption.append(travCaptionHeading, travCaptionText);
 
-  typesInfo.append(segmented, ruleRow, travSummary, travUse, compare, travCaption);
+  typesInfo.append(
+    segmented,
+    ruleRow,
+    travSummary,
+    travUse,
+    compare,
+    relate,
+    travCaption
+  );
 
   // Side tree
   const typesTree = el('article', 'dfs-lesson-card dfs-tree-card');
@@ -882,7 +915,7 @@ export function render(screen, container) {
     updateTraversal();
   });
 
- 
+
 const stackGrid = el('div', 'dfs-grid dfs-stack-grid');
 
 // ==========================================
@@ -1106,7 +1139,25 @@ stackGrid.append(
   sideColumn
 );
 
-panels[2].appendChild(stackGrid);
+// Ties this tab back to the comparison in "Traversal types", so the
+// stack reads as the mechanism behind that order, not a new topic.
+const stackIntro = el('div', 'dfs-stack-intro');
+
+stackIntro.append(
+  el('span', 'dfs-lesson-eyebrow', 'HOW THE ORDER HAPPENS'),
+  el('h2', '', 'The stack behind pre-order'),
+  el(
+    'p',
+    'dfs-lesson-muted',
+    'This is the mechanism that produced the pre-order sequence ' +
+    `you saw in Traversal types: ${TRAVERSALS.pre.order.join(' → ')}. ` +
+    'A stack is Last In, First Out, so pushing the right child ' +
+    'before the left means the left child always comes off — and ' +
+    'gets visited — first.'
+  )
+);
+
+panels[2].append(stackIntro, stackGrid);
 
 
   function renderPrediction() {
