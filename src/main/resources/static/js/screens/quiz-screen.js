@@ -18,6 +18,7 @@ import {
   selectItems
 } from '../quiz/quiz-engine.js';
 import { renderGuidedReview } from '../quiz/guided-review.js';
+import { describeNodeTag, nameTreeNode } from '../util.js';
 
 const QUIZ_NS = 'http://www.w3.org/2000/svg';
 
@@ -336,8 +337,7 @@ const caption = qEl(
 
     const attrs = {
       class: classes.join(' '),
-      'data-value': n.value,
-      'aria-label': `Node ${n.value}`
+      'data-value': n.value
     };
 
     if (onPick) {
@@ -365,22 +365,30 @@ const caption = qEl(
 
     const index = draft.indexOf(n.value);
 
-    if (
-      index >= 0 ||
-      Number(highlight.current) === n.value
-    ) {
+    // Every state has a text tag as well as a colour: draft order, NOW, ✓ (visited), PICKED.
+    const tagText = index >= 0
+      ? `#${index + 1}`
+      : Number(highlight.current) === n.value
+        ? 'NOW'
+        : (highlight.visited || []).includes(n.value)
+          ? '✓'
+          : highlight.selected === n.value
+            ? 'PICKED'
+            : '';
+
+    if (tagText) {
       const tag = qSvg('text', {
         x,
         y: y + 43,
         class: 'quiz-tree-state'
       });
 
-      tag.textContent = index >= 0
-        ? `#${index + 1}`
-        : 'NOW';
+      tag.textContent = tagText;
 
       group.appendChild(tag);
     }
+
+    nameTreeNode(group, describeNodeTag(tagText));
 
     if (onPick) {
       group.addEventListener(
@@ -439,7 +447,7 @@ const caption = qEl(
    ========================================== */
 
 export function render(screen, container) {
-  const page = qEl('main', 'quiz-page');
+  const page = qEl('div', 'quiz-page');
 
   const state = {
     bank: null,

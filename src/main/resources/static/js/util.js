@@ -134,3 +134,40 @@ export function placeholder(ticket, what) {
   return el('div', { class: 'placeholder', role: 'note' },
     el('strong', {}, `Not built yet (${ticket}). `), what);
 }
+
+/**
+ * Gives a clickable SVG tree node an accessible name that starts with the words it shows on screen
+ * (for example "20 LEAF" or "45 NOW"), followed by a description for screen readers. WCAG 2.5.3
+ * "Label in Name": people using voice control say what they see, so the visible text must be part
+ * of the name. Call it after all the node's <text> elements have been added.
+ *
+ * @param {Element} group - the node's <g> element
+ * @param {string} [description] - extra detail for screen readers, such as "current node"
+ * @returns {string} the name that was set
+ */
+export function nameTreeNode(group, description = '') {
+  const texts = [...group.querySelectorAll('text')].filter((t) => t.textContent.trim());
+  // Browsers and checkers join SVG <text> pieces without a gap ("20LEAF"). A trailing space keeps
+  // the words apart for assistive technology; SVG does not draw trailing spaces, so nothing moves.
+  texts.slice(0, -1).forEach((t) => {
+    if (!t.textContent.endsWith(' ')) t.textContent += ' ';
+  });
+  const visible = texts.map((t) => t.textContent.trim()).join(' ');
+  const name = description ? `${visible}. ${description}` : visible;
+  group.setAttribute('aria-label', name);
+  return name;
+}
+
+/** Plain-language meaning of the short tags drawn under tree nodes, for screen readers. */
+export function describeNodeTag(tag) {
+  if (!tag) return '';
+  if (tag === 'NOW') return 'Current node.';
+  if (tag === 'WAIT') return 'Waiting on the stack.';
+  if (tag === 'FIXED') return 'Moved to the correct place.';
+  if (tag === 'NEW') return 'Just added.';
+  if (tag === 'PICKED') return 'Selected.';
+  if (tag === '✓') return 'Visited.';
+  if (tag === '✕') return 'Not correct, try another node.';
+  if (/^#\d+$/.test(tag)) return `Number ${tag.slice(1)} in the order.`;
+  return '';
+}

@@ -258,7 +258,7 @@ function makeTree() {
    ========================================== */
 
 export function render(screen, container) {
-  const page = el('main', 'summary-page');
+  const page = el('div', 'summary-page');
 
   // ==========================================
   // 1. INTRODUCTION
