@@ -418,3 +418,15 @@
     flex: 1 1 150px;
   }
 }
+
+/* Worth a look: correct answers given while guessing (F-08). */
+.summary-page .summary-worth {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #dce1e5;
+}
+
+.summary-page .summary-worth-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}

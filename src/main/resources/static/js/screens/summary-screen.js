@@ -148,7 +148,16 @@ function getQuizResult() {
         Number.isInteger(saved.passMark) &&
         saved.passMark >= 0
           ? saved.passMark
-          : Math.ceil(answers.length * 0.75)
+          : Math.ceil(answers.length * 0.75),
+
+      // Correct answers given while guessing (planReview in quiz-engine.js, F-08).
+      worthALook: Array.isArray(saved.worthALook)
+        ? saved.worthALook.filter(entry =>
+            entry &&
+            Number.isInteger(entry.slot) &&
+            typeof entry.outcome === 'string'
+          )
+        : []
     };
 
   } catch {
@@ -505,6 +514,36 @@ export function render(screen, container) {
     );
 
     scoreSection.appendChild(info);
+
+    if (result.worthALook.length) {
+      const worth = el('div', 'summary-worth');
+      const list = el('ul', 'summary-worth-list');
+
+      result.worthALook.forEach(entry => {
+        const item = el('li');
+        item.appendChild(
+          link(
+            `Question ${entry.slot} · ${entry.outcome} →`,
+            '#/review',
+            'summary-text-link'
+          )
+        );
+        list.appendChild(item);
+      });
+
+      worth.append(
+        el('strong', '', 'Worth a look'),
+        el(
+          'p',
+          'summary-muted',
+          'You got these right while guessing, so it may have been luck. ' +
+          'A quick review will make them stick.'
+        ),
+        list
+      );
+
+      scoreSection.appendChild(worth);
+    }
 
   } else {
     scoreSection.append(

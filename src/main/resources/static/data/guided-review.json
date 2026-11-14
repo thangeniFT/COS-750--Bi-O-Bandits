@@ -1,0 +1,361 @@
+{
+  "_comment": "Guided review after the quiz (F-08, ID section 10.5). One entry per learning outcome: a short replay of the worked example with the reason highlighted, an easier question with hint 1 already shown, and an explanation. All replays use lesson tree A (shown as 'Tree Example' in the quiz). LO2, LO4 and LO5 replay the DFS search for 60 and LO3 replays pre-order; stack lists are top first and were checked against DepthFirstSearch. LO1 replays a BST insert, so its steps have no stack.",
+  "tree": "A",
+  "outcomes": {
+    "LO1": {
+      "title": "The BST ordering rule",
+      "screen": {
+        "route": "#/concept-bst",
+        "label": "BST basics"
+      },
+      "replay": {
+        "intro": "Watch where 65 belongs in the example tree. At every node, compare and choose a side.",
+        "steps": [
+          {
+            "visited": [],
+            "current": 50,
+            "reason": "65 is bigger than 50, so it belongs in the right subtree of 50."
+          },
+          {
+            "visited": [
+              50
+            ],
+            "current": 70,
+            "reason": "65 is smaller than 70, so go to the left subtree of 70."
+          },
+          {
+            "visited": [
+              50,
+              70
+            ],
+            "current": 60,
+            "reason": "65 is bigger than 60, and 60 has no right child, so 65 becomes the right child of 60."
+          }
+        ]
+      },
+      "practice": {
+        "prompt": "Where does 65 go in the example tree?",
+        "hint": "Hint 1: start at the root. Smaller values go left, larger values go right, at every node.",
+        "options": [
+          {
+            "id": "a",
+            "text": "Right child of 60",
+            "correct": true,
+            "feedback": "Correct. 65 > 50 (go right), 65 < 70 (go left), 65 > 60 (go right)."
+          },
+          {
+            "id": "b",
+            "text": "Right child of 80",
+            "feedback": "65 is smaller than 70, so it cannot be anywhere in the subtree to the right of 70."
+          },
+          {
+            "id": "c",
+            "text": "Right child of 40",
+            "feedback": "65 is bigger than the root, 50, so it must go in the right subtree. 40 is in the left subtree."
+          }
+        ]
+      },
+      "explain": "In a BST every value in a node's left subtree is smaller than the node, and every value in its right subtree is larger. The rule holds at every node, not only at the root, so a new value is placed by comparing it at each node on the way down."
+    },
+    "LO2": {
+      "title": "Going deep, then backtracking",
+      "screen": {
+        "route": "#/worked-example",
+        "label": "Worked example"
+      },
+      "replay": {
+        "intro": "Look at what DFS does after it reaches a leaf.",
+        "steps": [
+          {
+            "visited": [
+              50
+            ],
+            "current": 30,
+            "stack": [
+              20,
+              40,
+              70
+            ],
+            "reason": "From 30, DFS goes down to the left child first. It does not move across to 70."
+          },
+          {
+            "visited": [
+              50,
+              30
+            ],
+            "current": 20,
+            "stack": [
+              40,
+              70
+            ],
+            "reason": "20 is a leaf, so there is nowhere deeper to go."
+          },
+          {
+            "visited": [
+              50,
+              30,
+              20
+            ],
+            "current": 40,
+            "stack": [
+              70
+            ],
+            "reason": "Backtrack: 40 is now on top of the stack, so DFS visits 40 before 70."
+          }
+        ]
+      },
+      "practice": {
+        "prompt": "On the example tree, DFS has just visited 30. Which node does left-first DFS visit next?",
+        "hint": "Hint 1: DFS goes down before it goes across. Which child of 30 is on the left?",
+        "highlight": {
+          "visited": [
+            50
+          ],
+          "current": 30
+        },
+        "options": [
+          {
+            "id": "a",
+            "text": "20",
+            "correct": true,
+            "feedback": "Correct. 20 is the left child of 30, so DFS goes down to it first."
+          },
+          {
+            "id": "b",
+            "text": "70",
+            "misconception": "M1",
+            "feedback": "70 is across the tree at the same level as 30. That is level-by-level search (BFS). DFS goes deeper first."
+          },
+          {
+            "id": "c",
+            "text": "40",
+            "feedback": "40 is the right child of 30. Left-first DFS visits the left child, 20, before it."
+          }
+        ]
+      },
+      "explain": "Depth-first means following one path down until it ends, then backtracking to the most recent branch you skipped. After 30 the path continues to 20. Only once 20 is finished does DFS backtrack to 40."
+    },
+    "LO3": {
+      "title": "Pre-, in- and post-order",
+      "screen": {
+        "route": "#/worked-example",
+        "label": "Explorer: traversal orders"
+      },
+      "replay": {
+        "intro": "Pre-order writes each node down the moment DFS arrives at it.",
+        "steps": [
+          {
+            "visited": [],
+            "current": 50,
+            "stack": [
+              50
+            ],
+            "reason": "Arrive at 50 and write it down straight away. Written so far: 50."
+          },
+          {
+            "visited": [
+              50
+            ],
+            "current": 30,
+            "stack": [
+              30,
+              50
+            ],
+            "reason": "Go left to 30 and write it down before its children. Written so far: 50, 30."
+          },
+          {
+            "visited": [
+              50,
+              30
+            ],
+            "current": 20,
+            "stack": [
+              20,
+              30,
+              50
+            ],
+            "reason": "Then 20. Written so far: 50, 30, 20. The node always comes before its children, which is what pre means."
+          }
+        ]
+      },
+      "practice": {
+        "prompt": "In a pre-order traversal, when is a node written down?",
+        "hint": "Hint 1: pre means before. Before what?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Before its children",
+            "correct": true,
+            "feedback": "Correct. Pre-order: node, then left subtree, then right subtree."
+          },
+          {
+            "id": "b",
+            "text": "Between its left and right child",
+            "feedback": "That is in-order (left, node, right). On a BST it gives the values in sorted order."
+          },
+          {
+            "id": "c",
+            "text": "After both of its children",
+            "feedback": "That is post-order (left, right, node). The root comes last."
+          }
+        ]
+      },
+      "explain": "All three orders come from the same DFS walk. The only difference is when a node is written down: before its children (pre), between them (in) or after them (post). On the example tree, pre-order is 50, 30, 20, 40, 70, 60, 80."
+    },
+    "LO4": {
+      "title": "Tracing a search with the stack",
+      "screen": {
+        "route": "#/practice",
+        "label": "Guided practice"
+      },
+      "replay": {
+        "intro": "DFS searches the example tree for 60. Watch the stack in the last steps.",
+        "steps": [
+          {
+            "visited": [
+              50,
+              30,
+              20
+            ],
+            "current": 40,
+            "stack": [
+              70
+            ],
+            "reason": "Visit 40. It is a leaf, so nothing is pushed. Only 70 is left on the stack."
+          },
+          {
+            "visited": [
+              50,
+              30,
+              20,
+              40
+            ],
+            "current": 70,
+            "stack": [
+              60,
+              80
+            ],
+            "reason": "Pop 70. Push 80 (right), then 60 (left), so 60 is on top."
+          },
+          {
+            "visited": [
+              50,
+              30,
+              20,
+              40,
+              70
+            ],
+            "current": 60,
+            "stack": [
+              80
+            ],
+            "reason": "Pop 60: it is the target, so the search stops. 80 is never visited."
+          }
+        ]
+      },
+      "practice": {
+        "prompt": "DFS has just visited 70 on the example tree. The stack now holds 60 (top) and 80. Which node does DFS visit next?",
+        "hint": "Hint 1: DFS always takes the value on top of the stack.",
+        "highlight": {
+          "visited": [
+            50,
+            30,
+            20,
+            40
+          ],
+          "current": 70
+        },
+        "options": [
+          {
+            "id": "a",
+            "text": "60",
+            "correct": true,
+            "feedback": "Correct. 60 is on top because it was pushed last."
+          },
+          {
+            "id": "b",
+            "text": "80",
+            "feedback": "80 is underneath 60. It was pushed first, so it comes out later."
+          },
+          {
+            "id": "c",
+            "text": "50",
+            "feedback": "50 was visited at the very start. DFS never pushes a visited node again."
+          }
+        ]
+      },
+      "explain": "To trace DFS, repeat one cycle: pop the top value, visit it, then push its right child and then its left child. The left child ends up on top, so it is visited next."
+    },
+    "LO5": {
+      "title": "Why DFS can visit more nodes than needed",
+      "screen": {
+        "route": "#/worked-example",
+        "label": "Explorer: search"
+      },
+      "replay": {
+        "intro": "DFS searches the example tree for 60. Count the visits.",
+        "steps": [
+          {
+            "visited": [],
+            "current": 50,
+            "stack": [
+              30,
+              70
+            ],
+            "reason": "60 is bigger than 50, so a BST search would go right. DFS goes left anyway, because left-first is its rule."
+          },
+          {
+            "visited": [
+              50,
+              30
+            ],
+            "current": 20,
+            "stack": [
+              40,
+              70
+            ],
+            "reason": "DFS checks the whole left subtree (30, 20, 40), even though no value there can be 60."
+          },
+          {
+            "visited": [
+              50,
+              30,
+              20,
+              40,
+              70
+            ],
+            "current": 60,
+            "stack": [
+              80
+            ],
+            "reason": "Found after 6 visits. A BST search would need 3 (50, 70, 60). DFS ignores the ordering rule."
+          }
+        ]
+      },
+      "practice": {
+        "prompt": "DFS searches the example tree for 60. Does it visit node 20 on the way?",
+        "hint": "Hint 1: does DFS use the BST rule (smaller left, larger right) to decide where to go?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Yes. DFS explores the left subtree first, whatever the target is.",
+            "correct": true,
+            "feedback": "Correct. DFS does not compare the target with the node to choose a direction, so it visits 30, 20 and 40 first."
+          },
+          {
+            "id": "b",
+            "text": "No. 60 is bigger than 50, so DFS goes right.",
+            "misconception": "M4",
+            "feedback": "That is how binary search on a BST works. DFS always goes left first, so it visits 20 before reaching 60."
+          },
+          {
+            "id": "c",
+            "text": "Only if 20 is bigger than 60.",
+            "feedback": "DFS does not compare values to choose where to go. It visits 20 because 20 is in the left subtree."
+          }
+        ]
+      },
+      "explain": "DFS is a general way to walk any tree, so it does not use the BST ordering rule. That is why a search can visit more nodes than a BST search would. On the example tree the search for 60 takes 6 visits instead of 3."
+    }
+  }
+}

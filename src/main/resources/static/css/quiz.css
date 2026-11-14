@@ -739,3 +739,110 @@
     transition: none !important;
   }
 }
+
+/* Secondary action that should never look like a dead end ("Continue to summary anyway"). */
+.quiz-page .quiz-button--quiet {
+  border-color: var(--quiz-border);
+  color: var(--quiz-muted);
+}
+
+/* ============================================
+   GUIDED REVIEW (F-08)
+   ============================================ */
+
+.quiz-page .quiz-review-title {
+  margin: 6px 0 12px;
+  font-size: clamp(22px, 3vw, 28px);
+}
+
+.quiz-page .quiz-review-title:focus {
+  outline: none;
+}
+
+.quiz-page .quiz-review-replay {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  margin-top: 12px;
+}
+
+.quiz-page .quiz-review-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 16px;
+  padding: 10px;
+  list-style: none;
+
+  border: 2px solid var(--quiz-border);
+  border-top: 0;
+  border-radius: 0 0 10px 10px;
+  background: var(--quiz-light);
+}
+
+.quiz-page .quiz-review-stack li {
+  padding: 8px;
+  border: 1px solid var(--quiz-border);
+  border-radius: 6px;
+  background: #ffffff;
+  font-family: ui-monospace, Consolas, monospace;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* The top of the stack is marked with text ("← top") as well as weight, never colour alone. */
+.quiz-page .quiz-review-stack li.is-top {
+  border: 2px solid var(--quiz-ink);
+}
+
+.quiz-page .quiz-review-stack li.is-empty {
+  border-style: dashed;
+  color: var(--quiz-muted);
+  font-weight: 400;
+}
+
+.quiz-page .quiz-review-reason {
+  margin: 0;
+  padding: 14px 16px;
+  border-left: 4px solid #8b541b;
+  border-radius: 0 8px 8px 0;
+  background: #fff4e6;
+  color: #5c3510;
+  font-weight: 600;
+}
+
+.quiz-page .quiz-review-counter {
+  align-self: center;
+}
+
+.quiz-page .quiz-review-hint {
+  margin: 12px 0 16px;
+  padding: 12px 16px;
+  border: 1px dashed #cbd3da;
+  border-radius: 8px;
+  background: var(--quiz-light);
+  font-style: italic;
+}
+
+.quiz-page .quiz-review-explain {
+  margin-top: 18px;
+}
+
+.quiz-page .quiz-inline-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--quiz-ink);
+  font-weight: 700;
+}
+
+.quiz-page .quiz-review-footer {
+  border-top: 1px solid var(--quiz-border);
+  padding-top: 18px;
+}
+
+@media (max-width: 760px) {
+  .quiz-page .quiz-review-replay {
+    grid-template-columns: 1fr;
+  }
+}

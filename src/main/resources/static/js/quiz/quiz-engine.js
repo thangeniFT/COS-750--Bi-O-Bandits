@@ -207,3 +207,46 @@ export function planReview(responses) {
 
   return { review, worthALook };
 }
+
+/**
+ * Lists the learning outcomes to review, in the order the guided review should cover them
+ * (ID document, section 10.5). Each outcome appears once, at the position of its first entry in
+ * `plan.review`, so the outcome behind the most confident mistake comes first.
+ *
+ * @param {{review: {outcome: string}[]}} plan - the result of {@link planReview}
+ * @returns {string[]} outcome ids such as ["LO4", "LO2"]
+ */
+export function reviewOutcomes(plan) {
+  return [...new Set(plan.review.map((entry) => entry.outcome))];
+}
+
+/**
+ * Adds the ids of the items in an attempt to the list of ids the student has already seen, so the
+ * next attempt can pick unseen variants with {@link selectItems}. Keeps the original order and
+ * never repeats an id.
+ *
+ * @param {string[]} seenIds - ids seen in earlier attempts
+ * @param {{id: string}[]} items - the items of the attempt just started
+ * @returns {string[]} a new array; `seenIds` is not changed
+ */
+export function addSeen(seenIds, items) {
+  return [...new Set([...seenIds, ...items.map((item) => item.id)])];
+}
+
+/**
+ * Decides what the results screen offers after an attempt (ID document, section 10.5).
+ * Below the pass mark the main action is the guided review; at or above it, the summary.
+ * "Continue to summary" is always offered, so the student is never forced into a loop.
+ *
+ * @param {{passed: boolean}} score - the result of {@link scoreQuiz}
+ * @param {string[]} outcomes - the result of {@link reviewOutcomes}
+ * @returns {{primary: 'review'|'summary', offerReview: boolean, offerSummary: true}}
+ */
+export function nextStep(score, outcomes) {
+  const offerReview = outcomes.length > 0;
+  return {
+    primary: !score.passed && offerReview ? 'review' : 'summary',
+    offerReview,
+    offerSummary: true,
+  };
+}
