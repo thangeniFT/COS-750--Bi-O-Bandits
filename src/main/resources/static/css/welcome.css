@@ -726,6 +726,15 @@
   .welcome-page .welcome-actions .btn:hover {
     transform: none;
   }
+
+  .welcome-page .welcome-start,
+  .welcome-page .welcome-start-hint::after {
+    animation: none;
+  }
+
+  .welcome-page .welcome-start {
+    box-shadow: 0 0 0 4px rgba(30, 58, 95, 0.18);
+  }
 }
 
 
@@ -815,12 +824,69 @@
 .welcome-page .welcome-practice-option .welcome-explore {
   min-height: 46px;
   background: #ffffff;
-  border: 1px solid #1e3a5f;
-  color: #1e3a5f;
+  border: 1px solid var(--welcome-border);
+  color: var(--welcome-muted);
 }
 
 .welcome-page .welcome-practice-option .welcome-explore:hover {
-  background: #eaf2fb;
+  background: var(--welcome-light);
+  color: var(--welcome-dark-blue);
+  border-color: var(--welcome-dark-blue);
+}
+
+/* ==========================================
+   START LEARNING — CALL OUT THE DEFAULT PATH
+   ========================================== */
+
+.welcome-page .welcome-start-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.welcome-page .welcome-start-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  color: var(--welcome-blue);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.welcome-page .welcome-start-hint::after {
+  content: "\2193";
+  display: inline-block;
+  animation: welcome-start-hint-bounce 1.6s ease-in-out infinite;
+}
+
+.welcome-page .welcome-start {
+  animation: welcome-start-pulse 2.4s ease-in-out infinite;
+}
+
+.welcome-page .welcome-start:hover {
+  animation-play-state: paused;
+}
+
+@keyframes welcome-start-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(30, 58, 95, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 9px rgba(30, 58, 95, 0);
+  }
+}
+
+@keyframes welcome-start-hint-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(3px);
+  }
 }
 
 .welcome-page .welcome-practice-text {

@@ -985,6 +985,12 @@
   border-top: 1px solid #dce1e5;
 }
 
+/* Right-anchor the forward button even when "Previous" is hidden
+   (first tab) — space-between alone pins a lone child to the left. */
+.bst-navigation .bst-btn.primary {
+  margin-left: auto;
+}
+
 /* ==========================================
    ANIMATIONS
    ========================================== */

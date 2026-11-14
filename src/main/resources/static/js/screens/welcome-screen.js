@@ -586,6 +586,18 @@ startButton.addEventListener('click', () => {
   }
 });
 
+// Caption that marks Start Learning as the default next step
+const startHint = make(
+  'span',
+  'welcome-start-hint',
+  'Start here'
+);
+
+startHint.setAttribute('aria-hidden', 'true');
+
+const startWrap = make('div', 'welcome-start-wrap');
+startWrap.append(startHint, startButton);
+
 // Practice button and explanation
 const practiceOption = make(
   'div',
@@ -613,7 +625,7 @@ practiceOption.append(
 );
 
 actions.append(
-  startButton,
+  startWrap,
   practiceOption
 );
 
