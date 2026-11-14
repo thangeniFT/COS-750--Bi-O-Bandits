@@ -7,10 +7,12 @@
 
 const QUIZ_NS = 'http://www.w3.org/2000/svg';
 
+
 const QUIZ_TREES = {
-  A: [67, 33, 86, 15, 52, 74, 96, 45],
-  B: [59, 26, 82, 13, 41, 72, 93, 36]
+  quizA: [67, 33, 86, 15, 52, 74, 96, 45],
+  quizB: [59, 26, 82, 13, 41, 72, 93, 36]
 };
+
 
 const QUIZ_SECTIONS = [
   { id: 'bst', name: 'BST Skills' },
@@ -240,11 +242,11 @@ function qFigure(
 
   const figure = qEl('figure', 'quiz-tree');
 
-  const caption = qEl(
-    'figcaption',
-    '',
-    `Tree ${key} · ${entries.length} nodes`
-  );
+const caption = qEl(
+  'figcaption',
+  '',
+  `Tree ${key.replace(/^quiz/, '')} · ${entries.length} nodes`
+);
 
   const svg = qSvg('svg', {
     viewBox: `0 0 ${width} ${height}`,
