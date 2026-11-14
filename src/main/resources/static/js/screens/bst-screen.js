@@ -932,8 +932,9 @@ export function render(screen, container) {
   insertionPanel.append(
     el("h2", "", "Grow the tree"),
     el("p", "bst-muted",
-      "Apply the ordering rules, one comparison at a time. " +
-      "You can predict the next direction or play the animation.")
+      "Answer two short questions at each node -Whether a number being inserted is bigger or " +
+      "smaller, then whether it goes to the left or right or the current node. If you would like to learn first press Play to watch " +
+      "the same questions answered for you, then you can try answering them on your own.")
   );
 
   const treeCard = el("article", "bst-card");
@@ -948,6 +949,9 @@ export function render(screen, container) {
   let pathValues = [];
   let comparisons = new Map();
   let timer = null;
+  let stage = null;
+  let attempt = 0;
+  let compareWord = null;
 
   const insertionView = makeTreeView();
   const count = el("span", "bst-node-count");
@@ -1008,16 +1012,25 @@ export function render(screen, container) {
   const reset = btn("Reset tree", "bst-btn");
   form.append(label, input, start, reset);
 
-  const predict = el("div", "bst-predict");
-  const left = btn("← Go left", "bst-btn");
-  const right = btn("Go right →", "bst-btn");
-  predict.append(
-    el("strong", "", "Predict the next move"),
-    left, right
+  const question = el("div", "bst-callout bst-question");
+  question.setAttribute("aria-live", "polite");
+  const questionLabel = el("strong", "bst-callout-label", "Your turn");
+  const questionPrompt = el("p", "bst-callout-text bst-question-prompt");
+  const questionOptions = el("div", "bst-options bst-question-options");
+  const optionA = btn("", "bst-answer");
+  const optionB = btn("", "bst-answer");
+  questionOptions.append(optionA, optionB);
+  const questionHint = el("p", "bst-feedback is-review bst-question-hint");
+  questionHint.hidden = true;
+  question.append(
+    questionLabel,
+    questionPrompt,
+    questionOptions,
+    questionHint
   );
+  question.hidden = true;
 
   const controls = el("div", "bst-player");
-  const nextStep = btn("Reveal Next Step →", "bst-btn primary");
   const play = btn("Play", "bst-btn");
   const speed = el("select", "bst-speed");
 
@@ -1032,7 +1045,7 @@ export function render(screen, container) {
   });
   speed.value = "1400";
 
-  controls.append(nextStep, play, speed);
+  controls.append(play, speed);
 
   const history = el("div", "bst-player");
   const undo = btn("Undo last insert", "bst-btn");
@@ -1043,7 +1056,7 @@ export function render(screen, container) {
     el("h3", "", "Try an insertion"),
     insertionExplanation.box,
     form,
-    predict,
+    question,
     controls,
     history
   );
@@ -1079,11 +1092,12 @@ export function render(screen, container) {
 
   function updateInsertionControls() {
     const busy = pending !== null;
-    nextStep.disabled = !busy || timer !== null;
     play.disabled = !busy;
     start.disabled = busy;
     input.disabled = busy;
-    predict.hidden = !busy || timer !== null;
+    question.hidden = !busy;
+    optionA.disabled = timer !== null;
+    optionB.disabled = timer !== null;
     undo.disabled = busy || addedValues.length === 0;
     replay.disabled = undo.disabled;
   }
@@ -1096,6 +1110,9 @@ export function render(screen, container) {
     invalidValue = null;
     pathValues = [];
     comparisons = new Map();
+    stage = null;
+    attempt = 0;
+    compareWord = null;
     refreshInsertion();
     updateInsertionControls();
   }
@@ -1134,36 +1151,134 @@ export function render(screen, container) {
     }
 
     pending = { value, path, index: 0 };
+    stage = "compare";
+    attempt = 0;
+    compareWord = null;
     active = path[0].n.value;
     comparisons.set(active, `${value} ? ${active}`);
 
     explain(
-      `Inserting ${value}. Compare it with ${active}. ` +
-      "Predict left or right, or reveal the next step."
+      `Inserting ${value}. Let's work through it one question ` +
+      "at a time, starting at the root."
     );
     insertionPath.textContent = "Ready at the root.";
+    renderQuestion();
     refreshInsertion();
     updateInsertionControls();
     return true;
   }
 
-  function advance(guess = null) {
-    if (!pending) return;
+  // Shows the question that matches the current step and stage
+  // ("compare" the value against the active node, then work out
+  // "direction"), or hides the question card when nothing is pending.
+  function renderQuestion() {
+    if (!pending) {
+      question.hidden = true;
+      return;
+    }
 
+    const step = pending.path[pending.index];
+    const current = step.n.value;
+    const value = pending.value;
+
+    questionHint.hidden = true;
+    questionHint.textContent = "";
+
+    if (stage === "compare") {
+      questionPrompt.textContent =
+        `Is ${value} greater or less than ${current}?`;
+      optionA.textContent = "Greater (>)";
+      optionB.textContent = "Less (<)";
+      optionA.onclick = () => chooseCompare("greater");
+      optionB.onclick = () => chooseCompare("less");
+    } else {
+      questionPrompt.textContent =
+        `So does ${value} go to the left or right of ${current}?`;
+      optionA.textContent = "← Left";
+      optionB.textContent = "Right →";
+      optionA.onclick = () => chooseDirection("left");
+      optionB.onclick = () => chooseDirection("right");
+    }
+
+    updateInsertionControls();
+  }
+
+  function showHint(text) {
+    questionHint.hidden = false;
+    questionHint.textContent = text;
+  }
+
+  // First sub-question: is the new value bigger or smaller than the
+  // node we are looking at. Answering wrongly never reveals the
+  // answer directly — it recalls the rule, then (on a second miss)
+  // a concrete way to work it out, and asks again.
+  function chooseCompare(word) {
+    if (!pending || stage !== "compare") return;
+
+    const step = pending.path[pending.index];
+    const current = step.n.value;
+    const value = pending.value;
+    const actual = value < current ? "less" : "greater";
+
+    if (word === actual) {
+      compareWord = word;
+      stage = "direction";
+      attempt = 0;
+
+      const sign = word === "greater" ? ">" : "<";
+      comparisons.set(current, `${value} ${sign} ${current}`);
+
+      explain(
+        `Correct — ${value} is ${word} than ${current}. ` +
+        "Now work out which side that puts it on."
+      );
+      renderQuestion();
+      refreshInsertion();
+    } else {
+      attempt += 1;
+      showHint(
+        attempt === 1
+          ? "Compare the two numbers: which one is bigger?"
+          : `Subtract: ${value} − ${current}. A positive result ` +
+            `means ${value} is the bigger number; a negative ` +
+            `result means it is smaller.`
+      );
+    }
+  }
+
+  // Second sub-question: now that greater/less is settled, turn
+  // that into a left/right move. Same no-reveal-on-miss approach.
+  function chooseDirection(direction) {
+    if (!pending || stage !== "direction") return;
+
+    const step = pending.path[pending.index];
+    const current = step.n.value;
+    const value = pending.value;
+
+    if (direction === step.direction) {
+      commitStep();
+    } else {
+      attempt += 1;
+      showHint(
+        attempt === 1
+          ? "Remember the BST rule: smaller values are stored to " +
+            "the left of a node, larger values to the right."
+          : `You worked out that ${value} is ${compareWord} than ` +
+            `${current}. Apply the rule above to pick a side.`
+      );
+    }
+  }
+
+  // Both sub-questions for the current node are answered correctly:
+  // record the step and either finish the insertion or move the
+  // active node on to the next comparison.
+  function commitStep() {
     const { value, path } = pending;
     const step = path[pending.index];
     const sign = step.direction === "left" ? "<" : ">";
 
     comparisons.set(step.n.value, `${value} ${sign} ${step.n.value}`);
     pathValues.push(step.n.value);
-
-    let feedback = "";
-    if (guess) {
-      feedback = guess === step.direction
-        ? "Correct! "
-        : `Not quite. The correct direction is ${step.direction}. `;
-    }
-
     pending.index += 1;
 
     if (pending.index === path.length) {
@@ -1173,9 +1288,10 @@ export function render(screen, container) {
       newValue = value;
       pathValues.push(value);
       pending = null;
+      stage = null;
 
       explain(
-        `${feedback}${value} ${sign} ${step.n.value}. ` +
+        `${value} ${sign} ${step.n.value}. ` +
         `The ${step.direction} position is empty, ` +
         `so ${value} is inserted there.`
       );
@@ -1183,25 +1299,50 @@ export function render(screen, container) {
         `Complete: ${pathValues.join(" → ")}`;
       complete("insertion");
       stopInsertion();
+      renderQuestion();
     } else {
+      stage = "compare";
+      attempt = 0;
+      compareWord = null;
       active = path[pending.index].n.value;
       comparisons.set(active, `${value} ? ${active}`);
       explain(
-        `${feedback}${value} ${sign} ${step.n.value}. ` +
+        `${value} ${sign} ${step.n.value}. ` +
         `Go ${step.direction}. Now compare with ${active}.`
       );
       insertionPath.textContent =
         `Path: ${pathValues.join(" → ")}`;
+      renderQuestion();
     }
 
     refreshInsertion();
     updateInsertionControls();
   }
 
+  // Autoplay answers the current question correctly on the
+  // learner's behalf, through the same two functions above, so the
+  // questions stay visible and the animation keeps its usual pace.
+  function autoAnswer() {
+    if (!pending) {
+      stopInsertion();
+      return;
+    }
+
+    const step = pending.path[pending.index];
+
+    if (stage === "compare") {
+      const current = step.n.value;
+      const value = pending.value;
+      chooseCompare(value < current ? "less" : "greater");
+    } else {
+      chooseDirection(step.direction);
+    }
+  }
+
   function startAnimation() {
     if (!pending || timer !== null) return;
     play.textContent = "Pause";
-    timer = setInterval(() => advance(), Number(speed.value));
+    timer = setInterval(() => autoAnswer(), Number(speed.value));
     updateInsertionControls();
   }
 
@@ -1209,10 +1350,6 @@ export function render(screen, container) {
     if (timer !== null) stopInsertion();
     else startAnimation();
   });
-
-  nextStep.addEventListener("click", () => advance());
-  left.addEventListener("click", () => advance("left"));
-  right.addEventListener("click", () => advance("right"));
 
   speed.addEventListener("change", () => {
     if (timer === null) return;
