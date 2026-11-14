@@ -15,6 +15,7 @@
 import { loadData } from './api.js';
 import { renderScreen } from './screens/index.js';
 import { el } from './util.js';
+import { createSpeechControls, stopSpeech } from './components/speech-synthesis.js';
 
 // Existing page elements
 const screenEl = document.getElementById('screen');
@@ -371,6 +372,8 @@ function addLearningAction(screenId) {
 
 function show(index) {
 
+  stopSpeech();
+
   if (typeof state.cleanup === 'function') {
     state.cleanup();
   }
@@ -427,12 +430,15 @@ function show(index) {
   state.cleanup =
     renderScreen(screen, screenEl, ctx) ?? null;
 
- 
   const heading = screenEl.querySelector('h1');
 
+  const speechControls = createSpeechControls(screenEl);
   if (heading) {
+    heading.insertAdjacentElement('afterend', speechControls);
     heading.setAttribute('tabindex', '-1');
     heading.focus();
+  } else {
+    screenEl.prepend(speechControls);
   }
 }
 
