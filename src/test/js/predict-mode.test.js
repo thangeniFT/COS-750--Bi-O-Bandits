@@ -1,11 +1,10 @@
 // Specification for checkPrediction in static/js/components/predict-mode.js (backlog ticket F-05).
-// Skipped until the ticket is picked up: delete the `skip` option and make the tests pass.
+// Enabled with ticket F-05.
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { checkPrediction, HINTS } from '../../main/resources/static/js/components/predict-mode.js';
 
-const SKIP = 'Backlog ticket F-05 (predict mode): remove this skip when you start the ticket';
 
 /** The practice search for 55 on tree B (ID document, section 11.3), visit order only. */
 const search55 = {
@@ -14,7 +13,7 @@ const search55 = {
   steps: [45, 25, 15, 35, 30, 65, 55].map((node, i) => ({ number: i + 1, node, stackAfter: [], explanation: '' })),
 };
 
-describe('checkPrediction', { skip: SKIP }, () => {
+describe('checkPrediction', () => {
   test('a correct guess is confirmed and revealed', () => {
     const feedback = checkPrediction(search55, 1, 25, 1);
     assert.equal(feedback.correct, true);
