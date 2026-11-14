@@ -1,192 +1,495 @@
 
 /**
- * COS212 DFS Tutor — Guided DFS Practice
- * Figma Page 5
- *
- * Learning design:
- * 01 Recall prior knowledge
- * 02 Guided DFS search and prediction
- * 03 In-order traversal practice
- * 04 Readiness check and formative feedback
- *
- * No scores are saved or sent to a server.
+ * COS212 DFS Tutor — Applied Practice
+ * Three short tabs, new values, no progress bar.
  */
 
-const PRACTICE_SVG_NS = 'http://www.w3.org/2000/svg';
+const NS = 'http://www.w3.org/2000/svg';
 
-const PRACTICE_TREE = [
-  { value: 50, x: 300, y: 50, left: 30, right: 70 },
-  { value: 30, x: 155, y: 155, left: 20, right: 40 },
-  { value: 70, x: 445, y: 155, left: 60, right: 80 },
-  { value: 20, x: 75, y: 275, left: null, right: null },
-  { value: 40, x: 235, y: 275, left: null, right: null },
-  { value: 60, x: 365, y: 275, left: null, right: null },
-  { value: 80, x: 525, y: 275, left: null, right: null }
+const TRACE_VALUES = [62, 29, 84, 11, 46, 73, 95, 35];
+
+const REPAIRS = [
+  {
+    spec: [
+      65,
+      [32, [18], [47, null, [72]]],
+      [88, [76], [96]]
+    ],
+    bad: 72,
+    parent: 76,
+    side: 'left',
+    hint:
+      'Look at the whole left subtree of 65. All its values ' +
+      'must be smaller than 65.',
+    choices: [
+      ['Left child of 76', 76, 'left'],
+      ['Right child of 47', 47, 'right'],
+      ['Left child of 18', 18, 'left']
+    ]
+  },
+  {
+    spec: [
+      54,
+      [22, [10], [37]],
+      [78, [69, [49]], [92]]
+    ],
+    bad: 49,
+    parent: 37,
+    side: 'right',
+    hint:
+      'Every value in the right subtree of 54 must be ' +
+      'greater than 54.',
+    choices: [
+      ['Left child of 69', 69, 'left'],
+      ['Right child of 37', 37, 'right'],
+      ['Left child of 10', 10, 'left']
+    ]
+  },
+  {
+    spec: [
+      71,
+      [35, [16], [53]],
+      [90, [82, null, [94]], [98]]
+    ],
+    bad: 94,
+    parent: 98,
+    side: 'left',
+    hint:
+      'All values in the left subtree of 90 must be ' +
+      'smaller than 90.',
+    choices: [
+      ['Left child of 98', 98, 'left'],
+      ['Right child of 82', 82, 'right'],
+      ['Right child of 53', 53, 'right']
+    ]
+  }
 ];
 
-const PRACTICE_NODE_MAP = new Map(
-  PRACTICE_TREE.map(node => [node.value, node])
-);
+const SEQUENCES = [
+  {
+    type: 'pre',
+    label: 'A · Pre-order',
+    values: [58, 26, 81, 12, 42, 69, 94, 36]
+  },
+  {
+    type: 'in',
+    label: 'B · In-order',
+    values: [74, 38, 91, 19, 52, 84, 97, 61]
+  },
+  {
+    type: 'post',
+    label: 'C · Post-order',
+    values: [45, 21, 73, 8, 31, 59, 88, 66]
+  }
+];
 
-function practiceEl(tag, className = '', text = '') {
-  const element = document.createElement(tag);
-  if (className) element.className = className;
-  element.textContent = text;
-  return element;
+const RULES = {
+  pre: 'Root → Left → Right',
+  in: 'Left → Root → Right',
+  post: 'Left → Right → Root'
+};
+
+/* ==========================================
+   DOM HELPERS
+   ========================================== */
+
+function el(tag, css = '', value = '') {
+  const e = document.createElement(tag);
+  if (css) e.className = css;
+  e.textContent = value;
+  return e;
 }
 
-function practiceSvgEl(tag, attributes = {}) {
-  const element = document.createElementNS(
-    PRACTICE_SVG_NS,
-    tag
-  );
+function button(value, css = 'practice-btn') {
+  const b = el('button', css, value);
+  b.type = 'button';
+  return b;
+}
 
-  Object.entries(attributes).forEach(([name, value]) => {
-    element.setAttribute(name, String(value));
+function svgEl(tag, attrs) {
+  const e = document.createElementNS(NS, tag);
+
+  Object.entries(attrs).forEach(([k, v]) => {
+    e.setAttribute(k, String(v));
   });
 
-  return element;
+  return e;
 }
 
 /* ==========================================
-   GENERATE DFS SEARCH STATES
+   TREE HELPERS
    ========================================== */
 
-function buildPracticeSteps(target) {
-  const stack = [50];
-  const visited = [];
+function fromSpec(spec, parent = null) {
+  if (!spec) return null;
 
-  const steps = [{
-    current: null,
-    visited: [],
-    stack: [50],
-    found: false,
-    explanation:
-      'The root node 50 is waiting on the stack. ' +
-      'Predict which node will be removed first.'
-  }];
+  const node = {
+    value: spec[0],
+    parent,
+    left: null,
+    right: null
+  };
 
-  while (stack.length > 0) {
-    const current = stack.pop();
-    const node = PRACTICE_NODE_MAP.get(current);
+  node.left = fromSpec(spec[1], node);
+  node.right = fromSpec(spec[2], node);
 
-    visited.push(current);
-
-    const found = current === target;
-
-    if (!found) {
-      // Push right before left for left-first DFS.
-      if (node.right !== null) {
-        stack.push(node.right);
-      }
-
-      if (node.left !== null) {
-        stack.push(node.left);
-      }
-    }
-
-    const explanation = found
-      ? `Found ${target}! DFS visited ${visited.length} nodes.`
-      : `Visited ${current}. ${
-          node.left === null && node.right === null
-            ? 'This node has no children.'
-            : 'Its children have been added to the stack, ' +
-              'with the left child positioned to be visited first.'
-        }`;
-
-    steps.push({
-      current,
-      visited: [...visited],
-      stack: [...stack].reverse(),
-      found,
-      explanation
-    });
-
-    if (found) break;
-  }
-
-  return steps;
+  return node;
 }
 
-function getInOrder() {
-  const result = [];
-
-  function visit(value) {
-    if (value === null) return;
-
-    const node = PRACTICE_NODE_MAP.get(value);
-
-    visit(node.left);
-    result.push(node.value);
-    visit(node.right);
+function insert(root, value) {
+  if (!root) {
+    return {
+      value,
+      parent: null,
+      left: null,
+      right: null
+    };
   }
 
-  visit(50);
+  let current = root;
+
+  while (true) {
+    const side = value < current.value
+      ? 'left'
+      : 'right';
+
+    if (current.value === value) return root;
+
+    if (current[side]) {
+      current = current[side];
+    } else {
+      current[side] = {
+        value,
+        parent: current,
+        left: null,
+        right: null
+      };
+      return root;
+    }
+  }
+}
+
+function fromValues(values) {
+  let root = null;
+
+  values.forEach(value => {
+    root = insert(root, value);
+  });
+
+  return root;
+}
+
+function allNodes(root) {
+  return root
+    ? [
+        ...allNodes(root.left),
+        root,
+        ...allNodes(root.right)
+      ]
+    : [];
+}
+
+function findNode(root, value) {
+  return allNodes(root).find(
+    n => n.value === value
+  ) || null;
+}
+
+function traversal(root, type) {
+  const result = [];
+
+  function walk(n) {
+    if (!n) return;
+
+    if (type === 'pre') result.push(n.value);
+
+    walk(n.left);
+
+    if (type === 'in') result.push(n.value);
+
+    walk(n.right);
+
+    if (type === 'post') result.push(n.value);
+  }
+
+  walk(root);
   return result;
 }
 
 /* ==========================================
-   CREATE TREE SVG
+   HIGHLIGHTED FEEDBACK
    ========================================== */
 
-function createPracticeTree() {
-  const svg = practiceSvgEl('svg', {
+function callout(title, message) {
+  const box = el('div', 'practice-callout');
+  const heading = el('strong', '', title);
+  const body = el('p', '', message);
+
+  box.setAttribute('aria-live', 'polite');
+  box.append(heading, body);
+
+  return { box, heading, body };
+}
+
+function say(c, title, message, tone = '') {
+  c.heading.textContent = title;
+  c.body.textContent = message;
+  c.box.dataset.tone = tone;
+}
+
+/* ==========================================
+   TREE FRAME
+   ========================================== */
+
+function makeTreeFrame(legendEntries) {
+  const frame = el('div', 'practice-tree-frame');
+  const viewport = el('div', 'practice-tree-viewport');
+
+  const svg = svgEl('svg', {
     class: 'practice-tree-svg',
-    viewBox: '0 0 600 345',
-    role: 'img',
-    'aria-label':
-      'Binary Search Tree with root 50, ' +
-      'left subtree 30, 20 and 40, ' +
-      'and right subtree 70, 60 and 80'
+    role: 'group',
+    'aria-label': 'Interactive tree'
   });
 
-  PRACTICE_TREE.forEach(node => {
-    for (const childValue of [node.left, node.right]) {
-      if (childValue === null) continue;
+  viewport.append(svg);
 
-      const child = PRACTICE_NODE_MAP.get(childValue);
+  const legend = el('div', 'practice-legend');
 
-      svg.appendChild(practiceSvgEl('line', {
-        x1: node.x,
-        y1: node.y,
-        x2: child.x,
-        y2: child.y,
-        class: 'practice-tree-edge'
-      }));
+  legendEntries.forEach(([label, cls]) => {
+    const item = el('span', 'practice-legend-item');
+
+    item.append(
+      el('span', `practice-legend-dot ${cls}`),
+      document.createTextNode(label)
+    );
+
+    legend.append(item);
+  });
+
+  frame.append(viewport, legend);
+
+  return { frame, svg };
+}
+
+/* ==========================================
+   INTERACTIVE TREE DRAWING
+   ========================================== */
+
+function paint(view, root, state, onClick) {
+  const { svg } = view;
+  svg.replaceChildren();
+
+  const entries = [];
+
+  function collect(n, depth) {
+    if (!n) return;
+
+    collect(n.left, depth + 1);
+    entries.push({ n, depth });
+    collect(n.right, depth + 1);
+  }
+
+  collect(root, 0);
+
+  if (!entries.length) return;
+
+  const width = Math.max(620, entries.length * 81);
+
+  const maxDepth = Math.max(
+    ...entries.map(x => x.depth)
+  );
+
+  const height = Math.max(
+    315,
+    118 + maxDepth * 91
+  );
+
+  svg.setAttribute(
+    'viewBox',
+    `0 0 ${width} ${height}`
+  );
+
+  const positions = new Map();
+
+  entries.forEach(({ n, depth }, index) => {
+    positions.set(n, {
+      x: entries.length === 1
+        ? width / 2
+        : 54 + (width - 108) * index /
+          (entries.length - 1),
+      y: 49 + depth * 91
+    });
+  });
+
+  // Edges behind nodes.
+  entries.forEach(({ n }) => {
+    if (!n.parent) return;
+
+    const a = positions.get(n.parent);
+    const b = positions.get(n);
+
+    svg.append(
+      svgEl('line', {
+        x1: a.x,
+        y1: a.y,
+        x2: b.x,
+        y2: b.y,
+        class: 'practice-edge'
+      })
+    );
+  });
+
+  entries.forEach(({ n }) => {
+    const { x, y } = positions.get(n);
+
+    const classes = ['practice-node'];
+    let label = '';
+
+    if (n.value === state.current) {
+      classes.push('is-current');
+      label = 'NOW';
+    } else if (
+      (state.visited || []).includes(n.value)
+    ) {
+      classes.push('is-visited');
+
+      label =
+        `#${state.visited.indexOf(n.value) + 1}`;
+    } else if (
+      (state.pending || []).includes(n.value)
+    ) {
+      classes.push('is-pending');
+      label = 'WAIT';
+    }
+
+    if ((state.draft || []).includes(n.value)) {
+      classes.push('is-draft');
+
+      label =
+        `#${state.draft.indexOf(n.value) + 1}`;
+    }
+
+    if (state.selected === n.value) {
+      classes.push('is-selected');
+    }
+
+    if (state.error === n.value) {
+      classes.push('is-error');
+    }
+
+    if (state.fixed === n.value) {
+      classes.push('is-fixed');
+      label = 'FIXED';
+    }
+
+    const group = svgEl('g', {
+      class: classes.join(' '),
+      role: 'button',
+      tabindex: 0,
+      'data-value': n.value,
+      'aria-label': `Node ${n.value}`
+    });
+
+    const text = svgEl('text', {
+      x,
+      y,
+      class: 'practice-node-value'
+    });
+
+    text.textContent = String(n.value);
+
+    const tag = svgEl('text', {
+      x,
+      y: y + 42,
+      class: 'practice-node-tag'
+    });
+
+    tag.textContent = label;
+
+    group.append(
+      svgEl('circle', {
+        cx: x,
+        cy: y,
+        r: 25
+      }),
+      text,
+      tag
+    );
+
+    const act = () => onClick(n);
+
+    group.addEventListener('click', act);
+
+    group.addEventListener('keydown', event => {
+      if (
+        event.key === 'Enter' ||
+        event.key === ' '
+      ) {
+        event.preventDefault();
+        act();
+        return;
+      }
+
+      if (event.key.startsWith('Arrow')) {
+        const next = {
+          ArrowUp: n.parent,
+          ArrowLeft: n.left,
+          ArrowRight: n.right,
+          ArrowDown: n.left || n.right
+        }[event.key];
+
+        event.preventDefault();
+
+        if (next) {
+          svg.querySelector(
+            `[data-value="${next.value}"]`
+          )?.focus();
+        }
+      }
+    });
+
+    svg.append(group);
+  });
+}
+
+function renderTrail(
+  where,
+  values,
+  empty = 'None yet'
+) {
+  where.replaceChildren();
+
+  if (!values.length) {
+    where.append(
+      el('span', 'practice-muted', empty)
+    );
+    return;
+  }
+
+  values.forEach((v, i) => {
+    where.append(
+      el('span', 'practice-visit', String(v))
+    );
+
+    if (i !== values.length - 1) {
+      where.append(
+        el('span', 'practice-arrow', '→')
+      );
     }
   });
+}
 
-  PRACTICE_TREE.forEach(node => {
-    const group = practiceSvgEl('g', {
-      class: 'practice-tree-node',
-      'data-node': node.value
-    });
+function parseSequence(raw) {
+  const words = raw
+    .trim()
+    .split(/[\s,;→]+/)
+    .filter(Boolean);
 
-    const circle = practiceSvgEl('circle', {
-      cx: node.x,
-      cy: node.y,
-      r: 28
-    });
+  if (!words.every(w => /^-?\d+$/.test(w))) {
+    return null;
+  }
 
-    const number = practiceSvgEl('text', {
-      x: node.x,
-      y: node.y,
-      class: 'practice-tree-value'
-    });
-
-    number.textContent = String(node.value);
-
-    const stateLabel = practiceSvgEl('text', {
-      x: node.x,
-      y: node.y + 45,
-      class: 'practice-tree-state'
-    });
-
-    group.append(circle, number, stateLabel);
-    svg.appendChild(group);
-  });
-
-  return svg;
+  return words.map(Number);
 }
 
 /* ==========================================
@@ -194,657 +497,790 @@ function createPracticeTree() {
    ========================================== */
 
 export function render(screen, container) {
-  const page = practiceEl('div', 'practice-page');
+  const page = el('main', 'practice-page');
 
-  const target = Number.isInteger(Number(screen.target))
-    ? Number(screen.target)
-    : 55;
-
-  const steps = buildPracticeSteps(target);
-  const correctInOrder = getInOrder();
-
-  let stepIndex = 0;
-  let selectedPrediction = null;
-  let predictionAttempts = 0;
-  let hintCount = 0;
-  let inOrderAttempts = 0;
-  let wrongAnswers = 0;
-
-  const completed = new Set();
-
-  // Each practice milestone is counted once.
-  function markComplete(name) {
-    if (completed.has(name)) return;
-
-    completed.add(name);
-
-    const count = completed.size;
-
-    progressCount.textContent = `Step ${count} of 4`;
-    progressFill.style.width = `${count * 25}%`;
-
-    progressTrack.setAttribute(
-      'aria-valuenow',
-      String(count)
-    );
-
-    updateReadiness();
-  }
-
-  // ==========================================
-  // STICKY HEADER OFFSET
-  // ==========================================
-
-  const appHeader = document.querySelector('.app-header');
-  let headerObserver = null;
-
-  function updateHeaderHeight() {
-    if (!appHeader) return;
-
-    const height = Math.ceil(
-      appHeader.getBoundingClientRect().height
-    );
-
-    document.documentElement.style.setProperty(
-      '--app-header-height',
-      `${height}px`
-    );
-  }
-
-  updateHeaderHeight();
-
-  if (
-    appHeader &&
-    typeof ResizeObserver !== 'undefined'
-  ) {
-    headerObserver = new ResizeObserver(updateHeaderHeight);
-    headerObserver.observe(appHeader);
-  }
-
-  // ==========================================
-  // STICKY ACTIVITY PROGRESS
-  // ==========================================
-
-  const progress = practiceEl('div', 'lesson-progress');
-
-  const progressHeader = practiceEl(
-    'div',
-    'lesson-progress__header'
-  );
-
-  const progressTitle = practiceEl(
-    'strong',
-    '',
-    'GUIDED DFS PRACTICE'
-  );
-
-  const progressCount = practiceEl(
-    'span',
-    '',
-    'Step 0 of 4'
-  );
-
-  progressHeader.append(progressTitle, progressCount);
-
-  const progressTrack = practiceEl(
-    'div',
-    'lesson-progress__track'
-  );
-
-  progressTrack.setAttribute('role', 'progressbar');
-  progressTrack.setAttribute(
-    'aria-label',
-    'Practice activity progress'
-  );
-  progressTrack.setAttribute('aria-valuemin', '0');
-  progressTrack.setAttribute('aria-valuemax', '4');
-  progressTrack.setAttribute('aria-valuenow', '0');
-
-  const progressFill = practiceEl(
-    'div',
-    'lesson-progress__fill'
-  );
-
-  progressFill.style.width = '0%';
-
-  progressTrack.appendChild(progressFill);
-  progress.append(progressHeader, progressTrack);
-
-  // ==========================================
-  // INTRODUCTION
-  // ==========================================
-
-  const intro = practiceEl(
-    'section',
-    'practice-card practice-intro'
-  );
-
-  intro.append(
-    practiceEl(
-      'span',
-      'practice-eyebrow',
-      'LEARN BY DOING'
-    ),
-    practiceEl('h1', '', 'Guided DFS Practice'),
-    practiceEl(
-      'p',
-      'practice-lead',
-      'Now it is your turn. Predict which node ' +
-      'will be visited next, work out an in-order ' +
-      'traversal and check your understanding.'
-    ),
-    practiceEl(
-      'p',
-      'practice-muted',
-      'You can retry every activity, use hints ' +
-      'and learn from mistakes. This is practice, ' +
-      'not a graded assessment.'
-    )
-  );
-
-  // ==========================================
-  // 01 — RECALL PRIOR KNOWLEDGE
-  // ==========================================
-
-  const recall = practiceEl(
-    'section',
-    'practice-card practice-recall'
-  );
-
-  recall.append(
-    practiceEl('span', 'practice-eyebrow', '01 / RECALL'),
-    practiceEl('h2', '', 'Remember how a stack works'),
-    practiceEl(
-      'p',
-      'practice-muted',
-      'DFS uses a stack: the last item added ' +
-      'is the first item removed. ' +
-      'This is called Last In, First Out (LIFO).'
-    ),
-    practiceEl(
-      'h3',
-      '',
-      'If we push 10, then 20, then 30, ' +
-      'which value comes off first?'
-    )
-  );
-
-  const recallOptions = practiceEl(
-    'div',
-    'practice-answer-options'
-  );
-
-  const recallFeedback = practiceEl(
-    'div',
-    'practice-feedback'
-  );
-
-  recallFeedback.setAttribute('aria-live', 'polite');
-
-  const recallVisual = practiceEl(
-    'div',
-    'practice-recall-visual'
-  );
-
-  recallVisual.hidden = true;
-
-  recallVisual.append(
-    practiceEl(
-      'strong',
-      '',
-      'Stack (top first)'
-    ),
-    practiceEl(
-      'div',
-      'practice-stack-example',
-      '30  ← TOP'
-    ),
-    practiceEl(
-      'div',
-      'practice-stack-example',
-      '20'
-    ),
-    practiceEl(
-      'div',
-      'practice-stack-example',
-      '10'
-    )
-  );
-
-  const recallQuestionOptions = [
-    { text: '10', correct: false },
-    { text: '20', correct: false },
-    { text: '30', correct: true },
-    { text: 'Not sure', correct: false }
+  const tabs = [
+    ['repair', '1. Fix the BST'],
+    ['trace', '2. Trace DFS'],
+    ['sequence', '3. Traversal Tasks']
   ];
 
-  recallQuestionOptions.forEach(option => {
-    const button = practiceEl(
-      'button',
-      'practice-answer',
-      option.text
-    );
+  const finishedTabs = new Set();
 
-    button.type = 'button';
-    button.setAttribute('aria-pressed', 'false');
+  const title = el('header', 'practice-intro');
 
-    button.addEventListener('click', () => {
-      recallOptions.querySelectorAll('button').forEach(other => {
-        other.setAttribute(
-          'aria-pressed',
-          String(other === button)
-        );
-      });
-
-      recallFeedback.className = option.correct
-        ? 'practice-feedback is-correct'
-        : 'practice-feedback is-review';
-
-      if (option.correct) {
-        recallFeedback.textContent =
-          'Correct! 30 was pushed last, ' +
-          'so it is removed first.';
-
-        recallVisual.hidden = false;
-        markComplete('recall');
-      } else {
-        wrongAnswers += option.text === 'Not sure' ? 0 : 1;
-
-        recallFeedback.textContent =
-          'Look at the stack below. ' +
-          'The last value pushed sits on top. ' +
-          'Try again.';
-
-        recallVisual.hidden = false;
-      }
-
-      updateReadiness();
-    });
-
-    recallOptions.appendChild(button);
-  });
-
-  recall.append(
-    recallOptions,
-    recallFeedback,
-    recallVisual
-  );
-
-  // ==========================================
-  // 02 — GUIDED DFS SEARCH
-  // ==========================================
-
-  const searchSection = practiceEl(
-    'section',
-    'practice-search-section'
-  );
-
-  searchSection.append(
-    practiceEl(
-      'span',
-      'practice-eyebrow',
-      '02 / GUIDED DFS SEARCH'
-    ),
-    practiceEl(
-      'h2',
-      '',
-      `Search for ${target}`
-    ),
-    practiceEl(
+  title.append(
+    el('h1', '', 'DFS Practice'),
+    el(
       'p',
       'practice-muted',
-      `Predict the next node as DFS searches for ${target}. ` +
-      'We will explore the left side first. ' +
-      'Use the stack to help you decide.'
+      'Apply BST rules and DFS traversals to unfamiliar ' +
+      'trees. Try, check, and use hints when needed. ' +
+      'Nothing is graded.'
     )
   );
 
-  const searchLayout = practiceEl(
-    'div',
-    'practice-search-layout'
-  );
+  const tabBar = el('div', 'practice-tabs');
 
-  const treeCard = practiceEl(
-    'div',
-    'practice-card practice-tree-card'
-  );
+  tabBar.setAttribute('role', 'tablist');
 
-  const treeHeader = practiceEl(
-    'div',
-    'practice-tree-heading'
-  );
+  const panels = tabs.map(([id]) => {
+    const p = el('section', 'practice-panel');
 
-  const treeTitle = practiceEl(
-    'h3',
-    '',
-    'Follow the tree'
-  );
+    p.id = `practice-panel-${id}`;
 
-  const nodeCount = practiceEl(
-    'span',
-    'practice-node-count',
-    '7 nodes'
-  );
+    p.setAttribute('role', 'tabpanel');
 
-  treeHeader.append(treeTitle, nodeCount);
-
-  const treeViewport = practiceEl(
-    'div',
-    'practice-tree-viewport'
-  );
-
-  const treeSvg = createPracticeTree();
-  treeViewport.appendChild(treeSvg);
-
-  // Non-colour visual cues.
-  const legend = practiceEl(
-    'div',
-    'practice-tree-legend'
-  );
-
-  [
-    ['○', 'Not visited', 'default'],
-    ['●', 'Current', 'current'],
-    ['✓', 'Visited', 'visited'],
-    ['◌', 'Waiting', 'pending']
-  ].forEach(([symbol, label, type]) => {
-    const item = practiceEl(
-      'span',
-      'practice-legend-item'
+    p.setAttribute(
+      'aria-labelledby',
+      `practice-tab-${id}`
     );
 
-    item.append(
-      practiceEl(
-        'span',
-        `practice-legend-symbol practice-legend-symbol--${type}`,
-        symbol
-      ),
-      document.createTextNode(label)
-    );
+    p.tabIndex = -1;
 
-    legend.appendChild(item);
+    return p;
   });
 
-  // Prediction exercise.
-  const predictionBox = practiceEl(
-    'div',
-    'practice-prediction'
-  );
+  let activeTab = 0;
 
-  predictionBox.append(
-    practiceEl(
-      'span',
-      'practice-eyebrow',
-      'PREDICT BEFORE REVEAL'
-    ),
-    practiceEl(
-      'h3',
-      '',
-      'Which node will DFS visit next?'
-    )
-  );
+  const tabButtons = tabs.map(([id, label], i) => {
+    const b = button(label, 'practice-tab');
 
-  const predictionOptions = practiceEl(
-    'div',
-    'practice-prediction-options'
-  );
+    b.id = `practice-tab-${id}`;
 
-  const predictionFeedback = practiceEl(
-    'div',
-    'practice-feedback'
-  );
+    b.setAttribute('role', 'tab');
 
-  predictionFeedback.setAttribute('aria-live', 'polite');
+    b.setAttribute(
+      'aria-controls',
+      panels[i].id
+    );
 
-  const predictionHint = practiceEl(
-    'button',
-    'practice-hint-button',
-    'Need a hint?'
-  );
+    b.addEventListener('click', () => {
+      goTab(i);
+    });
 
-  predictionHint.type = 'button';
+    tabBar.append(b);
 
-  predictionBox.append(
-    predictionOptions,
-    predictionHint,
-    predictionFeedback
-  );
+    return b;
+  });
 
-  // Step-by-step explanation.
-  const explanationBox = practiceEl(
-    'div',
-    'practice-step-explanation'
-  );
+  function markDone(id) {
+    finishedTabs.add(id);
 
-  const explanationHeading = practiceEl(
-    'strong',
-    '',
-    'Ready to begin'
-  );
-
-  const explanationText = practiceEl('p');
-
-  explanationText.setAttribute('aria-live', 'polite');
-
-  explanationBox.append(
-    explanationHeading,
-    explanationText
-  );
-
-  // Traversal sequence.
-  const visitedSection = practiceEl(
-    'div',
-    'practice-visited'
-  );
-
-  visitedSection.appendChild(
-    practiceEl('h4', '', 'Visited order')
-  );
-
-  const visitedList = practiceEl(
-    'div',
-    'practice-visited-list'
-  );
-
-  visitedSection.appendChild(visitedList);
-
-  // Step controls.
-  const controls = practiceEl(
-    'div',
-    'practice-controls'
-  );
-
-  const previousButton = practiceEl(
-    'button',
-    'practice-button',
-    '← Previous'
-  );
-
-  const nextButton = practiceEl(
-    'button',
-    'practice-button practice-button--primary',
-    'Reveal Next Step →'
-  );
-
-  const restartButton = practiceEl(
-    'button',
-    'practice-button',
-    'Restart'
-  );
-
-  const stepCounter = practiceEl(
-    'span',
-    'practice-step-counter'
-  );
-
-  for (const button of [
-    previousButton,
-    nextButton,
-    restartButton
-  ]) {
-    button.type = 'button';
+    tabButtons.forEach((b, i) => {
+      b.classList.toggle(
+        'is-done',
+        finishedTabs.has(tabs[i][0])
+      );
+    });
   }
 
-  controls.append(
-    previousButton,
-    nextButton,
-    restartButton,
-    stepCounter
+  function goTab(i) {
+    if (i < 0 || i >= panels.length) return;
+
+    activeTab = i;
+
+    panels.forEach((p, index) => {
+      p.hidden = i !== index;
+    });
+
+    tabButtons.forEach((b, index) => {
+      b.classList.toggle(
+        'is-active',
+        index === i
+      );
+
+      b.setAttribute(
+        'aria-selected',
+        String(index === i)
+      );
+
+      b.tabIndex = index === i ? 0 : -1;
+    });
+  }
+
+  tabBar.addEventListener('keydown', event => {
+    const index = tabButtons.indexOf(
+      document.activeElement
+    );
+
+    if (index < 0) return;
+
+    let next = null;
+
+    if (event.key === 'ArrowRight') {
+      next = (index + 1) % 3;
+    }
+
+    if (event.key === 'ArrowLeft') {
+      next = (index + 2) % 3;
+    }
+
+    if (event.key === 'Home') next = 0;
+    if (event.key === 'End') next = 2;
+
+    if (next !== null) {
+      event.preventDefault();
+      goTab(next);
+      tabButtons[next].focus();
+    }
+  });
+
+  /* ==========================================
+     TAB 1 — REPAIR INVALID BSTs
+     ========================================== */
+
+  let repairIndex = 0;
+  let repairRoot = null;
+  let selectedBad = false;
+  let repaired = false;
+  let repairError = null;
+
+  const repairSolved = new Set();
+
+  const repairLayout = el(
+    'div',
+    'practice-layout'
   );
 
-  treeCard.append(
-    treeHeader,
-    treeViewport,
-    legend,
-    predictionBox,
-    explanationBox,
-    visitedSection,
-    controls
+  const repairLeft = el(
+    'article',
+    'practice-card'
   );
 
-  // ------------------------------------------
-  // LIVE STACK PANEL
-  // ------------------------------------------
+  const repairView = makeTreeFrame([
+    ['Node', 'normal'],
+    ['Selected', 'selected'],
+    ['Incorrect', 'error'],
+    ['Fixed', 'fixed']
+  ]);
 
-  const stackCard = practiceEl(
-    'aside',
+  const repairCounter = el(
+    'span',
+    'practice-count'
+  );
+
+  const repairHeading = el(
+    'div',
+    'practice-heading'
+  );
+
+  repairHeading.append(
+    el('h2', '', 'Find the broken BST rule'),
+    repairCounter
+  );
+
+  repairLeft.append(
+    repairHeading,
+    el(
+      'p',
+      'practice-muted',
+      'One value is in the wrong subtree. ' +
+      'Click that node, then choose its correct ' +
+      'empty position.'
+    ),
+    repairView.frame
+  );
+
+  const repairRight = el(
+    'article',
+    'practice-card practice-task'
+  );
+
+  const repairCall = callout(
+    'Find the misplaced value',
+    'Check the ordering rule at every ancestor, ' +
+    'not just the direct parent.'
+  );
+
+  const repairOptions = el(
+    'div',
+    'practice-answer-grid'
+  );
+
+  const repairHint = button('Hint');
+
+  const repairNext = button(
+    'Next case →',
+    'practice-btn practice-primary'
+  );
+
+  const repairActions = el(
+    'div',
+    'practice-actions'
+  );
+
+  repairActions.append(
+    repairHint,
+    repairNext
+  );
+
+  repairRight.append(
+    el('span', 'practice-eyebrow', 'BST RULES'),
+    el('h2', '', 'Diagnose and repair'),
+    repairCall.box,
+    repairOptions,
+    repairActions
+  );
+
+  repairLayout.append(
+    repairLeft,
+    repairRight
+  );
+
+  panels[0].append(repairLayout);
+
+  function loadRepair() {
+    const scenario = REPAIRS[repairIndex];
+
+    repairRoot = fromSpec(scenario.spec);
+    selectedBad = false;
+    repaired = false;
+    repairError = null;
+
+    repairOptions.replaceChildren();
+    showRepairOptions();
+    repairOptions.hidden = true;
+
+    repairCounter.textContent =
+      `Case ${repairIndex + 1} of ${REPAIRS.length}`;
+
+    repairNext.hidden =
+      repairIndex === REPAIRS.length - 1;
+
+    repairNext.disabled = true;
+    repairHint.disabled = false;
+
+    say(
+      repairCall,
+      'Find the misplaced value',
+      'Click the node that breaks the BST ' +
+      'ordering property.'
+    );
+
+    drawRepair();
+  }
+
+  function drawRepair() {
+    paint(
+      repairView,
+      repairRoot,
+      {
+        selected: selectedBad
+          ? REPAIRS[repairIndex].bad
+          : null,
+        error: repairError,
+        fixed: repaired
+          ? REPAIRS[repairIndex].bad
+          : null
+      },
+      n => {
+        if (repaired) return;
+
+        const scenario = REPAIRS[repairIndex];
+
+        if (n.value !== scenario.bad) {
+          repairError = n.value;
+
+          drawRepair();
+
+          say(
+            repairCall,
+            'Try another node',
+            `Node ${n.value} is not the misplaced ` +
+            'value. Compare each node with all ' +
+            'its ancestors.',
+            'review'
+          );
+
+          return;
+        }
+
+        selectedBad = true;
+        repairError = null;
+
+        drawRepair();
+
+        repairOptions.hidden = false;
+
+        say(
+          repairCall,
+          'Good diagnosis',
+          `You found ${n.value}. Where should it ` +
+          'move so the entire tree follows the ' +
+          'BST rules?'
+        );
+      }
+    );
+  }
+
+  function showRepairOptions() {
+    const scenario = REPAIRS[repairIndex];
+
+    repairOptions.replaceChildren();
+
+    scenario.choices.forEach(
+      ([label, parent, side]) => {
+        const b = button(
+          label,
+          'practice-answer'
+        );
+
+        b.addEventListener('click', () => {
+          if (!selectedBad || repaired) return;
+
+          if (
+            scenario.parent !== parent ||
+            scenario.side !== side
+          ) {
+            say(
+              repairCall,
+              'Not a valid repair',
+              'That position would still break ' +
+              'a BST rule or would not move the ' +
+              'value into the correct subtree. ' +
+              'Try another location.',
+              'review'
+            );
+
+            return;
+          }
+
+          const badNode = findNode(
+            repairRoot,
+            scenario.bad
+          );
+
+          const parentNode = findNode(
+            repairRoot,
+            parent
+          );
+
+          const oldSide =
+            badNode.parent.left === badNode
+              ? 'left'
+              : 'right';
+
+          badNode.parent[oldSide] = null;
+
+          badNode.parent = parentNode;
+          parentNode[side] = badNode;
+
+          repaired = true;
+          repairOptions.hidden = true;
+          repairNext.disabled = false;
+          repairHint.disabled = true;
+
+          repairSolved.add(repairIndex);
+
+          if (
+            repairSolved.size === REPAIRS.length
+          ) {
+            markDone('repair');
+          }
+
+          drawRepair();
+
+          say(
+            repairCall,
+            'BST repaired!',
+            `${scenario.bad} is now the ${side} ` +
+            `child of ${parent}. All subtree ` +
+            'ordering rules are satisfied.',
+            'correct'
+          );
+        });
+
+        repairOptions.append(b);
+      }
+    );
+  }
+
+  repairHint.addEventListener('click', () => {
+    const s = REPAIRS[repairIndex];
+
+    say(
+      repairCall,
+      'Hint',
+      selectedBad
+        ? 'The misplaced node must go into the ' +
+          `subtree that contains ${s.parent}. ` +
+          'Look for an empty child position.'
+        : s.hint
+    );
+  });
+
+  repairNext.addEventListener('click', () => {
+    if (
+      !repaired ||
+      repairIndex >= REPAIRS.length - 1
+    ) return;
+
+    repairIndex++;
+    loadRepair();
+  });
+
+  /* ==========================================
+     TAB 2 — TRACE DFS USING A REAL STACK
+     ========================================== */
+
+  const traceRoot = fromValues(TRACE_VALUES);
+
+  const traceTargets = [73, 77];
+
+  let traceCase = 0;
+  let traceStack = [];
+  let traceVisited = [];
+  let traceCurrent = null;
+  let traceError = null;
+  let traceFinished = false;
+
+  const traceCompleted = new Set();
+
+  const traceModes = el(
+    'div',
+    'practice-subtabs'
+  );
+
+  const traceModeButtons = traceTargets.map(
+    (target, index) => {
+      const b = button(
+        index === 0
+          ? `Find ${target}`
+          : `Find ${target} (missing)`,
+        'practice-subtab'
+      );
+
+      b.addEventListener('click', () => {
+        traceCase = index;
+        resetTrace();
+      });
+
+      traceModes.append(b);
+
+      return b;
+    }
+  );
+
+  const traceLayout = el(
+    'div',
+    'practice-layout'
+  );
+
+  const traceTreeCard = el(
+    'article',
+    'practice-card'
+  );
+
+  const traceView = makeTreeFrame([
+    ['Not visited', 'normal'],
+    ['Current', 'current'],
+    ['Visited', 'visited'],
+    ['On stack', 'pending']
+  ]);
+
+  const traceHeading = el(
+    'h2',
+    '',
+    'Choose the next node to visit'
+  );
+
+  const traceVisitedBox = el(
+    'div',
+    'practice-trail'
+  );
+
+  traceTreeCard.append(
+    traceHeading,
+    el(
+      'p',
+      'practice-muted',
+      'Click the node on the tree that comes ' +
+      'off the stack next. DFS visits left first ' +
+      'and stops when the target is found.'
+    ),
+    traceView.frame,
+    el(
+      'strong',
+      'practice-small-heading',
+      'Visited order'
+    ),
+    traceVisitedBox
+  );
+
+  const traceSide = el(
+    'div',
+    'practice-side'
+  );
+
+  const traceStackCard = el(
+    'article',
     'practice-card practice-stack-card'
   );
 
-  stackCard.append(
-    practiceEl(
+  const traceStackStatus = el(
+    'p',
+    'practice-muted'
+  );
+
+  const traceStackList = el(
+    'div',
+    'practice-stack'
+  );
+
+  traceStackCard.append(
+    el(
       'span',
       'practice-eyebrow',
-      'LIVE STACK'
+      'LIVE STACK · LIFO'
     ),
-    practiceEl('h3', '', 'Nodes waiting to be visited'),
-    practiceEl(
-      'p',
-      'practice-muted',
-      'The top node is the next one DFS will visit.'
-    )
+    el('h2', '', 'Which node is on top?'),
+    traceStackStatus,
+    traceStackList
   );
 
-  const stackStatus = practiceEl(
+  const traceTask = el(
+    'article',
+    'practice-card practice-task'
+  );
+
+  const traceCall = callout(
+    'Your move',
+    'Select the top item from the stack ' +
+    'by clicking its node.'
+  );
+
+  const traceHint = button('Hint');
+  const traceRestart = button('Restart search');
+
+  const traceActions = el(
+    'div',
+    'practice-actions'
+  );
+
+  traceActions.append(
+    traceHint,
+    traceRestart
+  );
+
+  const traceCount = el(
     'p',
-    'practice-stack-status'
+    'practice-muted'
   );
 
-  const stackList = practiceEl(
-    'div',
-    'practice-stack-list'
+  traceTask.append(
+    el('span', 'practice-eyebrow', 'YOUR TURN'),
+    el('h2', '', 'Run the search'),
+    traceCount,
+    traceCall.box,
+    traceActions
   );
 
-  const stackNote = practiceEl(
-    'div',
-    'practice-stack-note',
-    'For a left-first DFS, the right child ' +
-    'is pushed before the left child, ' +
-    'so the left child is removed first.'
+  traceSide.append(
+    traceStackCard,
+    traceTask
   );
 
-  stackCard.append(
-    stackStatus,
-    stackList,
-    stackNote
+  traceLayout.append(
+    traceTreeCard,
+    traceSide
   );
 
-  searchLayout.append(
-    treeCard,
-    stackCard
+  panels[1].append(
+    traceModes,
+    traceLayout
   );
 
-  const searchResult = practiceEl(
-    'div',
-    'practice-search-result'
-  );
+  function resetTrace() {
+    traceStack = [traceRoot];
+    traceVisited = [];
+    traceCurrent = null;
+    traceError = null;
+    traceFinished = false;
 
-  searchResult.hidden = true;
-  searchResult.setAttribute('aria-live', 'polite');
+    renderTrace();
 
-  searchSection.append(
-    searchLayout,
-    searchResult
-  );
-
-  // ------------------------------------------
-  // UPDATE DFS TREE
-  // ------------------------------------------
-
-  function updateTree(step) {
-    treeSvg.querySelectorAll('.practice-tree-node')
-      .forEach(group => {
-        const value = Number(group.dataset.node);
-
-        group.classList.remove(
-          'is-current',
-          'is-visited',
-          'is-pending'
-        );
-
-        let symbol = '';
-        let state = 'Not visited';
-
-        if (value === step.current) {
-          group.classList.add('is-current');
-          symbol = 'NOW';
-          state = 'Current';
-        } else if (step.visited.includes(value)) {
-          group.classList.add('is-visited');
-          symbol = '✓';
-          state = 'Visited';
-        } else if (step.stack.includes(value)) {
-          group.classList.add('is-pending');
-          symbol = 'WAIT';
-          state = 'Waiting on stack';
-        }
-
-        group.querySelector(
-          '.practice-tree-state'
-        ).textContent = symbol;
-
-        group.setAttribute(
-          'aria-label',
-          `Node ${value}: ${state}`
-        );
-      });
+    say(
+      traceCall,
+      'Your move',
+      `Find ${traceTargets[traceCase]} using ` +
+      'left-first pre-order DFS. Click the node ' +
+      'at the TOP of the stack.'
+    );
   }
 
-  // ------------------------------------------
-  // UPDATE LIVE STACK
-  // ------------------------------------------
+  function renderTrace() {
+    const waiting = [...traceStack]
+      .reverse()
+      .map(n => n.value);
 
-  function updateStack(step) {
-    stackList.replaceChildren();
+    traceModeButtons.forEach((b, i) => {
+      b.setAttribute(
+        'aria-pressed',
+        String(traceCase === i)
+      );
 
-    const count = step.stack.length;
+      b.classList.toggle(
+        'is-done',
+        traceCompleted.has(i)
+      );
+    });
 
-    stackStatus.textContent =
-      `${count} pending node${count === 1 ? '' : 's'}`;
+    paint(
+      traceView,
+      traceRoot,
+      {
+        current: traceCurrent,
+        visited: traceVisited,
+        pending: waiting,
+        error: traceError
+      },
+      n => {
+        if (traceFinished) return;
 
-    if (!count) {
-      stackList.appendChild(
-        practiceEl(
+        const expected =
+          traceStack[traceStack.length - 1];
+
+        if (!expected) return;
+
+        if (n.value !== expected.value) {
+          traceError = n.value;
+
+          renderTrace();
+
+          say(
+            traceCall,
+            'Check the stack',
+            `You selected ${n.value}. The ` +
+            'stack follows LIFO, so look at the ' +
+            'value marked TOP before choosing again.',
+            'review'
+          );
+
+          return;
+        }
+
+        traceError = null;
+
+        const current = traceStack.pop();
+
+        traceCurrent = current.value;
+        traceVisited.push(current.value);
+
+        const target = traceTargets[traceCase];
+
+        const found =
+          current.value === target;
+
+        if (!found) {
+          // Push right first so left is popped first.
+          if (current.right) {
+            traceStack.push(current.right);
+          }
+
+          if (current.left) {
+            traceStack.push(current.left);
+          }
+        }
+
+        if (found || traceStack.length === 0) {
+          traceFinished = true;
+
+          traceCompleted.add(traceCase);
+
+          if (
+            traceCompleted.size ===
+            traceTargets.length
+          ) {
+            markDone('trace');
+          }
+        }
+
+        renderTrace();
+
+        if (found) {
+          say(
+            traceCall,
+            'Target found!',
+            `You found ${target} after visiting ` +
+            `${traceVisited.length} nodes. ` +
+            'DFS stops here.',
+            'correct'
+          );
+        } else if (traceFinished) {
+          say(
+            traceCall,
+            'Target not found',
+            `All ${traceVisited.length} nodes ` +
+            'were visited and the stack is empty. ' +
+            `${target} is not in this tree.`,
+            'correct'
+          );
+        } else {
+          const children = [
+            current.right,
+            current.left
+          ]
+            .filter(Boolean)
+            .map(n => n.value);
+
+          say(
+            traceCall,
+            `Visited ${current.value}`,
+            children.length
+              ? `Push ${children.join(', then ')}. ` +
+                'The left child is visited first ' +
+                'because it was pushed last.'
+              : 'This node is a leaf. Pop the ' +
+                'next waiting node from the stack.',
+            'correct'
+          );
+        }
+      }
+    );
+
+    renderTrail(
+      traceVisitedBox,
+      traceVisited,
+      'No nodes visited yet.'
+    );
+
+    traceCount.textContent =
+      `Target: ${traceTargets[traceCase]} · ` +
+      `${traceVisited.length} visited`;
+
+    traceHint.disabled = traceFinished;
+
+    traceStackStatus.textContent = traceFinished
+      ? 'Search complete'
+      : `${waiting.length} waiting node` +
+        (waiting.length === 1 ? '' : 's');
+
+    traceStackList.replaceChildren();
+
+    if (!waiting.length) {
+      traceStackList.append(
+        el(
           'p',
-          'practice-stack-empty',
+          'practice-muted',
           'The stack is empty.'
         )
       );
-      return;
     }
 
-    step.stack.forEach((value, index) => {
-      const item = practiceEl(
+    waiting.forEach((value, i) => {
+      const row = el(
         'div',
-        'practice-stack-item',
-        String(value)
+        'practice-stack-row'
       );
 
-      if (index === 0) {
-        item.classList.add('is-top');
+      row.append(
+        el('strong', '', String(value))
+      );
 
-        item.appendChild(
-          practiceEl(
+      if (i === 0) {
+        row.append(
+          el(
             'span',
             'practice-stack-top',
             'TOP'
@@ -852,724 +1288,516 @@ export function render(screen, container) {
         );
       }
 
-      stackList.appendChild(item);
+      traceStackList.append(row);
     });
   }
 
-  // ------------------------------------------
-  // UPDATE VISITED ORDER
-  // ------------------------------------------
+  traceHint.addEventListener('click', () => {
+    const top =
+      traceStack[traceStack.length - 1];
 
-  function updateVisited(step) {
-    visitedList.replaceChildren();
-
-    if (!step.visited.length) {
-      visitedList.appendChild(
-        practiceEl(
-          'span',
-          'practice-visited-empty',
-          'No nodes visited yet.'
-        )
+    if (top) {
+      say(
+        traceCall,
+        'Hint: LIFO',
+        `The most recently pushed node is ` +
+        `${top.value}. Find it on the tree.`
       );
-      return;
     }
+  });
 
-    step.visited.forEach((value, index) => {
-      visitedList.appendChild(
-        practiceEl(
-          'span',
-          'practice-visited-chip',
-          String(value)
-        )
-      );
+  traceRestart.addEventListener(
+    'click',
+    resetTrace
+  );
 
-      if (index < step.visited.length - 1) {
-        visitedList.appendChild(
-          practiceEl(
-            'span',
-            'practice-visited-arrow',
-            '→'
-          )
-        );
-      }
-    });
-  }
+  /* ==========================================
+     TAB 3 — THREE TRAVERSAL TASKS
+     ========================================== */
 
-  // ------------------------------------------
-  // PREDICT THE NEXT NODE
-  // ------------------------------------------
+  let seqIndex = 0;
 
-  function renderPrediction() {
-    predictionOptions.replaceChildren();
-    predictionFeedback.textContent = '';
-    predictionFeedback.className = 'practice-feedback';
+  const seqSolved = new Set();
 
-    selectedPrediction = null;
+  const seqRoots = SEQUENCES.map(
+    task => fromValues(task.values)
+  );
 
-    const finished = stepIndex === steps.length - 1;
+  const seqButtons = el(
+    'div',
+    'practice-subtabs'
+  );
 
-    if (finished) {
-      predictionBox.hidden = true;
-      return;
-    }
-
-    predictionBox.hidden = false;
-
-    const currentStep = steps[stepIndex];
-    const expected = steps[stepIndex + 1].current;
-
-    // Three node choices and one "Not sure".
-    const options = [expected];
-
-    for (const node of PRACTICE_TREE) {
-      if (options.length >= 3) break;
-
-      if (
-        node.value !== expected &&
-        !options.includes(node.value)
-      ) {
-        options.push(node.value);
-      }
-    }
-
-    options.forEach(value => {
-      const button = practiceEl(
-        'button',
-        'practice-answer',
-        String(value)
+  const seqTaskButtons = SEQUENCES.map(
+    (task, i) => {
+      const b = button(
+        task.label,
+        'practice-subtab'
       );
 
-      button.type = 'button';
-      button.setAttribute('aria-pressed', 'false');
-
-      button.addEventListener('click', () => {
-        selectedPrediction = value;
-        predictionAttempts++;
-
-        predictionOptions.querySelectorAll('button')
-          .forEach(other => {
-            other.setAttribute(
-              'aria-pressed',
-              String(other === button)
-            );
-          });
-
-        if (value === expected) {
-          predictionFeedback.className =
-            'practice-feedback is-correct';
-
-          predictionFeedback.textContent =
-            'Correct! This is the next node ' +
-            'at the top of the stack.';
-        } else {
-          wrongAnswers++;
-
-          predictionFeedback.className =
-            'practice-feedback is-review';
-
-          predictionFeedback.textContent =
-            `Not quite. The next node is ${expected}. ` +
-            'Remember that the last node pushed ' +
-            'comes off first.';
-        }
-
-        updateControls();
-        updateReadiness();
+      b.addEventListener('click', () => {
+        seqIndex = i;
+        loadSequence();
       });
 
-      predictionOptions.appendChild(button);
-    });
+      seqButtons.append(b);
 
-    const unsureButton = practiceEl(
-      'button',
-      'practice-answer',
-      'Not sure'
-    );
-
-    unsureButton.type = 'button';
-    unsureButton.setAttribute('aria-pressed', 'false');
-
-    unsureButton.addEventListener('click', () => {
-      selectedPrediction = 'unsure';
-      predictionAttempts++;
-      hintCount++;
-
-      predictionOptions.querySelectorAll('button')
-        .forEach(other => {
-          other.setAttribute(
-            'aria-pressed',
-            String(other === unsureButton)
-          );
-        });
-
-      predictionFeedback.className =
-        'practice-feedback is-review';
-
-      predictionFeedback.textContent =
-        `The next node is ${expected}, ` +
-        'which is the top item on the stack.';
-
-      updateControls();
-      updateReadiness();
-    });
-
-    predictionOptions.appendChild(unsureButton);
-
-    predictionHint.onclick = () => {
-      hintCount++;
-
-      predictionFeedback.className =
-        'practice-feedback is-review';
-
-      predictionFeedback.textContent =
-        currentStep.stack.length
-          ? 'Look at the stack on the right. ' +
-            'The item marked TOP is visited next.'
-          : 'There are no pending nodes.';
-
-      updateReadiness();
-    };
-  }
-
-  // ------------------------------------------
-  // FULL SEARCH STATE UPDATE
-  // ------------------------------------------
-
-  function updateControls() {
-    const finished = stepIndex === steps.length - 1;
-
-    previousButton.disabled = stepIndex === 0;
-
-    nextButton.disabled =
-      finished || selectedPrediction === null;
-
-    nextButton.textContent = finished
-      ? 'Search Complete ✓'
-      : 'Reveal Next Step →';
-
-    stepCounter.textContent =
-      `Step ${stepIndex} of ${steps.length - 1}`;
-  }
-
-  function updateSearch() {
-    const step = steps[stepIndex];
-    const finished = stepIndex === steps.length - 1;
-
-    updateTree(step);
-    updateStack(step);
-    updateVisited(step);
-
-    explanationHeading.textContent =
-      stepIndex === 0
-        ? 'Ready to begin'
-        : `Step ${stepIndex}: Visit ${step.current}`;
-
-    explanationText.textContent = step.explanation;
-
-    if (finished) {
-      predictionBox.hidden = true;
-      searchResult.hidden = false;
-
-      const found = step.found;
-
-      searchResult.className =
-        'practice-search-result is-complete';
-
-      searchResult.textContent = found
-        ? `Target ${target} was found after ` +
-          `${step.visited.length} visits.`
-        : `Target ${target} was not found. ` +
-          'DFS visited every node and the stack is empty. ' +
-          'A search can finish without finding its target.';
-
-      markComplete('search');
-    } else {
-      searchResult.hidden = true;
+      return b;
     }
-
-    renderPrediction();
-    updateControls();
-  }
-
-  previousButton.addEventListener('click', () => {
-    if (stepIndex > 0) {
-      stepIndex--;
-      updateSearch();
-    }
-  });
-
-  nextButton.addEventListener('click', () => {
-    if (
-      selectedPrediction !== null &&
-      stepIndex < steps.length - 1
-    ) {
-      stepIndex++;
-      updateSearch();
-    }
-  });
-
-  restartButton.addEventListener('click', () => {
-    stepIndex = 0;
-    updateSearch();
-  });
-
-  // ==========================================
-  // 03 — IN-ORDER TRAVERSAL PRACTICE
-  // ==========================================
-
-  const inorder = practiceEl(
-    'section',
-    'practice-card practice-inorder'
   );
 
-  inorder.append(
-    practiceEl(
-      'span',
-      'practice-eyebrow',
-      '03 / TRAVERSAL PRACTICE'
-    ),
-    practiceEl(
-      'h2',
-      '',
-      'Write the in-order traversal'
-    ),
-    practiceEl(
+  const seqLayout = el(
+    'div',
+    'practice-layout'
+  );
+
+  const seqLeft = el(
+    'article',
+    'practice-card'
+  );
+
+  const seqView = makeTreeFrame([
+    ['Not chosen', 'normal'],
+    ['Draft (unchecked)', 'draft'],
+    ['Correctly completed', 'visited']
+  ]);
+
+  const seqTreeTitle = el(
+    'h2',
+    '',
+    'Build the traversal sequence'
+  );
+
+  const seqTrail = el(
+    'div',
+    'practice-trail'
+  );
+
+  seqLeft.append(
+    seqTreeTitle,
+    el(
       'p',
       'practice-muted',
-      'For an in-order traversal, visit the left ' +
-      'subtree, then the current node, then the ' +
-      'right subtree. Use the tree above.'
-    )
+      'Click the nodes to add values, or type ' +
+      'the sequence on the right. Check your ' +
+      'answer when ready.'
+    ),
+    seqView.frame,
+    el(
+      'strong',
+      'practice-small-heading',
+      'Your draft sequence'
+    ),
+    seqTrail
   );
 
-  const inorderRule = practiceEl(
-    'div',
-    'practice-rule',
-    'LEFT → NODE → RIGHT'
+  const seqRight = el(
+    'article',
+    'practice-card practice-task'
   );
 
-  const inorderForm = practiceEl(
+  const seqRule = el(
+    'p',
+    'practice-rule'
+  );
+
+  const seqForm = el(
     'form',
-    'practice-inorder-form'
+    'practice-form'
   );
 
-  const inorderLabel = practiceEl(
+  const seqLabel = el(
     'label',
     '',
-    'Enter the node values in visiting order'
+    'Node values in visiting order'
   );
 
-  const inorderInput = practiceEl(
-    'input',
-    'practice-inorder-input'
+  const seqInput = el('input');
+
+  seqInput.type = 'text';
+  seqInput.id = 'practice-sequence-input';
+  seqLabel.htmlFor = seqInput.id;
+  seqInput.placeholder = 'e.g. 12, 30, 48, ...';
+  seqInput.autocomplete = 'off';
+
+  const seqCheck = button(
+    'Check sequence',
+    'practice-btn practice-primary'
   );
 
-  inorderInput.type = 'text';
-  inorderInput.placeholder = 'e.g. 10, 20, 30';
-  inorderInput.autocomplete = 'off';
+  seqCheck.type = 'submit';
 
-  inorderLabel.appendChild(inorderInput);
-
-  const inorderSubmit = practiceEl(
-    'button',
-    'practice-button practice-button--primary',
-    'Check my answer'
+  seqForm.append(
+    seqLabel,
+    seqInput,
+    seqCheck
   );
 
-  inorderSubmit.type = 'submit';
-
-  const inorderHint = practiceEl(
-    'button',
-    'practice-hint-button',
-    'Give me a hint'
+  const seqCall = callout(
+    'Solve the traversal',
+    'Use the visiting order you learned ' +
+    'in DFS Introduction.'
   );
 
-  inorderHint.type = 'button';
+  const seqHint = button('Hint');
+  const seqUndo = button('Undo last');
+  const seqClear = button('Clear draft');
 
-  const inorderFeedback = practiceEl(
+  const seqNext = button(
+    'Next task →',
+    'practice-btn practice-primary'
+  );
+
+  const seqActions = el(
     'div',
-    'practice-feedback'
+    'practice-actions'
   );
 
-  inorderFeedback.setAttribute('aria-live', 'polite');
-
-  const inorderHintText = practiceEl(
-    'div',
-    'practice-inorder-hint'
+  seqActions.append(
+    seqHint,
+    seqUndo,
+    seqClear,
+    seqNext
   );
 
-  inorderHintText.hidden = true;
-
-  const inorderActions = practiceEl(
-    'div',
-    'practice-inorder-actions'
-  );
-
-  inorderActions.append(
-    inorderSubmit,
-    inorderHint
-  );
-
-  inorderForm.append(
-    inorderLabel,
-    inorderActions
-  );
-
-  let inorderHintLevel = 0;
-
-  inorderHint.addEventListener('click', () => {
-    inorderHintLevel++;
-    hintCount++;
-
-    const messages = [
-      'Begin with the smallest value in the ' +
-      'leftmost part of the tree.',
-      'Visit 20, then 30, then 40. ' +
-      'What comes after the left subtree?',
-      'The root 50 comes after its left subtree. ' +
-      'Continue through the right subtree.'
-    ];
-
-    inorderHintText.hidden = false;
-    inorderHintText.textContent =
-      messages[Math.min(inorderHintLevel - 1, 2)];
-
-    updateReadiness();
-  });
-
-  inorderForm.addEventListener('submit', event => {
-    event.preventDefault();
-
-    const raw = inorderInput.value.trim();
-
-    if (!raw) {
-      inorderFeedback.className =
-        'practice-feedback is-review';
-
-      inorderFeedback.textContent =
-        'Enter the traversal first. ' +
-        'You can use the hint if you are unsure.';
-      return;
-    }
-
-    const parts = raw
-      .split(/[\s,;→]+/)
-      .filter(Boolean);
-
-    const values = parts.map(value => Number(value));
-
-    const valid =
-      values.length === correctInOrder.length &&
-      values.every(Number.isInteger);
-
-    inorderAttempts++;
-
-    if (!valid) {
-      inorderFeedback.className =
-        'practice-feedback is-review';
-
-      inorderFeedback.textContent =
-        'Enter all seven node values, separated ' +
-        'by commas or spaces.';
-
-      updateReadiness();
-      return;
-    }
-
-    const correct = values.every(
-      (value, index) =>
-        value === correctInOrder[index]
-    );
-
-    if (correct) {
-      inorderFeedback.className =
-        'practice-feedback is-correct';
-
-      inorderFeedback.textContent =
-        `Correct! ${correctInOrder.join(' → ')}. ` +
-        'In-order traversal of a BST visits ' +
-        'its values in ascending order.';
-
-      markComplete('inorder');
-    } else {
-      wrongAnswers++;
-
-      inorderFeedback.className =
-        'practice-feedback is-review';
-
-      const firstMismatch = values.findIndex(
-        (value, index) =>
-          value !== correctInOrder[index]
-      );
-
-      inorderFeedback.textContent =
-        `Check position ${firstMismatch + 1}. ` +
-        'Remember: left subtree, node, right subtree. ' +
-        'Try again or request a hint.';
-    }
-
-    updateReadiness();
-  });
-
-  inorder.append(
-    inorderRule,
-    inorderForm,
-    inorderHintText,
-    inorderFeedback
-  );
-
-  // ==========================================
-  // 04 — REFLECTION AND READINESS
-  // ==========================================
-
-  const reflection = practiceEl(
-    'section',
-    'practice-card practice-reflection'
-  );
-
-  reflection.append(
-    practiceEl(
+  seqRight.append(
+    el(
       'span',
       'practice-eyebrow',
-      '04 / CHECK YOUR READINESS'
+      'INDEPENDENT PRACTICE'
     ),
-    practiceEl(
-      'h2',
-      '',
-      'What did you discover?'
-    ),
-    practiceEl(
-      'p',
-      'practice-muted',
-      'Answer one final question to connect ' +
-      'the practical activity to the algorithm.'
-    ),
-    practiceEl(
-      'h3',
-      '',
-      `What does it mean if DFS finishes ` +
-      `searching for ${target} without finding it?`
-    )
+    el('h2', '', 'Write the visit order'),
+    seqRule,
+    seqForm,
+    seqCall.box,
+    seqActions
   );
 
-  const reflectionOptions = practiceEl(
-    'div',
-    'practice-answer-options'
+  seqLayout.append(
+    seqLeft,
+    seqRight
   );
 
-  const reflectionFeedback = practiceEl(
-    'div',
-    'practice-feedback'
+  panels[2].append(
+    seqButtons,
+    seqLayout
   );
 
-  reflectionFeedback.setAttribute('aria-live', 'polite');
+  function currentExpected() {
+    return traversal(
+      seqRoots[seqIndex],
+      SEQUENCES[seqIndex].type
+    );
+  }
 
-  const reflectionAnswers = [
-    {
-      text: 'The target must be at the root',
-      correct: false
-    },
-    {
-      text: 'The target is absent from this tree',
-      correct: true
-    },
-    {
-      text: 'The tree is not a valid BST',
-      correct: false
-    },
-    {
-      text: 'Not sure',
-      correct: false
-    }
-  ];
-
-  reflectionAnswers.forEach(option => {
-    const button = practiceEl(
-      'button',
-      'practice-answer',
-      option.text
+  function showSequenceTree() {
+    const words = parseSequence(
+      seqInput.value
     );
 
-    button.type = 'button';
-    button.setAttribute('aria-pressed', 'false');
+    const draft = words || [];
 
-    button.addEventListener('click', () => {
-      reflectionOptions.querySelectorAll('button')
-        .forEach(other => {
-          other.setAttribute(
-            'aria-pressed',
-            String(other === button)
+    const solved = seqSolved.has(
+      seqIndex
+    );
+
+    paint(
+      seqView,
+      seqRoots[seqIndex],
+      {
+        visited: solved
+          ? currentExpected()
+          : [],
+        draft: solved
+          ? []
+          : draft
+      },
+      n => {
+        if (seqSolved.has(seqIndex)) return;
+
+        const current = parseSequence(
+          seqInput.value
+        );
+
+        if (current === null) {
+          say(
+            seqCall,
+            'Check the draft',
+            'Enter only whole numbers separated ' +
+            'by commas or spaces.',
+            'review'
           );
-        });
 
-      reflectionFeedback.className = option.correct
-        ? 'practice-feedback is-correct'
-        : 'practice-feedback is-review';
+          return;
+        }
 
-      if (option.correct) {
-        reflectionFeedback.textContent =
-          'Correct! Once DFS has checked every node ' +
-          'and the stack is empty, the target is ' +
-          'not present in the tree.';
+        if (current.includes(n.value)) {
+          say(
+            seqCall,
+            'Already included',
+            `Node ${n.value} is already in your ` +
+            'draft. Each node is visited once.',
+            'review'
+          );
 
-        markComplete('reflection');
-      } else {
-        wrongAnswers += option.text === 'Not sure' ? 0 : 1;
+          return;
+        }
 
-        reflectionFeedback.textContent =
-          'Think about what an empty stack means. ' +
-          'If no nodes remain to check, ' +
-          'where else could DFS search? Try again.';
+        current.push(n.value);
+
+        seqInput.value = current.join(', ');
+
+        showSequenceTree();
+
+        say(
+          seqCall,
+          'Added to draft',
+          `Node ${n.value} is at position ` +
+          `${current.length}. Check your full ` +
+          'sequence when ready.'
+        );
       }
+    );
 
-      updateReadiness();
+    renderTrail(
+      seqTrail,
+      solved ? currentExpected() : draft,
+      'Click nodes or type a sequence.'
+    );
+  }
+
+  function loadSequence() {
+    const task = SEQUENCES[seqIndex];
+
+    seqTaskButtons.forEach((b, i) => {
+      b.setAttribute(
+        'aria-pressed',
+        String(i === seqIndex)
+      );
+
+      b.classList.toggle(
+        'is-done',
+        seqSolved.has(i)
+      );
     });
 
-    reflectionOptions.appendChild(button);
-  });
+    seqRule.textContent =
+      `${task.label}: ${RULES[task.type]}`;
 
-  // Readiness recommendation.
-  const readiness = practiceEl(
-    'div',
-    'practice-readiness'
+    seqInput.value =
+      seqSolved.has(seqIndex)
+        ? currentExpected().join(', ')
+        : '';
+
+    seqCheck.disabled =
+      seqSolved.has(seqIndex);
+
+    seqHint.disabled =
+      seqSolved.has(seqIndex);
+
+    seqNext.hidden =
+      seqIndex === SEQUENCES.length - 1;
+
+    seqNext.disabled =
+      !seqSolved.has(seqIndex);
+
+    showSequenceTree();
+
+    say(
+      seqCall,
+      seqSolved.has(seqIndex)
+        ? 'Task completed!'
+        : 'Your challenge',
+      seqSolved.has(seqIndex)
+        ? 'You solved this traversal. Choose ' +
+          'a different task to practise more.'
+        : `Use ${RULES[task.type]}. Each node ` +
+          'must appear exactly once.'
+    );
+  }
+
+  seqInput.addEventListener(
+    'input',
+    showSequenceTree
   );
 
-  const readinessTitle = practiceEl(
-    'h3',
-    '',
-    'Your practice summary'
-  );
+  seqForm.addEventListener('submit', event => {
+    event.preventDefault();
 
-  const readinessText = practiceEl(
-    'p',
-    '',
-    'Complete the activities above to receive ' +
-    'guidance for your next step.'
-  );
+    if (seqSolved.has(seqIndex)) return;
 
-  const readinessLink = practiceEl(
-    'a',
-    'practice-review-link',
-    'Review DFS Introduction →'
-  );
+    const answer = parseSequence(
+      seqInput.value
+    );
 
-  readinessLink.href = '#/concept-idea';
+    const expected = currentExpected();
 
-  readiness.append(
-    readinessTitle,
-    readinessText,
-    readinessLink
-  );
+    if (!answer) {
+      say(
+        seqCall,
+        'Use whole numbers',
+        'Separate each value with a comma ' +
+        'or space. Do not include letters.',
+        'review'
+      );
 
-  function updateReadiness() {
-    if (completed.size < 4) {
-      readinessTitle.textContent =
-        'Your practice summary';
-
-      readinessText.textContent =
-        `You have completed ${completed.size} of 4 activities. ` +
-        'Keep practising to receive your readiness feedback.';
-
-      readinessLink.textContent =
-        'Review DFS Introduction →';
-
-      readinessLink.href = '#/concept-idea';
       return;
     }
 
-    if (wrongAnswers === 0 && hintCount === 0) {
-      readinessTitle.textContent =
-        "You're ready for the quiz!";
+    if (answer.length !== expected.length) {
+      say(
+        seqCall,
+        'Check the number of visits',
+        `This tree has ${expected.length} nodes, ` +
+        `but you entered ${answer.length}. ` +
+        'Visit every node exactly once.',
+        'review'
+      );
 
-      readinessText.textContent =
-        'You completed the practice activities ' +
-        'without requesting hints or making ' +
-        'incorrect attempts. Continue to the quiz.';
-
-      readinessLink.textContent =
-        'Continue to Quiz →';
-
-      readinessLink.href = '#/quiz';
-    } else {
-      readinessTitle.textContent =
-        'Good progress — review and continue';
-
-      readinessText.textContent =
-        'You completed all four activities. ' +
-        'You used feedback or hints along the way, ' +
-        'which is part of learning. Review the ' +
-        'concepts you found difficult before the quiz.';
-
-      readinessLink.textContent =
-        'Review DFS Introduction →';
-
-      readinessLink.href = '#/concept-idea';
+      return;
     }
-  }
 
-  reflection.append(
-    reflectionOptions,
-    reflectionFeedback,
-    readiness
-  );
+    const wrong = answer.findIndex(
+      (value, index) =>
+        value !== expected[index]
+    );
 
-  // ==========================================
-  // BOTTOM NAVIGATION
-  // ==========================================
+    if (wrong !== -1) {
+      say(
+        seqCall,
+        'Review the sequence',
+        `Position ${wrong + 1} is not correct. ` +
+        `Recheck ${
+          RULES[SEQUENCES[seqIndex].type]
+        } and try again.`,
+        'review'
+      );
 
-  const navigation = practiceEl(
+      return;
+    }
+
+    seqSolved.add(seqIndex);
+
+    if (
+      seqSolved.size === SEQUENCES.length
+    ) {
+      markDone('sequence');
+    }
+
+    loadSequence();
+
+    say(
+      seqCall,
+      'Correct traversal!',
+      `${expected.join(' → ')}. You applied ` +
+      'the rule correctly.',
+      'correct'
+    );
+  });
+
+  seqHint.addEventListener('click', () => {
+    const task = SEQUENCES[seqIndex];
+    const root = seqRoots[seqIndex];
+
+    const hint = task.type === 'pre'
+      ? `Start at the root ${root.value}, ` +
+        'then finish its left subtree before ' +
+        'the right.'
+      : task.type === 'in'
+        ? 'Start at the leftmost leaf. ' +
+          'In a BST, in-order gives ascending values.'
+        : 'Visit both subtrees before their ' +
+          `parent. The final node must be ` +
+          `the root ${root.value}.`;
+
+    say(
+      seqCall,
+      'Hint',
+      hint
+    );
+  });
+
+  seqUndo.addEventListener('click', () => {
+    if (seqSolved.has(seqIndex)) return;
+
+    const values = parseSequence(
+      seqInput.value
+    );
+
+    if (!values) return;
+
+    values.pop();
+
+    seqInput.value = values.join(', ');
+
+    showSequenceTree();
+  });
+
+  seqClear.addEventListener('click', () => {
+    if (seqSolved.has(seqIndex)) return;
+
+    seqInput.value = '';
+
+    showSequenceTree();
+
+    say(
+      seqCall,
+      'Draft cleared',
+      'Start your traversal again.'
+    );
+  });
+
+  seqNext.addEventListener('click', () => {
+    if (
+      !seqSolved.has(seqIndex) ||
+      seqIndex >= SEQUENCES.length - 1
+    ) return;
+
+    seqIndex++;
+
+    loadSequence();
+  });
+
+  /* ==========================================
+     PAGE NAVIGATION
+     ========================================== */
+
+  const navigation = el(
     'nav',
-    'practice-page-navigation'
+    'practice-navigation'
   );
 
-  navigation.setAttribute(
-    'aria-label',
-    'Practice navigation'
-  );
-
-  const backLink = practiceEl(
+  const back = el(
     'a',
-    'practice-page-navigation__back',
+    'practice-btn',
     '← Explorer'
   );
 
-  backLink.href = '#/worked-example';
+  back.href = '#/worked-example';
 
-  const nextLink = practiceEl(
+  const forward = el(
     'a',
-    'practice-page-navigation__next',
+    'practice-btn practice-primary',
     'Next: Quiz →'
   );
 
-  nextLink.href = '#/quiz';
+  forward.href = '#/quiz';
 
-  navigation.append(
-    backLink,
-    nextLink
-  );
-
-  // ==========================================
-  // ASSEMBLE PAGE
-  // ==========================================
+  navigation.append(back, forward);
 
   page.append(
-    progress,
-    intro,
-    recall,
-    searchSection,
-    inorder,
-    reflection,
+    title,
+    tabBar,
+    ...panels,
     navigation
   );
 
-  container.appendChild(page);
+  container.replaceChildren(page);
 
-  updateSearch();
-  updateReadiness();
+  loadRepair();
+  resetTrace();
+  loadSequence();
+  goTab(0);
 
-  // Clean up the header observer when
-  // navigating away from the practice page.
-  return () => {
-    headerObserver?.disconnect();
-  };
+  return () => {};
 }

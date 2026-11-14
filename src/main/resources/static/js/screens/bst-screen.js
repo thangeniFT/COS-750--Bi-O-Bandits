@@ -1,1692 +1,1374 @@
 
 /**
- * COS212 DFS Tutor — BST Introduction
- * Figma Page 2
+ * COS212 DFS Tutor — BST Basics
+ * Five-tab lesson, using only JavaScript.
  *
- * Sections:
- * 01 Warm-up
- * 02 Vocabulary
- * 03 Explore the tree
- * 04 Knowledge check
+ * Tab 1: Warm-up
+ * Tab 2: Vocabulary
+ * Tab 3: BST definition and rules
+ * Tab 4: Animated insertion
+ * Tab 5: Knowledge check
  *
- * Warm-up questions come from lesson.json.
+ * Warm-up questions are read from lesson.json.
  */
 
-const INITIAL_VALUES = [50, 30, 70, 20, 40, 60, 80];
+const NS = "http://www.w3.org/2000/svg";
+const INITIAL = [50, 30, 70, 20, 40, 60, 80];
 const MAX_NODES = 15;
-const SVG_NS = 'http://www.w3.org/2000/svg';
 
-function el(tag, className = '', text = '') {
-  const element = document.createElement(tag);
-  if (className) element.className = className;
-  element.textContent = text;
-  return element;
+function el(tag, cls = "", text = "") {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  e.textContent = text;
+  return e;
 }
 
-function svgEl(tag, attributes = {}) {
-  const element = document.createElementNS(SVG_NS, tag);
-
-  Object.entries(attributes).forEach(([name, value]) => {
-    element.setAttribute(name, String(value));
-  });
-
-  return element;
+function svgEl(tag, attrs = {}) {
+  const e = document.createElementNS(NS, tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    e.setAttribute(key, String(value));
+  }
+  return e;
 }
 
-function createNode(value, parent = null) {
-  return {
-    value,
-    parent,
-    left: null,
-    right: null
-  };
+function btn(text, cls = "") {
+  const b = el("button", cls, text);
+  b.type = "button";
+  return b;
 }
 
-function insertNode(root, value) {
-  if (!root) return createNode(value);
+function node(value, parent = null) {
+  return { value, parent, left: null, right: null };
+}
+
+function insert(root, value) {
+  if (!root) return node(value);
 
   let current = root;
-
-  while (true) {
+  while (current) {
     if (value === current.value) return root;
 
-    const side = value < current.value
-      ? 'left'
-      : 'right';
+    const side = value < current.value ? "left" : "right";
 
-    if (current[side]) {
-      current = current[side];
-    } else {
-      current[side] = createNode(value, current);
-      break;
+    if (current[side]) current = current[side];
+    else {
+      current[side] = node(value, current);
+      return root;
     }
   }
-
   return root;
 }
 
-function buildExample() {
+function makeTree(values = INITIAL) {
   let root = null;
-
-  INITIAL_VALUES.forEach(value => {
-    root = insertNode(root, value);
-  });
-
+  for (const value of values) root = insert(root, value);
   return root;
 }
 
-function findNode(root, value) {
-  let current = root;
-
-  while (current) {
-    if (current.value === value) return current;
-
-    current = value < current.value
-      ? current.left
-      : current.right;
-  }
-
-  return null;
+function nodes(root) {
+  if (!root) return [];
+  return [...nodes(root.left), root, ...nodes(root.right)];
 }
 
-function countNodes(root) {
-  if (!root) return 0;
-
-  return (
-    1 +
-    countNodes(root.left) +
-    countNodes(root.right)
-  );
+function find(root, value) {
+  return nodes(root).find(n => n.value === value) || null;
 }
 
-function describeNode(node) {
-  if (!node) return 'No node selected.';
-
-  const facts = [];
-
-  if (!node.parent) {
-    facts.push(`${node.value} is the root of the tree.`);
-  } else {
-    const parent = node.parent;
-
-    const side = parent.left === node
-      ? 'left'
-      : 'right';
-
-    facts.push(
-      `${node.value} is the ${side} child of ${parent.value}.`
-    );
-
-    facts.push(`Parent: ${parent.value}.`);
-
-    const sibling = side === 'left'
-      ? parent.right
-      : parent.left;
-
-    if (sibling) {
-      facts.push(`Sibling: ${sibling.value}.`);
-    }
-  }
-
-  const children = [
-    node.left,
-    node.right
-  ].filter(Boolean);
-
-  if (children.length === 0) {
-    facts.push('It is a leaf because it has no children.');
-  } else {
-    facts.push(
-      `Children: ${children.map(child => child.value).join(', ')}.`
-    );
-
-    facts.push(
-      'This node and its descendants form a subtree.'
-    );
-  }
-
-  return facts.join(' ');
+function values(root) {
+  return nodes(root).map(n => n.value);
 }
 
-/* ==========================================
-   INTERACTIVE SVG TREE
-   ========================================== */
+function facts(n) {
+  const p = n.parent;
+  const side = p ? (p.left === n ? "left" : "right") : null;
+  const sibling = p ? (side === "left" ? p.right : p.left) : null;
+  const children = [n.left, n.right].filter(Boolean);
 
-function drawTree(svg, root, state, onSelect) {
-  svg.replaceChildren();
+  return [
+    ["Position", p ? `${side} child of ${p.value}` : "Root"],
+    ["Parent", p ? String(p.value) : "None"],
+    ["Sibling", sibling ? String(sibling.value) : "None"],
+    ["Children", children.length
+      ? children.map(c => c.value).join(", ")
+      : "None — leaf"],
+    ["Subtree", values(n).join(", ")]
+  ];
+}
+
+function listTree(root, role = "root") {
+  const ul = el("ul");
+  if (!root) return ul;
+
+  const li = el("li", "", `${root.value} (${role})`);
+  if (root.left) {
+    li.appendChild(listTree(root.left, `left child of ${root.value}`));
+  }
+  if (root.right) {
+    li.appendChild(listTree(root.right, `right child of ${root.value}`));
+  }
+  ul.appendChild(li);
+  return ul;
+}
+
+function makeCallout(label, initial = "") {
+  const box = el("div", "bst-callout");
+  const heading = el("strong", "bst-callout-label", label);
+  const text = el("p", "bst-callout-text", initial);
+  box.append(heading, text);
+  return { box, text };
+}
+
+/**
+ * Draw an interactive tree.
+ *
+ * marks: Map(node.value -> colour name)
+ * comparisons: Map(node.value -> text)
+ */
+function createTree(root, opts = {}) {
+  const {
+    marks = new Map(),
+    active = null,
+    selected = null,
+    added = null,
+    comparisons = new Map(),
+    invalid = null,
+    path = [],
+    onSelect = null
+  } = opts;
 
   const entries = [];
-
-  function collect(node, depth = 0) {
-    if (!node) return;
-
-    collect(node.left, depth + 1);
-    entries.push({ node, depth });
-    collect(node.right, depth + 1);
+  function collect(n, depth) {
+    if (!n) return;
+    collect(n.left, depth + 1);
+    entries.push({ n, depth });
+    collect(n.right, depth + 1);
   }
+  collect(root, 0);
 
-  collect(root);
-
-  if (!entries.length) return;
-
-  const maxDepth = Math.max(
-    ...entries.map(entry => entry.depth)
-  );
-
-  const width = Math.max(760, entries.length * 92);
-  const height = Math.max(355, 150 + maxDepth * 110);
-
-  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-  svg.setAttribute('role', 'group');
-  svg.setAttribute(
-    'aria-label',
-    'Interactive Binary Search Tree diagram'
-  );
-
+  const depth = Math.max(0, ...entries.map(e => e.depth));
+  const width = Math.max(680, entries.length * 90);
+  const height = Math.max(340, 135 + depth * 110);
   const positions = new Map();
 
-  entries.forEach(({ node, depth }, index) => {
+  entries.forEach(({ n, depth }, i) => {
     const x = entries.length === 1
       ? width / 2
-      : 65 + index * (width - 130) /
-        (entries.length - 1);
+      : 65 + i * (width - 130) / (entries.length - 1);
 
-    positions.set(node, {
-      x,
-      y: 65 + depth * 110
-    });
+    positions.set(n, { x, y: 65 + depth * 110 });
   });
 
-  // Connections are drawn behind the nodes.
-  entries.forEach(({ node }) => {
-    if (!node.parent) return;
+  const svg = svgEl("svg", {
+    class: "bst-svg",
+    viewBox: `0 0 ${width} ${height}`,
+    "aria-label": "Interactive binary search tree"
+  });
 
-    const parent = positions.get(node.parent);
-    const child = positions.get(node);
+  for (const { n } of entries) {
+    if (!n.parent) continue;
+    const a = positions.get(n.parent);
+    const b = positions.get(n);
 
-    const classes = ['bst-tree-edge'];
-
-    if (node.value === state.newValue) {
-      classes.push('bst-tree-edge--new');
+    const classes = ["bst-edge"];
+    if (n.value === added) classes.push("is-new");
+    if (path.includes(n.value) && path.includes(n.parent.value)) {
+      classes.push("is-path");
     }
 
-    if (
-      state.answerPath.has(node.value) &&
-      state.answerPath.has(node.parent.value)
-    ) {
-      classes.push('is-answer-path');
+    const colour = marks.get(n.value);
+    if (colour && colour === marks.get(n.parent.value)) {
+      classes.push(`mk-${colour}`);
     }
 
-    svg.appendChild(svgEl('line', {
-      x1: parent.x,
-      y1: parent.y,
-      x2: child.x,
-      y2: child.y,
-      class: classes.join(' ')
+    svg.appendChild(svgEl("line", {
+      x1: a.x, y1: a.y, x2: b.x, y2: b.y,
+      class: classes.join(" ")
     }));
-  });
+  }
 
-  entries.forEach(({ node }) => {
-    const { x, y } = positions.get(node);
+  for (const { n } of entries) {
+    const { x, y } = positions.get(n);
+    const classes = ["bst-node"];
 
-    const classes = ['bst-tree-node'];
+    if (marks.has(n.value)) classes.push(`mk-${marks.get(n.value)}`);
+    if (n.value === active) classes.push("is-active");
+    if (n.value === selected) classes.push("is-selected");
+    if (n.value === added) classes.push("is-new");
+    if (n.value === invalid) classes.push("is-invalid");
+    if (path.includes(n.value)) classes.push("is-path");
 
-    if (node === state.selected) {
-      classes.push('is-selected');
-    }
-
-    if (node === state.active) {
-      classes.push('is-active');
-    }
-
-    if (node === state.highlighted) {
-      classes.push('is-rule-highlight');
-    }
-
-    if (node.value === state.newValue) {
-      classes.push('is-new');
-    }
-
-    if (state.answerPath.has(node.value)) {
-      classes.push('is-answer-path');
-    }
-
-    const group = svgEl('g', {
-      class: classes.join(' '),
-      'data-value': node.value,
-      tabindex: '0',
-      role: 'button',
-      'aria-pressed': String(node === state.selected),
-      'aria-label':
-        `Select node ${node.value}. ${describeNode(node)}`
+    const g = svgEl("g", {
+      class: classes.join(" "),
+      "data-value": n.value,
+      role: "button",
+      tabindex: "0",
+      "aria-label": `Node ${n.value}. ` +
+        facts(n).map(([k,v]) => `${k}: ${v}`).join(". ")
     });
 
-    const circle = svgEl('circle', {
-      cx: x,
-      cy: y,
-      r: 27
-    });
+    g.append(
+      svgEl("circle", { cx: x, cy: y, r: 27 }),
+      Object.assign(
+        svgEl("text", { x, y, class: "bst-value" }),
+        { textContent: String(n.value) }
+      )
+    );
 
-    const number = svgEl('text', {
-      x,
-      y,
-      class: 'bst-tree-value'
-    });
-
-    number.textContent = String(node.value);
-
-    group.append(circle, number);
-
-    // Only ROOT and LEAF labels.
-    // This prevents child labels overlapping branches.
-    if (!node.parent || (!node.left && !node.right)) {
-      const label = svgEl('text', {
-        x,
-        y: node.parent ? y + 45 : y - 41,
-        class: 'bst-tree-role'
+    if (!n.parent || (!n.left && !n.right)) {
+      const label = svgEl("text", {
+        x, y: n.parent ? y + 45 : y - 41,
+        class: "bst-role"
       });
-
-      label.textContent = node.parent ? 'LEAF' : 'ROOT';
-
-      group.appendChild(label);
+      label.textContent = n.parent ? "LEAF" : "ROOT";
+      g.appendChild(label);
     }
 
-    if (node.value === state.newValue) {
-      const tag = svgEl('text', {
-        x: x + 37,
-        y: y - 28,
-        class: 'bst-tree-new-label'
+    if (n.value === added) {
+      const tag = svgEl("text", {
+        x: x + 37, y: y - 30, class: "bst-new-label"
       });
-
-      tag.textContent = 'NEW';
-      group.appendChild(tag);
+      tag.textContent = "NEW";
+      g.appendChild(tag);
     }
 
-    group.addEventListener('click', () => {
-      onSelect(node);
-    });
+    if (n.value === invalid) {
+      const tag = svgEl("text", {
+        x: x + 35, y: y - 25, class: "bst-invalid-label"
+      });
+      tag.textContent = "✕";
+      g.appendChild(tag);
+    }
 
-    group.addEventListener('keydown', event => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        onSelect(node, true);
-      }
-    });
+    const comparison = comparisons.get(n.value);
+    if (comparison) {
+      const pillWidth = comparison.length * 9 + 18;
+      const px = x + 35 + pillWidth > width - 5
+        ? x - pillWidth - 35 : x + 35;
 
-    svg.appendChild(group);
-  });
+      const pill = svgEl("g", { class: "bst-comparison" });
+      pill.append(
+        svgEl("rect", {
+          x: px, y: y - 15,
+          width: pillWidth, height: 30, rx: 7
+        }),
+        Object.assign(
+          svgEl("text", { x: px + pillWidth / 2, y }),
+          { textContent: comparison }
+        )
+      );
+      g.appendChild(pill);
+    }
+
+    if (onSelect) {
+      g.addEventListener("click", () => onSelect(n, g));
+      g.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect(n, g);
+          return;
+        }
+
+        const target = {
+          ArrowUp: n.parent,
+          ArrowLeft: n.left,
+          ArrowRight: n.right,
+          ArrowDown: n.left || n.right
+        }[event.key];
+
+        if (event.key.startsWith("Arrow")) {
+          event.preventDefault();
+          if (target) {
+            svg.querySelector(
+              `[data-value="${target.value}"]`
+            )?.focus();
+          }
+        }
+      });
+    }
+    svg.appendChild(g);
+  }
+  return svg;
 }
 
-/* ==========================================
-   MAIN SCREEN
-   ========================================== */
-
-export function render(screen, container) {
-  const page = el('div', 'bst-page');
-
-  let root = buildExample();
-
-  const treeState = {
-    selected: root,
-    active: null,
-    highlighted: null,
-    newValue: null,
-    answerPath: new Set()
-  };
-
-  let pendingInsertion = null;
-  let playbackTimer = null;
-  let playing = false;
-  let destroyed = false;
-
-  const timeoutTasks = new Set();
-  const completedSections = new Set();
-
-  // ------------------------------------------
-  // ANIMATION HELPERS
-  // ------------------------------------------
-
-  function wait(ms) {
-    return new Promise(resolve => {
-      const task = {
-        id: null,
-        resolve
-      };
-
-      task.id = setTimeout(() => {
-        timeoutTasks.delete(task);
-        resolve();
-      }, ms);
-
-      timeoutTasks.add(task);
-    });
-  }
-
-  function stopPlayback() {
-    if (playbackTimer !== null) {
-      clearInterval(playbackTimer);
-      playbackTimer = null;
-    }
-
-    playing = false;
-  }
-
-  // ------------------------------------------
-  // STICKY HEADER OFFSET
-  // ------------------------------------------
-
-  const appHeader = document.querySelector('.app-header');
-
-  let headerObserver = null;
-
-  function updateHeaderHeight() {
-    if (!appHeader) return;
-
-    const height = Math.ceil(
-      appHeader.getBoundingClientRect().height
-    );
-
-    document.documentElement.style.setProperty(
-      '--app-header-height',
-      `${height}px`
-    );
-  }
-
-  updateHeaderHeight();
-
-  if (appHeader && typeof ResizeObserver !== 'undefined') {
-    headerObserver = new ResizeObserver(updateHeaderHeight);
-    headerObserver.observe(appHeader);
-  }
-
-  // ==========================================
-  // STICKY ACTIVITY PROGRESS
-  // ==========================================
-
-  const progress = el('div', 'lesson-progress');
-
-  const progressHeader = el(
-    'div',
-    'lesson-progress__header'
-  );
-
-  const progressTitle = el(
-    'strong',
-    '',
-    'BINARY SEARCH TREES'
-  );
-
-  const progressLabel = el(
-    'span',
-    '',
-    'Step 0 of 4'
-  );
-
-  progressHeader.append(progressTitle, progressLabel);
-
-  const progressTrack = el(
-    'div',
-    'lesson-progress__track'
-  );
-
-  progressTrack.setAttribute('role', 'progressbar');
-  progressTrack.setAttribute(
-    'aria-label',
-    'BST activity progress'
-  );
-  progressTrack.setAttribute('aria-valuemin', '0');
-  progressTrack.setAttribute('aria-valuemax', '4');
-  progressTrack.setAttribute('aria-valuenow', '0');
-
-  const progressFill = el(
-    'div',
-    'lesson-progress__fill'
-  );
-
-  progressFill.style.width = '0%';
-
-  progressTrack.appendChild(progressFill);
-
-  progress.append(
-    progressHeader,
-    progressTrack
-  );
-
-  function markComplete(section) {
-    if (completedSections.has(section)) return;
-
-    completedSections.add(section);
-
-    const count = completedSections.size;
-
-    progressLabel.textContent = `Step ${count} of 4`;
-
-    progressFill.style.width = `${count * 25}%`;
-
-    progressTrack.setAttribute(
-      'aria-valuenow',
-      String(count)
-    );
-  }
-
-  // ==========================================
-  // 01 — WARM-UP
-  // ==========================================
-
-  const warmup = el(
-    'section',
-    'bst-card bst-warmup-card'
-  );
-
-  warmup.id = 'bst-warmup';
-
-  warmup.append(
-    el('span', 'bst-eyebrow', '01 / WARM-UP'),
-    el('h2', '', 'Quick warm-up'),
-    el(
-      'p',
-      'bst-muted',
-      'Check what you already know about trees ' +
-      'and stacks. You can ask for help and try again.'
-    )
-  );
-
-  const warmupGrid = el('div', 'bst-warmup-grid');
-
-  const warmupResult = el(
-    'div',
-    'bst-warmup-result'
-  );
-
-  warmupResult.hidden = true;
-  warmupResult.setAttribute('aria-live', 'polite');
-
-  const questions = screen.warmup?.questions || [];
-  const refreshers = screen.warmup?.refreshers || {};
-
-  const warmupCorrect = new Set();
-  const warmupAttempted = new Set();
-  const warmupNeedsReview = new Set();
-
-  function updateWarmupResult() {
-    if (warmupAttempted.size !== questions.length) return;
-    if (questions.length === 0) return;
-
-    warmupResult.hidden = false;
-
-    if (warmupCorrect.size === questions.length) {
-      warmupResult.className =
-        'bst-warmup-result is-ready';
-
-      warmupResult.textContent =
-        "You're ready! You've recalled the basics " +
-        'of trees and stacks. Continue to vocabulary.';
-
-      markComplete('warmup');
-      return;
-    }
-
-    warmupResult.className =
-      'bst-warmup-result is-review';
-
-    if (warmupNeedsReview.has('stacks')) {
-      warmupResult.textContent =
-        'Review stacks first. Watch the short ' +
-        'animation and retry the question.';
-    } else {
-      warmupResult.textContent =
-        'Review the tree explanation and try again. ' +
-        'This activity is not graded.';
-    }
-  }
-
-  questions.forEach((question, questionIndex) => {
-    const questionCard = el(
-      'article',
-      'bst-warmup-question'
-    );
-
-    const heading = el(
-      'h3',
-      '',
-      `${questionIndex + 1}. ${question.prompt}`
-    );
-
-    const answers = el('div', 'bst-answer-options');
-
-    const feedback = el(
-      'div',
-      'bst-answer-feedback'
-    );
-
-    feedback.setAttribute('aria-live', 'polite');
-
-    // Extra explanation with a mini visual.
-    const help = el('div', 'bst-warmup-help');
-    help.hidden = true;
-
-    if (question.refresher === 'trees') {
-      const diagram = el('div', 'bst-mini-diagram');
-
-      diagram.innerHTML = `
-        <svg viewBox="0 0 180 110"
-             role="img"
-             aria-label="A root node 50 connected to children 30 and 70">
-          <line x1="90" y1="25" x2="40" y2="85"/>
-          <line x1="90" y1="25" x2="140" y2="85"/>
-          <circle cx="90" cy="25" r="18"/>
-          <circle cx="40" cy="85" r="18"/>
-          <circle cx="140" cy="85" r="18"/>
-          <text x="90" y="30">50</text>
-          <text x="40" y="90">30</text>
-          <text x="140" y="90">70</text>
-        </svg>
-      `;
-
-      help.append(
-        diagram,
-        el(
-          'p',
-          '',
-          refreshers.trees ||
-          'A tree has a root, connected child nodes and no cycles.'
-        )
-      );
-    }
-
-    if (question.refresher === 'stacks') {
-      const demo = el('div', 'bst-stack-demo');
-
-      const stackTitle = el(
-        'strong',
-        '',
-        'Watch how a stack works'
-      );
-
-      const stackVisual = el(
-        'div',
-        'bst-stack-demo__items'
-      );
-
-      const stackMessage = el(
-        'p',
-        'bst-stack-demo__message',
-        'Push 1, then 2, then 3.'
-      );
-
-      stackMessage.setAttribute('aria-live', 'polite');
-
-      const watchButton = el(
-        'button',
-        'bst-demo-button',
-        'Watch stack animation'
-      );
-
-      watchButton.type = 'button';
-
-      let demoRunning = false;
-
-      watchButton.addEventListener('click', async () => {
-        if (demoRunning || destroyed) return;
-
-        demoRunning = true;
-        watchButton.disabled = true;
-
-        let stack = [];
-
-        function renderStack() {
-          stackVisual.replaceChildren();
-
-          [...stack].reverse().forEach((value, index) => {
-            const item = el(
-              'div',
-              'bst-stack-demo__item',
-              String(value)
-            );
-
-            if (index === 0) {
-              item.classList.add('is-top');
-            }
-
-            stackVisual.appendChild(item);
-          });
-        }
-
-        for (const value of [1, 2, 3]) {
-          if (destroyed) return;
-
-          stack.push(value);
-          stackMessage.textContent = `Push ${value}.`;
-          renderStack();
-
-          await wait(700);
-        }
-
-        if (destroyed) return;
-
-        stackMessage.textContent =
-          'The last value pushed is 3, ' +
-          'so 3 is popped first.';
-
-        await wait(950);
-
-        if (destroyed) return;
-
-        stack.pop();
-        renderStack();
-
-        stackMessage.textContent =
-          '3 came off first. This is Last In, First Out (LIFO).';
-
-        demoRunning = false;
-        watchButton.disabled = false;
-      });
-
-      demo.append(
-        stackTitle,
-        stackVisual,
-        stackMessage,
-        watchButton
-      );
-
-      help.append(
-        demo,
-        el(
-          'p',
-          '',
-          refreshers.stacks ||
-          'A stack follows Last In, First Out.'
-        )
-      );
-    }
-
-    // Real questions are loaded from lesson.json.
-    const questionOptions = [
-      ...question.options,
-      {
-        id: 'unsure',
-        text: 'Not sure',
-        unsure: true
-      }
-    ];
-
-    questionOptions.forEach(option => {
-      const button = el(
-        'button',
-        'bst-answer',
-        option.text
-      );
-
-      button.type = 'button';
-      button.setAttribute('aria-pressed', 'false');
-
-      button.addEventListener('click', () => {
-        warmupAttempted.add(question.id);
-
-        answers.querySelectorAll('button').forEach(other => {
-          other.setAttribute(
-            'aria-pressed',
-            String(other === button)
-          );
-        });
-
-        const correct = option.correct === true;
-
-        if (correct) {
-          warmupCorrect.add(question.id);
-          warmupNeedsReview.delete(question.refresher);
-
-          feedback.className =
-            'bst-answer-feedback is-correct';
-
-          feedback.textContent =
-            question.refresher === 'stacks'
-              ? 'Correct! The last item pushed comes off first.'
-              : 'Correct! A tree has connected nodes and no cycles.';
-
-          help.hidden = true;
-        } else {
-          warmupCorrect.delete(question.id);
-          warmupNeedsReview.add(question.refresher);
-
-          feedback.className =
-            'bst-answer-feedback is-review';
-
-          feedback.textContent = option.unsure
-            ? "That's okay. Read the explanation below, " +
-              'then try again.'
-            : 'Not quite. Use the explanation below ' +
-              'to work through the answer.';
-
-          help.hidden = false;
-        }
-
-        updateWarmupResult();
-      });
-
-      answers.appendChild(button);
-    });
-
-    questionCard.append(
-      heading,
-      answers,
-      feedback,
-      help
-    );
-
-    warmupGrid.appendChild(questionCard);
-  });
-
-  if (questions.length === 0) {
-    warmupResult.hidden = false;
-    warmupResult.textContent =
-      'Warm-up questions are unavailable. ' +
-      'Check the warmup section in lesson.json.';
-  }
-
-  warmup.append(
-    warmupGrid,
-    warmupResult
-  );
-
-  // ==========================================
-  // INTRODUCTION
-  // ==========================================
-
-  const intro = el(
-    'section',
-    'bst-card bst-intro-card'
-  );
-
-  intro.append(
-    el('h2', '', 'Binary Search Trees'),
-    el(
-      'p',
-      '',
-      'A Binary Search Tree (BST) stores values ' +
-      'in connected nodes. Each node has at most ' +
-      'two children. Smaller values belong to the ' +
-      'left subtree and larger values to the right.'
-    )
-  );
-
-  // ==========================================
-  // 02 — VOCABULARY
-  // ==========================================
-
-  const vocabulary = el(
-    'section',
-    'bst-card bst-vocabulary'
-  );
-
-  vocabulary.id = 'bst-vocabulary';
-
-  vocabulary.append(
-    el('span', 'bst-eyebrow', '02 / VOCABULARY'),
-    el('h2', '', 'Meet the tree'),
-    el(
-      'p',
-      'bst-muted',
-      'Select each term to learn what it means. ' +
-      'The matching node will be highlighted below.'
-    )
-  );
-
-  const vocabularyChips = el(
-    'div',
-    'bst-vocabulary__chips'
-  );
-
-  const vocabularyFeedback = el(
-    'p',
-    'bst-vocabulary__feedback',
-    'Choose a term to begin.'
-  );
-
-  vocabularyFeedback.setAttribute('aria-live', 'polite');
-
-  const vocabularySeen = new Set();
-
-  const vocabularyTerms = [
-    {
-      term: 'Root',
-      node: 50,
-      explanation:
-        'The root is the top node where the tree starts. ' +
-        'In this example, it is 50.'
-    },
-    {
-      term: 'Parent',
-      node: 30,
-      explanation:
-        'A parent has at least one child. ' +
-        'Node 30 is the parent of 20 and 40.'
-    },
-    {
-      term: 'Leaf',
-      node: 20,
-      explanation:
-        'A leaf has no children. Node 20 is a leaf.'
-    },
-    {
-      term: 'Subtree',
-      node: 70,
-      explanation:
-        'A subtree is a node and all its descendants. ' +
-        'The subtree rooted at 70 contains 70, 60 and 80.'
-    }
-  ];
-
-  vocabularyTerms.forEach(item => {
-    const chip = el(
-      'button',
-      'bst-vocabulary__chip',
-      item.term
-    );
-
-    chip.type = 'button';
-    chip.setAttribute('aria-pressed', 'false');
-
-    chip.addEventListener('click', () => {
-      vocabularySeen.add(item.term);
-
-      vocabularyChips.querySelectorAll('button')
-        .forEach(other => {
-          other.setAttribute(
-            'aria-pressed',
-            String(other === chip)
-          );
-        });
-
-      vocabularyFeedback.textContent = item.explanation;
-
-      const node = findNode(root, item.node);
-
-      if (node) {
-        treeState.selected = node;
-        treeState.highlighted = node;
-        refreshTree();
-        updateSelectedPanel();
-      }
-
-      if (vocabularySeen.size === vocabularyTerms.length) {
-        markComplete('vocabulary');
-      }
-    });
-
-    vocabularyChips.appendChild(chip);
-  });
-
-  vocabulary.append(
-    vocabularyChips,
-    vocabularyFeedback
-  );
-
-  // ==========================================
-  // 03 — EXPLORE
-  // ==========================================
-
-  const exploreHeading = el(
-    'div',
-    'bst-section-title'
-  );
-
-  exploreHeading.append(
-    el('span', 'bst-eyebrow', '03 / EXPLORE'),
-    el('h2', '', 'Explore the tree'),
-    el(
-      'p',
-      'bst-muted',
-      'Select a node to learn about its relationships, ' +
-      'or insert a value to see how the tree grows.'
-    )
-  );
-
-  const treeCard = el(
-    'section',
-    'bst-card bst-tree-card'
-  );
-
-  const treeHeading = el(
-    'div',
-    'bst-tree-heading'
-  );
-
-  const treeHeadingText = el(
-    'div',
-    'bst-tree-heading__text'
-  );
-
-  const nodeCount = el('span', 'bst-node-count');
-
-  treeHeadingText.append(
-    el('h3', '', 'Interactive tree'),
-    el(
-      'p',
-      'bst-tree-description',
-      'Click a node to inspect its parent, children and siblings.'
-    )
-  );
-
-  treeHeading.append(treeHeadingText, nodeCount);
-
-  const treeViewport = el(
-    'div',
-    'bst-tree-viewport'
-  );
-
-  const svg = svgEl('svg', {
-    class: 'bst-lesson-svg'
-  });
-
-  treeViewport.appendChild(svg);
-
-  // Selected-node panel
-  const selectedPanel = el(
-    'section',
-    'bst-selected-panel'
-  );
-
-  const selectedPanelTitle = el(
-    'h4',
-    '',
-    'Selected node'
-  );
-
-  const selectedDetails = el(
-    'p',
-    'bst-selected-panel__details'
-  );
-
-  selectedDetails.setAttribute(
-    'aria-live',
-    'polite'
-  );
-
-  selectedPanel.append(
-    selectedPanelTitle,
-    selectedDetails
-  );
-
-  function updateSelectedPanel() {
-    selectedDetails.textContent =
-      describeNode(treeState.selected);
-  }
-
-  function selectNode(node, restoreFocus = false) {
-    treeState.selected = node;
-    treeState.highlighted = null;
-
-    refreshTree();
-    updateSelectedPanel();
-
-    if (restoreFocus) {
-      svg.querySelector(
-        `[data-value="${node.value}"]`
+/**
+ * Tree view with a floating comment at the selected node.
+ * No visible keyboard-instruction paragraph is added.
+ */
+function makeTreeView() {
+  const wrap = el("div", "bst-tree-wrap");
+  const viewport = el("div", "bst-tree-viewport");
+  const popup = el("div", "bst-popover");
+
+  popup.hidden = true;
+  const popupClose = btn("×", "bst-popover-close");
+  popupClose.setAttribute("aria-label", "Close node details");
+
+  popup.appendChild(popupClose);
+  wrap.append(viewport, popup);
+
+  let selectedNode = null;
+
+  function close(restore = false) {
+    popup.hidden = true;
+    if (restore && selectedNode) {
+      viewport.querySelector(
+        `[data-value="${selectedNode.value}"]`
       )?.focus();
     }
   }
 
-  function refreshTree() {
-    if (destroyed) return;
+  popupClose.addEventListener("click", () => close(true));
+  wrap.addEventListener("keydown", event => {
+    if (event.key === "Escape") close(true);
+  });
+  viewport.addEventListener("scroll", () => close());
 
-    nodeCount.textContent = `${countNodes(root)} nodes`;
+  function open(n) {
+    const circle = viewport.querySelector(
+      `[data-value="${n.value}"] circle`
+    );
+    if (!circle) return;
 
-    drawTree(
-      svg,
-      root,
-      treeState,
-      selectNode
+    selectedNode = n;
+
+    const title = el("strong", "bst-popover-title", `Node ${n.value}`);
+    const dl = el("dl");
+
+    for (const [key, value] of facts(n)) {
+      dl.append(el("dt", "", key), el("dd", "", value));
+    }
+    popup.replaceChildren(popupClose, title, dl);
+    popup.hidden = false;
+
+    const a = circle.getBoundingClientRect();
+    const b = wrap.getBoundingClientRect();
+    const pw = popup.offsetWidth;
+    const ph = popup.offsetHeight;
+
+    let left = a.right - b.left + 12;
+    if (left + pw > b.width - 5) {
+      left = a.left - b.left - pw - 12;
+    }
+
+    popup.style.left = `${Math.max(4, left)}px`;
+    popup.style.top =
+      `${Math.max(4, Math.min(a.top - b.top, b.height - ph - 4))}px`;
+  }
+
+  return {
+    wrap,
+    open,
+    close,
+    draw(root, opts = {}) {
+      close();
+      const svg = createTree(root, {
+        ...opts,
+        onSelect(n) {
+          open(n);
+          opts.onSelect?.(n);
+        }
+      });
+      viewport.replaceChildren(svg);
+    }
+  };
+}
+
+const VOCAB = [
+  {
+    name: "Node",
+    explanation: "A node is one circle in the tree. " +
+      "Each node stores one key.",
+    highlight: root =>
+      nodes(root).map(n => [n.value, "slate"])
+  },
+  {
+    name: "Root",
+    explanation: "The root is the top node, where the tree begins. " +
+      "Node 50 is the root.",
+    highlight: root => [[root.value, "purple"]]
+  },
+  {
+    name: "Parent",
+    explanation: "A parent has at least one child. " +
+      "The parents are 50, 30 and 70.",
+    highlight: root => nodes(root)
+      .filter(n => n.left || n.right)
+      .map(n => [n.value, "blue"])
+  },
+  {
+    name: "Child",
+    explanation: "Every node except the root is a child. " +
+      "Blue shows left children; orange shows right children.",
+    highlight: root => nodes(root)
+      .filter(n => n.parent)
+      .map(n => [
+        n.value,
+        n.parent.left === n ? "blue" : "orange"
+      ])
+  },
+  {
+    name: "Leaf",
+    explanation: "Leaves have no children. The leaf nodes are " +
+      "20, 40, 60 and 80.",
+    highlight: root => nodes(root)
+      .filter(n => !n.left && !n.right)
+      .map(n => [n.value, "green"])
+  },
+  {
+    name: "Subtree",
+    explanation: "A subtree contains a node and all its descendants. " +
+      "Blue shows the left subtree (30, 20, 40). " +
+      "Orange shows the right subtree (70, 60, 80). " +
+      "Every node can also be the root of its own subtree.",
+    highlight: root => [
+      ...nodes(root.left).map(n => [n.value, "blue"]),
+      ...nodes(root.right).map(n => [n.value, "orange"])
+    ]
+  }
+];
+
+export function render(screen, container) {
+  const page = el("main", "bst-page");
+  const cleanup = [];
+  const completed = new Set();
+  let activeTab = 0;
+  let destroyed = false;
+
+  const appHeader = document.querySelector(".app-header");
+  if (appHeader) {
+    const update = () =>
+      document.documentElement.style.setProperty(
+        "--app-header-height",
+        `${Math.ceil(appHeader.getBoundingClientRect().height)}px`
+      );
+    update();
+    if (typeof ResizeObserver !== "undefined") {
+      const observer = new ResizeObserver(update);
+      observer.observe(appHeader);
+      cleanup.push(() => observer.disconnect());
+    }
+  }
+
+  const title = el("header", "bst-title");
+  title.append(
+    el("h1", "", "Binary Search Trees"),
+    el("p", "bst-muted",
+      "Five short activities. Learn the rules, explore the tree " +
+      "and practise inserting values.")
+  );
+
+  // ------------------------------------------
+  // Progress displays completed activities,
+  // not merely which tab has been opened.
+  // ------------------------------------------
+  const progress = el("div", "bst-progress");
+  const progressLabel = el("strong", "", "Step 0 of 5");
+  const progressTrack = el("div", "bst-progress-track");
+  const progressFill = el("div", "bst-progress-fill");
+
+  progressTrack.setAttribute("role", "progressbar");
+  progressTrack.setAttribute("aria-valuemin", "0");
+  progressTrack.setAttribute("aria-valuemax", "5");
+  progressTrack.setAttribute("aria-valuenow", "0");
+  progressTrack.appendChild(progressFill);
+  progress.append(
+    el("strong", "", "BINARY SEARCH TREES"),
+    progressTrack,
+    progressLabel
+  );
+
+  const defs = [
+    ["warmup", "Warm-up"],
+    ["vocabulary", "Vocabulary"],
+    ["rules", "BST Rules"],
+    ["insertion", "Insertion"],
+    ["check", "Check"]
+  ];
+
+  const tabList = el("div", "bst-tabs");
+  tabList.setAttribute("role", "tablist");
+  tabList.setAttribute("aria-label", "BST lesson activities");
+
+  const panels = defs.map(([id]) => {
+    const p = el("section", "bst-tab-panel");
+    p.id = `bst-panel-${id}`;
+    p.setAttribute("role", "tabpanel");
+    p.setAttribute("aria-labelledby", `bst-tab-${id}`);
+    p.tabIndex = -1;
+    return p;
+  });
+
+  const tabs = defs.map(([id, label], i) => {
+    const b = btn("", "bst-tab");
+    b.id = `bst-tab-${id}`;
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-controls", panels[i].id);
+    b.append(
+      el("span", "bst-tab-number", String(i + 1)),
+      document.createTextNode(label)
+    );
+    b.addEventListener("click", () => goTab(i));
+    tabList.appendChild(b);
+    return b;
+  });
+
+  function complete(id) {
+    if (completed.has(id)) return;
+    completed.add(id);
+    const count = completed.size;
+
+    progressLabel.textContent = `Step ${count} of 5`;
+    progressFill.style.width = `${count * 20}%`;
+    progressTrack.setAttribute("aria-valuenow", String(count));
+
+    tabs.forEach((tab, i) =>
+      tab.classList.toggle("is-done", completed.has(defs[i][0]))
     );
   }
 
-  // Legend
-  const legend = el(
-    'div',
-    'bst-tree-legend'
+  function goTab(i, focus = false) {
+    if (i < 0 || i >= panels.length) return;
+
+    // Animation stops while a different tab is open.
+    if (activeTab === 3 && i !== 3) stopInsertion();
+
+    activeTab = i;
+    panels.forEach((p, index) => {
+      p.hidden = i !== index;
+    });
+    tabs.forEach((b, index) => {
+      b.setAttribute("aria-selected", String(index === i));
+      b.classList.toggle("is-active", index === i);
+      b.tabIndex = index === i ? 0 : -1;
+    });
+
+    previous.hidden = i === 0;
+    next.hidden = i === panels.length - 1;
+    toDfs.hidden = i !== panels.length - 1;
+
+    if (focus) {
+      tabList.scrollIntoView({ block: "start", behavior: "smooth" });
+      panels[i].focus({ preventScroll: true });
+    }
+  }
+
+  tabList.addEventListener("keydown", event => {
+    const i = tabs.indexOf(document.activeElement);
+    if (i < 0) return;
+
+    let target = null;
+    if (event.key === "ArrowRight") target = (i + 1) % tabs.length;
+    if (event.key === "ArrowLeft") {
+      target = (i + tabs.length - 1) % tabs.length;
+    }
+    if (event.key === "Home") target = 0;
+    if (event.key === "End") target = tabs.length - 1;
+
+    if (target !== null) {
+      event.preventDefault();
+      goTab(target);
+      tabs[target].focus();
+    }
+  });
+
+  // ------------------------------------------
+  // Tab 1 — Original warm-up functionality
+  // ------------------------------------------
+  const warmup = panels[0];
+  warmup.append(
+    el("h2", "", "Quick warm-up"),
+    el("p", "bst-muted",
+      "Check what you know about trees and stacks. " +
+      "This is not graded. Ask for help and try again.")
   );
 
-  const legendItems = [
-    ['○', 'Normal', 'normal'],
-    ['◌', 'Comparing', 'comparing'],
-    ['●', 'Selected', 'selected'],
-    ['+', 'New', 'new']
+  const warmupGrid = el("div", "bst-warmup-grid");
+  const warmupResult = el("p", "bst-feedback");
+  const warmupQuestions = screen.warmup?.questions || [];
+  const refreshers = screen.warmup?.refreshers || {};
+  const warmupCorrect = new Set();
+
+  function updateWarmup() {
+    if (warmupQuestions.length &&
+        warmupCorrect.size === warmupQuestions.length) {
+      warmupResult.className = "bst-feedback is-correct";
+      warmupResult.textContent =
+        "You have recalled the basics of trees and stacks.";
+      complete("warmup");
+    }
+  }
+
+  warmupQuestions.forEach((q, i) => {
+    const card = el("article", "bst-question");
+    const choices = el("div", "bst-options");
+    const feedback = el("p", "bst-feedback");
+    const help = el("div", "bst-help");
+    help.hidden = true;
+
+    if (q.refresher === "trees") {
+      const drawing = el("div", "bst-mini-tree");
+      drawing.innerHTML = `
+        <svg viewBox="0 0 190 130" aria-label="Simple tree">
+          <line x1="95" y1="27" x2="45" y2="101"/>
+          <line x1="95" y1="27" x2="145" y2="101"/>
+          <circle cx="95" cy="27" r="20"/>
+          <circle cx="45" cy="101" r="20"/>
+          <circle cx="145" cy="101" r="20"/>
+          <text x="95" y="32">50</text>
+          <text x="45" y="106">30</text>
+          <text x="145" y="106">70</text>
+        </svg>`;
+      help.append(
+        drawing,
+        el("p", "", refreshers.trees ||
+          "A tree has connected nodes, a root and no cycles.")
+      );
+    }
+
+    if (q.refresher === "stacks") {
+      const stack = el("div", "bst-stack");
+      const message = el("p");
+      const watch = btn("Watch stack animation", "bst-btn primary");
+
+      let running = false;
+      watch.addEventListener("click", async () => {
+        if (running) return;
+        running = true;
+        watch.disabled = true;
+        const items = [];
+
+        for (const v of [1, 2, 3]) {
+          if (destroyed) return;
+          items.push(v);
+          stack.replaceChildren(
+            ...[...items].reverse()
+              .map(n => el("span", "bst-stack-item", String(n)))
+          );
+          message.textContent = `Push ${v}.`;
+          await new Promise(r => setTimeout(r, 750));
+        }
+
+        if (destroyed) return;
+        items.pop();
+        stack.replaceChildren(
+          ...[...items].reverse()
+            .map(n => el("span", "bst-stack-item", String(n)))
+        );
+        message.textContent =
+          "3 came off first: Last In, First Out (LIFO).";
+        running = false;
+        watch.disabled = false;
+      });
+
+      help.append(
+        stack,
+        message,
+        watch,
+        el("p", "", refreshers.stacks ||
+          "The last value pushed is the first removed.")
+      );
+    }
+
+    [...q.options, {
+      id: "unsure",
+      text: "Not sure",
+      unsure: true
+    }].forEach(option => {
+      const b = btn(option.text, "bst-answer");
+      b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", () => {
+        choices.querySelectorAll("button").forEach(x =>
+          x.setAttribute("aria-pressed", String(x === b))
+        );
+
+        if (option.correct) {
+          warmupCorrect.add(q.id);
+          feedback.className = "bst-feedback is-correct";
+          feedback.textContent =
+            "Correct! " + (q.refresher === "stacks"
+              ? "A stack follows LIFO."
+              : "A tree has a root and no cycles.");
+          help.hidden = true;
+        } else {
+          warmupCorrect.delete(q.id);
+          feedback.className = "bst-feedback is-review";
+          feedback.textContent = option.unsure
+            ? "Read the refresher and try again."
+            : "Not quite. Use the explanation to review.";
+          help.hidden = false;
+        }
+        updateWarmup();
+      });
+      choices.appendChild(b);
+    });
+
+    card.append(
+      el("h3", "", `${i + 1}. ${q.prompt}`),
+      choices,
+      feedback,
+      help
+    );
+    warmupGrid.appendChild(card);
+  });
+
+  if (!warmupQuestions.length) {
+    warmupResult.textContent =
+      "Warm-up questions are unavailable in lesson.json.";
+  }
+  warmup.append(warmupGrid, warmupResult);
+
+  // ------------------------------------------
+  // Tab 2 — Vocabulary and pop-up comments
+  // ------------------------------------------
+  const vocabulary = panels[1];
+  vocabulary.append(
+    el("h2", "", "Meet the tree"),
+    el("p", "bst-muted",
+      'A tree stores values in connected nodes. A binary tree is a tree in ' +
+      'which every node has at most two children: a left child and a right child.'),
+    el("p", "bst-muted", 'Select each vocabulary term to learn its meaning ' +
+    'and see the matching nodes highlighted in the tree.')
+  );
+
+  const vocabRoot = makeTree();
+  const vocabSeen = new Set();
+  const vocabButtons = el("div", "bst-chips");
+  const vocabText = el("div", "bst-learn-text");
+  const vocabView = makeTreeView();
+  const vocabExplanation = makeCallout(
+    "Explanation",
+    "Choose a term to see its definition here."
+  );
+  const vocabLegend = el("div", "bst-subtree-legend");
+
+  function showVocabulary(item) {
+    const marks = new Map(item.highlight(vocabRoot));
+    vocabView.draw(vocabRoot, { marks });
+
+    vocabExplanation.text.textContent =
+      `${item.name}. ${item.explanation}`;
+    vocabLegend.replaceChildren();
+
+    if (item.name === "Subtree" || item.name === "Child") {
+      vocabLegend.append(
+        el("span", "bst-legend-blue", "Blue — left"),
+        el("span", "bst-legend-orange", "Orange — right")
+      );
+    }
+  }
+
+  VOCAB.forEach(item => {
+    const b = btn(item.name, "bst-chip");
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => {
+      vocabButtons.querySelectorAll("button").forEach(x =>
+        x.setAttribute("aria-pressed", String(x === b))
+      );
+      vocabSeen.add(item.name);
+      b.classList.add("is-viewed");
+      showVocabulary(item);
+
+      if (vocabSeen.size === VOCAB.length) {
+        complete("vocabulary");
+      }
+    });
+    vocabButtons.appendChild(b);
+  });
+
+  vocabText.append(
+    vocabButtons,
+    vocabExplanation.box,
+    vocabLegend
+  );
+
+  const vocabGrid = el("div", "bst-two-columns");
+  vocabGrid.append(vocabText, vocabView.wrap);
+  vocabulary.appendChild(vocabGrid);
+  vocabView.draw(vocabRoot);
+
+  // ------------------------------------------
+  // Tab 3 — BST definition and ordering rules
+  // ------------------------------------------
+  const rules = panels[2];
+  rules.append(
+    el("h2", "", "What makes a Binary Search Tree?"),
+   el('p', 'bst-lead',
+  'A Binary Search Tree (BST) is a type of binary tree data structure in which ' +
+  'each node contains a unique key and satisfies a specific ordering property. ' +
+  'The following are the three fundamental ordering rules that every BST must follow:'
+)
+  );
+
+  const ruleRoot = makeTree();
+  const ruleView = makeTreeView();
+  const ruleText = el("div", "bst-learn-text");
+  const ruleButtons = el("div", "bst-rules");
+  const ruleExplain = makeCallout(
+    "Explanation",
+    "Select a rule to watch how the example tree demonstrates it."
+  );
+  const seenRules = new Set();
+  const ruleGrid = el("div", "bst-two-columns");
+
+  const RULES = [
+    {
+      id: "unique",
+      name: "Unique keys",
+      symbol: "≠",
+      text: "Every key appears only once. Duplicate values " +
+        "are rejected in this lesson."
+    },
+    {
+      id: "left",
+      name: "Smaller goes left",
+      symbol: "<",
+      text: "Every value in the left subtree must be smaller " +
+        "than the root of that subtree."
+    },
+    {
+      id: "right",
+      name: "Larger goes right",
+      symbol: ">",
+      text: "Every value in the right subtree must be larger " +
+        "than the root of that subtree."
+    }
   ];
 
-  legendItems.forEach(([symbol, label, type]) => {
-    const item = el('span', 'bst-legend-item');
+  const restoreRule = btn("Restore original tree", "bst-btn");
+  restoreRule.hidden = true;
 
-    item.append(
-      el(
-        'span',
-        `bst-legend-symbol bst-legend-symbol--${type}`,
-        symbol
-      ),
-      document.createTextNode(label)
+  function drawRule(rule) {
+    if (rule.id === "unique") {
+      // Deliberately invalid duplicate example.
+      let invalidRoot = makeTree();
+      const eighty = find(invalidRoot, 80);
+      eighty.right = node(80, eighty);
+
+      ruleView.draw(invalidRoot, {
+        invalid: 80,
+        marks: new Map([[80, "orange"]])
+      });
+      restoreRule.hidden = false;
+      ruleExplain.text.textContent =
+        "This deliberately invalid example shows a duplicate 80. " +
+        "The insertion algorithm must reject it.";
+    } else {
+      const left = rule.id === "left";
+      const members = nodes(left ? ruleRoot.left : ruleRoot.right);
+      const colour = left ? "blue" : "orange";
+      const symbol = left ? "<" : ">";
+      const comparisons = new Map(
+        members.map(n => [n.value, `${n.value} ${symbol} 50`])
+      );
+
+      ruleView.draw(ruleRoot, {
+        marks: new Map([
+          [50, "purple"],
+          ...members.map(n => [n.value, colour])
+        ]),
+        comparisons
+      });
+      restoreRule.hidden = true;
+      ruleExplain.text.textContent =
+        `${rule.text} Compare every highlighted value with 50. ` +
+        "The rule also applies inside every subtree.";
+    }
+  }
+
+  RULES.forEach(rule => {
+    const b = btn("", "bst-rule-button");
+    b.append(
+
+      el("span", "bst-rule-symbol", rule.symbol),
+      el("strong", "", rule.name),
+      el("span", "", rule.text)
     );
 
+    b.addEventListener("click", () => {
+      seenRules.add(rule.id);
+      ruleButtons.querySelectorAll("button").forEach(x =>
+        x.setAttribute("aria-pressed", String(x === b))
+      );
+      drawRule(rule);
+      if (seenRules.size === RULES.length) complete("rules");
+    });
+    ruleButtons.appendChild(b);
+  });
+
+  restoreRule.addEventListener("click", () => {
+    ruleView.draw(ruleRoot);
+    restoreRule.hidden = true;
+    ruleExplain.text.textContent =
+      "Original valid tree restored. Every key is unique.";
+  });
+
+  const clueTerms = el("div", "bst-chips");
+  for (const name of ["Node", "Root", "Subtree"]) {
+    const b = btn(`Review ${name}`, "bst-chip");
+    b.addEventListener("click", () => {
+      goTab(1, true);
+      const index = VOCAB.findIndex(v => v.name === name);
+      vocabButtons.children[index]?.click();
+    });
+    clueTerms.appendChild(b);
+  }
+
+  ruleText.append(
+    ruleButtons,
+    ruleExplain.box,
+    restoreRule,
+    el("p", "bst-muted",
+      "Need a refresher? These terms were introduced earlier."),
+    clueTerms
+  );
+  ruleGrid.append(ruleText, ruleView.wrap);
+  rules.appendChild(ruleGrid);
+  ruleView.draw(ruleRoot);
+
+  // ------------------------------------------
+  // Tab 4 — Insertion player
+  // ------------------------------------------
+  const insertionPanel = panels[3];
+  insertionPanel.append(
+    el("h2", "", "Grow the tree"),
+    el("p", "bst-muted",
+      "Apply the ordering rules, one comparison at a time. " +
+      "You can predict the next direction or play the animation.")
+  );
+
+  const treeCard = el("article", "bst-card");
+  const controlCard = el("article", "bst-card");
+
+  let addedValues = [];
+  let root = makeTree();
+  let pending = null;
+  let active = null;
+  let newValue = null;
+  let invalidValue = null;
+  let pathValues = [];
+  let comparisons = new Map();
+  let timer = null;
+
+  const insertionView = makeTreeView();
+  const count = el("span", "bst-node-count");
+  const treeFrame = el("div", "bst-tree-frame");
+  const legend = el("div", "bst-tree-legend");
+
+  [
+    ["○", "Normal"],
+    ["◌", "Comparing"],
+    ["●", "Selected"],
+    ["+", "New"],
+    ["<>", "Comparison sign"]
+  ].forEach(([symbol, label]) => {
+    const item = el("span", "bst-legend-item");
+    item.append(
+      el("span", "bst-legend-symbol", symbol),
+      document.createTextNode(label)
+    );
     legend.appendChild(item);
   });
 
-  // Short, expandable explanation.
-  const treeNote = el(
-    'details',
-    'bst-tree-note'
+  treeFrame.append(insertionView.wrap, legend);
+
+  const textTree = el("details", "bst-tree-text");
+  const textTreeBody = el("div");
+  textTree.append(
+    el("summary", "", "Show tree as text"),
+    textTreeBody
   );
 
-  treeNote.append(
-    el('summary', '', 'How to read this tree — More'),
-    el(
-      'p',
-      '',
-      'Start at 50. Smaller values go left and ' +
-      'larger values go right. Follow each branch ' +
-      'to see how nodes are connected.'
-    )
+  treeCard.append(
+    el("h3", "", "Interactive tree"),
+    count,
+    treeFrame,
+    textTree
   );
 
-  // Insertion explanation
-  const explanation = el(
-    'p',
-    'bst-insertion-explanation',
-    'Try inserting 65 into the tree.'
+  const insertionExplanation = makeCallout(
+    "What is happening",
+    "Try inserting 65 into the tree."
+  );
+  const insertionPath = el("p", "bst-insertion-path");
+  insertionExplanation.box.appendChild(insertionPath);
+
+  const form = el("form", "bst-form");
+  const label = el("label", "", "Insert a value (0–99)");
+  const input = el("input", "bst-input");
+  input.type = "number";
+  input.min = "0";
+  input.max = "99";
+  input.step = "1";
+  input.placeholder = "e.g. 65";
+  input.id = "bst-insert-value";
+  label.htmlFor = input.id;
+
+  const start = btn("Start insertion", "bst-btn primary");
+  start.type = "submit";
+  const reset = btn("Reset tree", "bst-btn");
+  form.append(label, input, start, reset);
+
+  const predict = el("div", "bst-predict");
+  const left = btn("← Go left", "bst-btn");
+  const right = btn("Go right →", "bst-btn");
+  predict.append(
+    el("strong", "", "Predict the next move"),
+    left, right
   );
 
-  explanation.setAttribute('aria-live', 'polite');
-  explanation.setAttribute('aria-atomic', 'true');
+  const controls = el("div", "bst-player");
+  const nextStep = btn("Show next step →", "bst-btn primary");
+  const play = btn("Play", "bst-btn");
+  const speed = el("select", "bst-speed");
 
-  // Insertion form
-  const form = el('form', 'bst-insert-form');
-
-  const inputLabel = el(
-    'label',
-    '',
-    'Insert a value (0–99)'
-  );
-
-  const input = el('input');
-
-  input.id = 'bst-insert-value';
-  input.type = 'number';
-  input.min = '0';
-  input.max = '99';
-  input.step = '1';
-  input.placeholder = 'e.g. 65';
-
-  inputLabel.htmlFor = input.id;
-
-  const insertButton = el(
-    'button',
-    'btn btn--primary',
-    'Start insertion'
-  );
-
-  insertButton.type = 'submit';
-
-  const resetButton = el(
-    'button',
-    'btn',
-    'Reset tree'
-  );
-
-  resetButton.type = 'button';
-
-  form.append(
-    inputLabel,
-    input,
-    insertButton,
-    resetButton
-  );
-
-  // ------------------------------------------
-  // INSERTION PLAYER
-  // ------------------------------------------
-
-  const player = el(
-    'div',
-    'bst-insertion-player'
-  );
-
-  const nextButton = el(
-    'button',
-    'btn btn--primary',
-    'Next →'
-  );
-
-  nextButton.type = 'button';
-
-  const playButton = el(
-    'button',
-    'btn',
-    'Play'
-  );
-
-  playButton.type = 'button';
-
-  const speedLabel = el(
-    'label',
-    '',
-    'Speed'
-  );
-
-  const speedSelect = el(
-    'select',
-    'bst-speed'
-  );
-
-  const speeds = [
-    ['1500', 'Slow'],
-    ['850', 'Normal'],
-    ['400', 'Fast']
-  ];
-
-  speeds.forEach(([value, text]) => {
-    const option = el('option', '', text);
-
-    option.value = value;
-
-    if (value === '850') {
-      option.selected = true;
-    }
-
-    speedSelect.appendChild(option);
+  [
+    ["2200", "Slow"],
+    ["1400", "Normal"],
+    ["800", "Fast"]
+  ].forEach(([value, label]) => {
+    const opt = el("option", "", label);
+    opt.value = value;
+    speed.appendChild(opt);
   });
+  speed.value = "1400";
 
-  speedLabel.appendChild(speedSelect);
+  controls.append(nextStep, play, speed);
 
-  player.append(
-    nextButton,
-    playButton,
-    speedLabel
+  const history = el("div", "bst-player");
+  const undo = btn("Undo last insert", "bst-btn");
+  const replay = btn("Replay last", "bst-btn");
+  history.append(undo, replay);
+
+  controlCard.append(
+    el("h3", "", "Try an insertion"),
+    insertionExplanation.box,
+    form,
+    predict,
+    controls,
+    history
   );
 
-  function updatePlayer() {
-    const hasPending = pendingInsertion !== null;
+  const insertionGrid = el("div", "bst-explore-grid");
+  insertionGrid.append(treeCard, controlCard);
+  insertionPanel.appendChild(insertionGrid);
 
-    nextButton.disabled = !hasPending || playing;
-    playButton.disabled = !hasPending;
-
-    input.disabled = hasPending;
-    insertButton.disabled = hasPending;
-
-    playButton.textContent = playing ? 'Pause' : 'Play';
+  function refreshInsertion() {
+    count.textContent = `${nodes(root).length} nodes`;
+    insertionView.draw(root, {
+      active,
+      added: newValue,
+      invalid: invalidValue,
+      comparisons,
+      path: pathValues
+    });
+    textTreeBody.replaceChildren(listTree(root));
   }
 
-  function getInsertionPath(value) {
+  function explain(message) {
+    insertionExplanation.text.textContent = message;
+  }
+
+  function stopInsertion() {
+    if (timer !== null) {
+      clearInterval(timer);
+      timer = null;
+    }
+    play.textContent = "Play";
+    updateInsertionControls();
+  }
+
+  function updateInsertionControls() {
+    const busy = pending !== null;
+    nextStep.disabled = !busy || timer !== null;
+    play.disabled = !busy;
+    start.disabled = busy;
+    input.disabled = busy;
+    predict.hidden = !busy || timer !== null;
+    undo.disabled = busy || addedValues.length === 0;
+    replay.disabled = undo.disabled;
+  }
+
+  function rebuild() {
+    root = makeTree([...INITIAL, ...addedValues]);
+    pending = null;
+    active = null;
+    newValue = null;
+    invalidValue = null;
+    pathValues = [];
+    comparisons = new Map();
+    refreshInsertion();
+    updateInsertionControls();
+  }
+
+  function prepare(value) {
+    stopInsertion();
+
+    if (!Number.isInteger(value) || value < 0 || value > 99) {
+      explain("Enter a whole number between 0 and 99.");
+      return false;
+    }
+
+    if (find(root, value)) {
+      invalidValue = value;
+      explain(`${value} already exists. Duplicate keys are not allowed.`);
+      refreshInsertion();
+      return false;
+    }
+
+    if (nodes(root).length >= MAX_NODES) {
+      explain("The tree is full for this exercise. Reset to continue.");
+      return false;
+    }
+
+    invalidValue = null;
+    newValue = null;
+    pathValues = [];
+    comparisons = new Map();
+
     const path = [];
     let current = root;
-
     while (current) {
-      const direction = value < current.value
-        ? 'left'
-        : 'right';
-
-      path.push({
-        node: current,
-        direction
-      });
-
+      const direction = value < current.value ? "left" : "right";
+      path.push({ n: current, direction });
       current = current[direction];
     }
 
-    return path;
-  }
+    pending = { value, path, index: 0 };
+    active = path[0].n.value;
+    comparisons.set(active, `${value} ? ${active}`);
 
-  function prepareInsertion(value) {
-    stopPlayback();
-
-    if (!Number.isInteger(value) || value < 0 || value > 99) {
-      explanation.textContent =
-        'Please enter a whole number between 0 and 99.';
-      return false;
-    }
-
-    if (findNode(root, value)) {
-      explanation.textContent =
-        `${value} already exists in the tree. ` +
-        'Try another number.';
-      return false;
-    }
-
-    if (countNodes(root) >= MAX_NODES) {
-      explanation.textContent =
-        'The tree has reached its practice limit of 15 nodes. ' +
-        'Reset the tree to start again.';
-      return false;
-    }
-
-    treeState.active = null;
-    treeState.newValue = null;
-    treeState.highlighted = null;
-    treeState.answerPath.clear();
-
-    pendingInsertion = {
-      value,
-      path: getInsertionPath(value),
-      index: 0
-    };
-
-    explanation.textContent =
-      `Ready to insert ${value}. ` +
-      'Use Next to compare values one at a time, ' +
-      'or Play to watch automatically.';
-
-    refreshTree();
-    updatePlayer();
-
+    explain(
+      `Inserting ${value}. Compare it with ${active}. ` +
+      "Predict left or right, or reveal the next step."
+    );
+    insertionPath.textContent = "Ready at the root.";
+    refreshInsertion();
+    updateInsertionControls();
     return true;
   }
 
-  function advanceInsertion() {
-    if (!pendingInsertion) return;
+  function advance(guess = null) {
+    if (!pending) return;
 
-    const { value, path, index } = pendingInsertion;
-    const step = path[index];
+    const { value, path } = pending;
+    const step = path[pending.index];
+    const sign = step.direction === "left" ? "<" : ">";
 
-    treeState.active = step.node;
-    treeState.selected = step.node;
+    comparisons.set(step.n.value, `${value} ${sign} ${step.n.value}`);
+    pathValues.push(step.n.value);
 
-    const symbol = step.direction === 'left'
-      ? '<'
-      : '>';
+    let feedback = "";
+    if (guess) {
+      feedback = guess === step.direction
+        ? "Correct! "
+        : `Not quite. The correct direction is ${step.direction}. `;
+    }
 
-    const comparison =
-      `${value} ${symbol} ${step.node.value}: ` +
-      `go ${step.direction}.`;
+    pending.index += 1;
 
-    pendingInsertion.index += 1;
+    if (pending.index === path.length) {
+      root = insert(root, value);
+      addedValues.push(value);
+      active = null;
+      newValue = value;
+      pathValues.push(value);
+      pending = null;
 
-    if (pendingInsertion.index >= path.length) {
-      const added = createNode(value, step.node);
-
-      step.node[step.direction] = added;
-
-      treeState.selected = added;
-      treeState.active = null;
-      treeState.newValue = value;
-
-      pendingInsertion = null;
-
-      stopPlayback();
-
-      explanation.textContent =
-        `${comparison} Success! ${value} is now the ` +
-        `${step.direction} child of ${step.node.value}.`;
-
-      markComplete('explore');
+      explain(
+        `${feedback}${value} ${sign} ${step.n.value}. ` +
+        `The ${step.direction} position is empty, ` +
+        `so ${value} is inserted there.`
+      );
+      insertionPath.textContent =
+        `Complete: ${pathValues.join(" → ")}`;
+      complete("insertion");
+      stopInsertion();
     } else {
-      explanation.textContent = comparison;
+      active = path[pending.index].n.value;
+      comparisons.set(active, `${value} ? ${active}`);
+      explain(
+        `${feedback}${value} ${sign} ${step.n.value}. ` +
+        `Go ${step.direction}. Now compare with ${active}.`
+      );
+      insertionPath.textContent =
+        `Path: ${pathValues.join(" → ")}`;
     }
 
-    refreshTree();
-    updateSelectedPanel();
-    updatePlayer();
+    refreshInsertion();
+    updateInsertionControls();
   }
 
-  nextButton.addEventListener('click', () => {
-    if (!playing) advanceInsertion();
+  function startAnimation() {
+    if (!pending || timer !== null) return;
+    play.textContent = "Pause";
+    timer = setInterval(() => advance(), Number(speed.value));
+    updateInsertionControls();
+  }
+
+  play.addEventListener("click", () => {
+    if (timer !== null) stopInsertion();
+    else startAnimation();
   });
 
-  playButton.addEventListener('click', () => {
-    if (playing) {
-      stopPlayback();
-      updatePlayer();
-      return;
-    }
+  nextStep.addEventListener("click", () => advance());
+  left.addEventListener("click", () => advance("left"));
+  right.addEventListener("click", () => advance("right"));
 
-    if (!pendingInsertion) return;
-
-    playing = true;
-    updatePlayer();
-
-    playbackTimer = setInterval(() => {
-      advanceInsertion();
-    }, Number(speedSelect.value));
+  speed.addEventListener("change", () => {
+    if (timer === null) return;
+    stopInsertion();
+    startAnimation();
   });
 
-  speedSelect.addEventListener('change', () => {
-    if (!playing) return;
-
-    clearInterval(playbackTimer);
-
-    playbackTimer = setInterval(() => {
-      advanceInsertion();
-    }, Number(speedSelect.value));
-  });
-
-  form.addEventListener('submit', event => {
+  form.addEventListener("submit", event => {
     event.preventDefault();
-
-    const raw = input.value.trim();
-
-    if (raw === '') {
-      explanation.textContent =
-        'Enter a value first. Try 65 as an example.';
+    if (!input.value.trim()) {
+      explain("Enter a number first. Try 65.");
       return;
     }
-
-    prepareInsertion(Number(raw));
+    prepare(Number(input.value));
   });
 
-  function resetTree() {
-    stopPlayback();
-
-    root = buildExample();
-
-    treeState.selected = root;
-    treeState.active = null;
-    treeState.highlighted = null;
-    treeState.newValue = null;
-    treeState.answerPath.clear();
-
-    pendingInsertion = null;
-    input.value = '';
-
-    explanation.textContent =
-      'The original tree has been restored. ' +
-      'Enter a number to begin.';
-
-    refreshTree();
-    updateSelectedPanel();
-    updatePlayer();
-  }
-
-  resetButton.addEventListener('click', resetTree);
-
-  // ------------------------------------------
-  // BST ORDERING RULES
-  // ------------------------------------------
-
-  const rulesCard = el(
-    'aside',
-    'bst-card bst-rules-card'
-  );
-
-  rulesCard.append(
-    el('span', 'bst-eyebrow', 'THE MAIN IDEA'),
-    el('h2', '', 'BST ordering rule'),
-    el(
-      'p',
-      'bst-muted',
-      'Each node follows these rules.'
-    )
-  );
-
-  const rules = [
-    {
-      symbol: '←',
-      title: 'Smaller goes left',
-      description: '30 is smaller than 50.',
-      value: 30
-    },
-    {
-      symbol: '→',
-      title: 'Larger goes right',
-      description: '70 is larger than 50.',
-      value: 70
-    },
-    {
-      symbol: '=',
-      title: 'No duplicates',
-      description: 'Each value appears only once.',
-      value: 50
-    }
-  ];
-
-  rules.forEach(rule => {
-    const item = el(
-      'button',
-      'bst-rule-item'
-    );
-
-    item.type = 'button';
-
-    item.append(
-      el('span', 'bst-rule-icon', rule.symbol),
-      el('strong', '', rule.title),
-      el(
-        'span',
-        'bst-rule-description',
-        rule.description
-      )
-    );
-
-    const highlight = () => {
-      treeState.highlighted = findNode(root, rule.value);
-      refreshTree();
-    };
-
-    const clearHighlight = () => {
-      treeState.highlighted = null;
-      refreshTree();
-    };
-
-    item.addEventListener('mouseenter', highlight);
-    item.addEventListener('mouseleave', clearHighlight);
-
-    item.addEventListener('focus', highlight);
-    item.addEventListener('blur', clearHighlight);
-
-    item.addEventListener('click', () => {
-      const node = findNode(root, rule.value);
-
-      if (node) {
-        treeState.selected = node;
-        updateSelectedPanel();
-        refreshTree();
-      }
-    });
-
-    rulesCard.appendChild(item);
+  reset.addEventListener("click", () => {
+    stopInsertion();
+    addedValues = [];
+    rebuild();
+    input.value = "";
+    insertionPath.textContent = "";
+    explain("Original tree restored. Try inserting 65.");
   });
 
-  // Assemble tree card.
-  treeCard.append(
-    treeHeading,
-    treeViewport,
-    selectedPanel,
-    legend,
-    treeNote,
-    explanation,
-    form,
-    player
-  );
+  undo.addEventListener("click", () => {
+    stopInsertion();
+    addedValues.pop();
+    rebuild();
+    explain("The last inserted value was removed.");
+  });
 
-  const layout = el(
-    'div',
-    'bst-content-grid'
-  );
+  replay.addEventListener("click", () => {
+    if (!addedValues.length) return;
+    stopInsertion();
+    const value = addedValues.pop();
+    rebuild();
+    input.value = String(value);
+    prepare(value);
+  });
 
-  layout.append(
-    treeCard,
-    rulesCard
-  );
+  refreshInsertion();
+  updateInsertionControls();
 
-  // ==========================================
-  // 04 — KNOWLEDGE CHECK
-  // ==========================================
-
-  const check = el(
-    'section',
-    'bst-card bst-check-card'
-  );
-
-  check.id = 'bst-knowledge-check';
-
+  // ------------------------------------------
+  // Tab 5 — Knowledge check and clues
+  // ------------------------------------------
+  const check = panels[4];
   check.append(
-    el('span', 'bst-eyebrow', '04 / CHECK'),
-    el('h2', '', 'Can you apply the BST rule?'),
-    el(
-      'p',
-      '',
-      'In the original example tree, ' +
-      'where would 65 be inserted?'
-    )
+    el("h2", "", "Can you apply the BST rule?"),
+    el("p", "bst-muted",
+      "In the original example tree, where would 65 be inserted?")
   );
 
-  const checkAnswers = el(
-    'div',
-    'bst-answer-options'
-  );
+  const answers = el("div", "bst-options");
+  const checkFeedback = el("p", "bst-feedback");
 
-  const checkFeedback = el(
-    'div',
-    'bst-answer-feedback'
-  );
+  [
+    ["Left child of 60", false],
+    ["Right child of 60", true],
+    ["Right child of 80", false],
+    ["Not sure", false]
+  ].forEach(([text, correct]) => {
+    const b = btn(text, "bst-answer");
+    b.setAttribute("aria-pressed", "false");
 
-  checkFeedback.setAttribute('aria-live', 'polite');
+    b.addEventListener("click", () => {
+      answers.querySelectorAll("button").forEach(x =>
+        x.setAttribute("aria-pressed", String(x === b))
+      );
 
-  const checkOptions = [
-    { text: 'Left child of 60', correct: false },
-    { text: 'Right child of 60', correct: true },
-    { text: 'Right child of 80', correct: false },
-    { text: 'Not sure', correct: false }
-  ];
-
-  checkOptions.forEach(option => {
-    const button = el(
-      'button',
-      'bst-answer',
-      option.text
-    );
-
-    button.type = 'button';
-    button.setAttribute('aria-pressed', 'false');
-
-    button.addEventListener('click', () => {
-      checkAnswers.querySelectorAll('button').forEach(other => {
-        other.setAttribute(
-          'aria-pressed',
-          String(other === button)
-        );
-      });
-
-      if (option.correct) {
-        checkFeedback.className =
-          'bst-answer-feedback is-correct';
-
+      if (correct) {
+        checkFeedback.className = "bst-feedback is-correct";
         checkFeedback.textContent =
-          'Correct! Compare 65 with 50, then 70, then 60. ' +
-          'It becomes the right child of 60.';
-
-        treeState.answerPath = new Set([50, 70, 60]);
-
-        markComplete('check');
+          "Correct! 65 > 50, 65 < 70, and 65 > 60. " +
+          "It becomes the right child of 60.";
+        complete("check");
       } else {
-        checkFeedback.className =
-          'bst-answer-feedback is-review';
-
+        checkFeedback.className = "bst-feedback is-review";
         checkFeedback.textContent =
-          option.text === 'Not sure'
-            ? 'That is okay. Follow 65 through the tree: ' +
-              'start at 50, then compare with 70 and 60. ' +
-              'Use Show me if you want to watch.'
-            : 'Not quite. Compare 65 with 50, then 70, ' +
-              'then 60. Try again, or select Show me.';
-
-        treeState.answerPath.clear();
+          "Not quite. Use a clue or watch the insertion demonstration.";
       }
-
-      refreshTree();
     });
-
-    checkAnswers.appendChild(button);
+    answers.appendChild(b);
   });
 
-  const showMeButton = el(
-    'button',
-    'bst-show-me',
-    'Show me →'
-  );
+  const clue = makeCallout("Clue");
+  clue.box.hidden = true;
 
-  showMeButton.type = 'button';
+  const clueTexts = [
+    "Start at the root, 50. Compare 65 with 50.",
+    "65 is larger than 50, so move right to 70.",
+    "65 is smaller than 70, so go left to 60. " +
+      "It is larger than 60, so use the empty right position."
+  ];
+  let clueIndex = 0;
 
-  showMeButton.addEventListener('click', () => {
-    resetTree();
+  const clueButton = btn("Need a clue?", "bst-btn");
+  const showMe = btn("Show me →", "bst-btn");
 
-    input.value = '65';
-
-    if (!prepareInsertion(65)) return;
-
-    playing = true;
-    updatePlayer();
-
-    playbackTimer = setInterval(() => {
-      advanceInsertion();
-    }, Number(speedSelect.value));
-
-    treeCard.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
-    });
+  clueButton.addEventListener("click", () => {
+    if (clueIndex >= clueTexts.length) return;
+    clue.box.hidden = false;
+    clue.text.textContent = clueTexts[clueIndex++];
+    clueButton.textContent = clueIndex >= clueTexts.length
+      ? "All clues shown" : "Another clue";
+    clueButton.disabled = clueIndex >= clueTexts.length;
   });
 
-  check.append(
-    checkAnswers,
-    checkFeedback,
-    showMeButton
+  showMe.addEventListener("click", () => {
+    goTab(3, true);
+    stopInsertion();
+    addedValues = [];
+    rebuild();
+    input.value = "65";
+    if (prepare(65)) startAnimation();
+  });
+
+  const checkActions = el("div", "bst-player");
+  checkActions.append(clueButton, showMe);
+  check.append(answers, checkFeedback, clue.box, checkActions);
+
+  // ------------------------------------------
+  // Bottom navigation
+  // ------------------------------------------
+  const navigation = el("nav", "bst-navigation");
+  navigation.setAttribute("aria-label", "BST lesson navigation");
+
+  const previous = btn("← Previous", "bst-btn");
+  const next = btn("Next →", "bst-btn primary");
+  const toDfs = el("a", "bst-btn primary", "Next Lesson →");
+  toDfs.href = "#/concept-idea";
+
+  previous.addEventListener("click", () =>
+    goTab(activeTab - 1, true)
+  );
+  next.addEventListener("click", () =>
+    goTab(activeTab + 1, true)
   );
 
-  // ==========================================
-  // NEXT LESSON
-  // ==========================================
-
-  const lessonNavigation = el(
-    'nav',
-    'bst-lesson-navigation'
-  );
-
-  lessonNavigation.setAttribute(
-    'aria-label',
-    'BST lesson navigation'
-  );
-
-  const nextLesson = el(
-  'a',
-  'bst-next-button',
-  'Next Lesson →'
-);
-
-nextLesson.href = '#/concept-idea';
-
-lessonNavigation.appendChild(nextLesson);
-
-  // ==========================================
-  // ASSEMBLE PAGE
-  // ==========================================
+  navigation.append(previous, next, toDfs);
 
   page.append(
+    title,
     progress,
-    warmup,
-    intro,
-    vocabulary,
-    exploreHeading,
-    layout,
-    check,
-    lessonNavigation
+    tabList,
+    ...panels,
+    navigation
   );
 
-  container.appendChild(page);
+  container.replaceChildren(page);
+  goTab(0);
 
-  refreshTree();
-  updateSelectedPanel();
-  updatePlayer();
-
-  // Cleanup when navigating to another screen.
   return () => {
     destroyed = true;
-
-    stopPlayback();
-
-    if (headerObserver) {
-      headerObserver.disconnect();
-    }
-
-    for (const task of timeoutTasks) {
-      clearTimeout(task.id);
-      task.resolve();
-    }
-
-    timeoutTasks.clear();
+    stopInsertion();
+    cleanup.forEach(fn => fn());
   };
 }

@@ -80,22 +80,44 @@ function getSection(screenId) {
     return 'practice';
   }
 
-  if (screenId === 'quiz') {
-    return 'quiz';
-  }
+if (
+  screenId === 'quiz' ||
+  screenId === 'review' ||
+  screenId === 'summary'
+) {
+  return 'quiz';
+}
 
   return null;
 }
 
+
 function setupTopNavigation() {
   const header = document.querySelector('.app-header');
+  if (!header) return;
 
-  if (!header || header.querySelector('.top-nav')) {
-    return;
+  // Find the existing brand in the header.
+  const brand = header.querySelector(
+    '.top-nav__brand, .app-header__brand, ' +
+    '.app-header__logo, .app-header__title, .brand'
+  ) || Array.from(header.children).find(child =>
+    !child.matches('.top-nav, .app-header__progress') &&
+    /COS212 DFS Tutor|BST & DFS Interactive Tutor|COS212 Learning Companion/i
+      .test(child.textContent || '')
+  );
+
+  if (brand) {
+    brand.classList.add('top-nav__brand');
+
+    const brandText =
+      brand.querySelector('a, h1, h2, strong, span') || brand;
+
+    brandText.textContent = 'COS212 Learning Companion';
   }
 
-  const nav = document.createElement('nav');
+  if (header.querySelector('.top-nav')) return;
 
+  const nav = document.createElement('nav');
   nav.className = 'top-nav';
   nav.setAttribute('aria-label', 'Main navigation');
 
@@ -117,6 +139,7 @@ function setupTopNavigation() {
     header.appendChild(nav);
   }
 }
+
 
 
 function updateTopNavigation(screenId) {

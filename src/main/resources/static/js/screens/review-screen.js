@@ -1,1448 +1,1545 @@
 
 /**
- * COS212 DFS Tutor — Feedback and Guided Review
- * Page 7
+ * COS212 DFS Tutor — Guided Review
  *
- * Learning design:
- * - Gagne Event 7: Provide feedback
- * - Gagne Event 8: Assess performance
- * - Mayer: signalling, segmenting, multimedia learning
- * - Scaffolding through hints and corrective practice
- * - Metacognition through confidence reflection
+ * Displays saved Readiness Quiz results.
+ * Tabs:
+ * 1. My Results
+ * 2. Key Ideas
+ * 3. Quick Check
+ * 4. Next Steps
  *
- * Reads quiz results from sessionStorage when available.
- * Also works as a standalone review page.
+ * No progress bar and no backend required.
  */
 
-const REVIEW_STORAGE_KEY = 'cos212-dfs-quiz-result';
+const REVIEW_KEY = 'cos212-dfs-quiz-result';
+const REVIEW_NS = 'http://www.w3.org/2000/svg';
 
-const REVIEW_SVG_NS = 'http://www.w3.org/2000/svg';
-
-function reviewEl(tag, className = '', text = '') {
-  const element = document.createElement(tag);
-
-  if (className) {
-    element.className = className;
-  }
-
-  element.textContent = text;
-  return element;
-}
-
-function reviewSvgEl(tag, attributes = {}) {
-  const element = document.createElementNS(
-    REVIEW_SVG_NS,
-    tag
-  );
-
-  Object.entries(attributes).forEach(([name, value]) => {
-    element.setAttribute(name, String(value));
-  });
-
-  return element;
-}
-
-/* ============================================
-   LEARNING OUTCOME CONTENT
-   ========================================== */
-
-const REVIEW_TOPICS = [
+const REVIEW_AREAS = [
   {
-    id: 'LO1',
-    title: 'Trees and stacks',
-    label: 'FOUNDATIONS',
-    summary:
-      'A tree connects nodes through parent-child ' +
-      'relationships. A stack remembers pending work.',
+    id: 'bst',
+    title: 'BST Skills',
+    rule:
+      'Smaller goes left. Larger goes right. ' +
+      'Keys are unique.',
     explanation:
-      'The top node of a tree is its root. ' +
-      'A stack uses Last In, First Out (LIFO): ' +
-      'the most recently added item is removed first.',
+      'A node must satisfy the ordering rule ' +
+      'of every ancestor, not only its direct parent. ' +
+      'During insertion, compare the value at each ' +
+      'node until you find an empty child position.',
     example:
-      'Push 1, then 2, then 3. The first value ' +
-      'popped is 3.',
-    takeaway:
-      'DFS can use a stack to remember which nodes ' +
-      'still need to be explored.',
+      'To insert 63: 63 > 44, so go right to 68. ' +
+      '63 < 68, so go left to 59. ' +
+      '63 > 59, so insert on the right of 59.',
     route: '#/concept-bst',
-    routeText: 'Review BST Basics',
-    cue: 'stack'
+    action: 'Revisit BST Basics'
   },
   {
-    id: 'LO2',
-    title: 'Depth-first exploration',
-    label: 'DFS BEHAVIOUR',
-    summary:
-      'DFS explores one path before returning ' +
-      'to another pending path.',
+    id: 'dfs',
+    title: 'DFS & Stack',
+    rule:
+      'Go depth-first. A stack uses Last In, ' +
+      'First Out (LIFO).',
     explanation:
-      'In left-first DFS, the algorithm explores ' +
-      'the left subtree before moving to the right. ' +
-      'When it reaches a leaf, it continues from ' +
-      'the most recent pending node.',
+      'In left-first iterative pre-order DFS, ' +
+      'pop and visit a node, push its right child ' +
+      'first, then its left child. If a branch ends, ' +
+      'continue from the next pending stack item. ' +
+      'DFS does not use BST target comparisons ' +
+      'to skip branches.',
     example:
-      'In tree A, after visiting 50, 30 and 20, ' +
-      'DFS visits 40 next rather than stopping.',
-    takeaway:
-      'Backtracking means continuing from pending ' +
-      'work when the current branch ends.',
+      'After visiting 44, push 68 and then 21. ' +
+      'Node 21 is now on top and will be visited next.',
     route: '#/concept-idea',
-    routeText: 'Review DFS Introduction',
-    cue: 'tree'
+    action: 'Revisit DFS Introduction'
   },
   {
-    id: 'LO3',
-    title: 'Traversal orders',
-    label: 'ALGORITHM ORDER',
-    summary:
-      'Pre-order, in-order and post-order record ' +
-      'nodes at different times.',
+    id: 'traversal',
+    title: 'Traversal Orders',
+    rule:
+      'Pre: Root → Left → Right  |  ' +
+      'In: Left → Root → Right  |  ' +
+      'Post: Left → Right → Root',
     explanation:
-      'Pre-order visits Node → Left → Right. ' +
-      'In-order visits Left → Node → Right. ' +
-      'Post-order visits Left → Right → Node.',
+      'A traversal visits every node once. ' +
+      'The three orders differ in when the parent ' +
+      'is recorded. For a valid BST, in-order ' +
+      'produces the values from smallest to largest.',
     example:
-      'For tree A, pre-order starts with 50. ' +
-      'In-order produces 20, 30, 40, 50, 60, 70, 80.',
-    takeaway:
-      'The same tree produces different visiting ' +
-      'sequences depending on the traversal order.',
+      'For the review tree: Pre-order is ' +
+      '44, 21, 15, 32, 68, 59, 79. ' +
+      'In-order is 15, 21, 32, 44, 59, 68, 79. ' +
+      'Post-order is 15, 32, 21, 59, 79, 68, 44.',
     route: '#/worked-example',
-    routeText: 'Explore traversal orders',
-    cue: 'orders'
-  },
-  {
-    id: 'LO4',
-    title: 'Understanding the live stack',
-    label: 'STACK STATE',
-    summary:
-      'The top item on the stack is the next ' +
-      'pending node to be processed.',
-    explanation:
-      'For iterative left-first pre-order DFS, ' +
-      'push the right child before the left child. ' +
-      'This places the left child on top.',
-    example:
-      'If the stack is [40, 70], with the top ' +
-      'shown first, node 40 is popped next.',
-    takeaway:
-      'Push right first, then left, to visit ' +
-      'the left subtree first.',
-    route: '#/concept-idea',
-    routeText: 'Review the live stack',
-    cue: 'stack'
-  },
-  {
-    id: 'LO5',
-    title: 'DFS versus BST lookup',
-    label: 'APPLY AND COMPARE',
-    summary:
-      'DFS follows a traversal order, while a ' +
-      'BST lookup uses value comparisons.',
-    explanation:
-      'A BST lookup chooses left or right by ' +
-      'comparing the target with the current value. ' +
-      'Plain DFS does not skip branches using ' +
-      'those comparisons.',
-    example:
-      'Searching for 80 in tree A, left-first ' +
-      'pre-order DFS visits 7 nodes. ' +
-      'A BST lookup follows 50 → 70 → 80.',
-    takeaway:
-      'A traversal and a BST lookup are different ' +
-      'algorithms even when they use the same tree.',
-    route: '#/worked-example',
-    routeText: 'Compare search methods',
-    cue: 'tree'
+    action: 'Explore the traversals'
   }
 ];
 
-/**
- * Misconception codes grounded in the supplied
- * quiz-bank.json. M2 is intentionally not defined
- * because its meaning was not provided.
- */
-const REVIEW_MISCONCEPTIONS = {
-  M1: {
-    title: 'DFS versus breadth-first search',
-    description:
-      'DFS goes deep along one path before moving ' +
-      'to another branch. Breadth-first search ' +
-      'visits nodes level by level.',
-    outcome: 'LO2'
+const REVIEW_ERRORS = {
+  M1:
+    'DFS explores a branch before returning to ' +
+    'another. Breadth-first search visits nodes ' +
+    'level by level.',
+  M3:
+    'Pre-order records a parent first, in-order ' +
+    'between its subtrees, and post-order last.',
+  M4:
+    'BST lookup compares target values to select ' +
+    'a branch. Plain DFS follows the traversal order.',
+  M5:
+    'For left-first DFS, push the right child ' +
+    'first, then the left. The left child is ' +
+    'popped first.'
+};
+
+const REVIEW_CHECKS = {
+  bst: {
+    prompt:
+      'On the review tree, where would you insert 63?',
+    choices: [
+      'Left of 59',
+      'Right of 59',
+      'Right of 68'
+    ],
+    correct: 1,
+    explanation:
+      '63 > 44, 63 < 68, and 63 > 59. ' +
+      'Therefore 63 becomes the right child of 59.'
   },
-  M3: {
-    title: 'Traversal-order confusion',
-    description:
-      'Pre-order records a node before its children, ' +
-      'in-order between its subtrees, and post-order ' +
-      'after its children.',
-    outcome: 'LO3'
+  dfs: {
+    prompt:
+      'DFS visits 44, then pushes 68 and 21. ' +
+      'Which node comes off the stack next?',
+    choices: ['68', '21', '44'],
+    correct: 1,
+    explanation:
+      '21 was pushed last, so it is popped first. ' +
+      'A stack follows LIFO.'
   },
-  M4: {
-    title: 'BST lookup versus DFS',
-    description:
-      'BST lookup compares values to choose a path. ' +
-      'Plain DFS follows its traversal order.',
-    outcome: 'LO5'
-  },
-  M5: {
-    title: 'Stack order and push direction',
-    description:
-      'In left-first iterative DFS, right is pushed ' +
-      'first, then left. Left is therefore popped first.',
-    outcome: 'LO4'
+  traversal: {
+    prompt:
+      'What is the post-order of the subtree ' +
+      'rooted at 68, with children 59 and 79?',
+    choices: [
+      '68 → 59 → 79',
+      '59 → 68 → 79',
+      '59 → 79 → 68'
+    ],
+    correct: 2,
+    explanation:
+      'Post-order is Left → Right → Root: ' +
+      '59, then 79, then 68.'
   }
 };
 
-/* ============================================
-   MINI LEARNING DIAGRAMS
+/* ==========================================
+   DOM HELPERS
    ========================================== */
 
-function makeMiniTree() {
-  const svg = reviewSvgEl('svg', {
-    viewBox: '0 0 360 205',
-    role: 'img',
-    'aria-label':
-      'Tree with root 50, children 30 and 70, ' +
-      'and leaves 20, 40, 60 and 80'
-  });
+function rvEl(tag, cls = '', value = '') {
+  const e = document.createElement(tag);
 
-  const points = [
-    [50, 180, 30],
-    [30, 90, 105],
-    [70, 270, 105],
-    [20, 40, 175],
-    [40, 140, 175],
-    [60, 220, 175],
-    [80, 320, 175]
-  ];
+  if (cls) e.className = cls;
 
-  const positions = new Map(
-    points.map(([value, x, y]) => [
-      value,
-      { x, y }
-    ])
-  );
-
-  [
-    [50, 30],
-    [50, 70],
-    [30, 20],
-    [30, 40],
-    [70, 60],
-    [70, 80]
-  ].forEach(([parent, child]) => {
-    const a = positions.get(parent);
-    const b = positions.get(child);
-
-    svg.appendChild(reviewSvgEl('line', {
-      x1: a.x,
-      y1: a.y,
-      x2: b.x,
-      y2: b.y,
-      class: 'review-tree-edge'
-    }));
-  });
-
-  points.forEach(([value, x, y]) => {
-    const group = reviewSvgEl('g');
-
-    const circle = reviewSvgEl('circle', {
-      cx: x,
-      cy: y,
-      r: 22,
-      class: value === 50
-        ? 'review-tree-root'
-        : ''
-    });
-
-    const label = reviewSvgEl('text', {
-      x,
-      y,
-      class: 'review-tree-value'
-    });
-
-    label.textContent = String(value);
-
-    group.append(circle, label);
-    svg.appendChild(group);
-  });
-
-  return svg;
+  e.textContent = value;
+  return e;
 }
 
-function makeStackDiagram() {
-  const diagram = reviewEl(
-    'div',
-    'review-stack-diagram'
-  );
-
-  diagram.appendChild(
-    reviewEl(
-      'p',
-      'review-diagram-label',
-      'TOP OF STACK'
-    )
-  );
-
-  [3, 2, 1].forEach((value, index) => {
-    const item = reviewEl(
-      'div',
-      'review-stack-item',
-      String(value)
-    );
-
-    if (index === 0) {
-      item.classList.add('is-top');
-      item.appendChild(
-        reviewEl('span', '', 'POP FIRST')
-      );
-    }
-
-    diagram.appendChild(item);
-  });
-
-  diagram.appendChild(
-    reviewEl(
-      'p',
-      'review-diagram-note',
-      'Push 1 → 2 → 3. Pop 3 first.'
-    )
-  );
-
-  return diagram;
+function rvBtn(value, cls = 'review-button') {
+  const b = rvEl('button', cls, value);
+  b.type = 'button';
+  return b;
 }
 
-function makeOrderDiagram() {
-  const wrapper = reviewEl(
-    'div',
-    'review-order-diagram'
+function rvSvg(tag, props = {}) {
+  const e = document.createElementNS(
+    REVIEW_NS,
+    tag
   );
 
-  const orders = [
-    [
-      'Pre-order',
-      '50 → 30 → 20 → 40 → 70 → 60 → 80'
-    ],
-    [
-      'In-order',
-      '20 → 30 → 40 → 50 → 60 → 70 → 80'
-    ],
-    [
-      'Post-order',
-      '20 → 40 → 30 → 60 → 80 → 70 → 50'
-    ]
-  ];
+  for (const [key, value] of Object.entries(props)) {
+    e.setAttribute(key, String(value));
+  }
 
-  orders.forEach(([label, sequence]) => {
-    const row = reviewEl(
-      'div',
-      'review-order-row'
-    );
-
-    row.append(
-      reviewEl('strong', '', label),
-      reviewEl('span', '', sequence)
-    );
-
-    wrapper.appendChild(row);
-  });
-
-  return wrapper;
+  return e;
 }
 
-/* ============================================
-   LOAD SAVED QUIZ RESULTS
+/* ==========================================
+   READ THE ACTUAL QUIZ RESULTS
    ========================================== */
 
-function loadQuizResults() {
+function readReviewResult() {
   try {
-    const raw = sessionStorage.getItem(
-      REVIEW_STORAGE_KEY
-    );
+    const raw = sessionStorage.getItem(REVIEW_KEY);
 
     if (!raw) return null;
 
-    const parsed = JSON.parse(raw);
+    const saved = JSON.parse(raw);
 
     if (
-      !parsed ||
-      !Array.isArray(parsed.answers)
+      !saved ||
+      !Array.isArray(saved.answers)
     ) {
       return null;
     }
 
-    // Avoid relying on unvalidated stored fields.
-    const answers = parsed.answers.filter(answer =>
-      answer &&
-      typeof answer.outcome === 'string' &&
-      typeof answer.correct === 'boolean'
-    );
+    const answers = saved.answers
+      .filter(a =>
+        a &&
+        typeof a.correct === 'boolean' &&
+        Number.isInteger(Number(a.slot))
+      )
+      .map(a => ({
+        ...a,
+        slot: Number(a.slot)
+      }))
+      .sort((a, b) => a.slot - b.slot);
 
     if (!answers.length) return null;
 
+    const correct = answers.filter(
+      a => a.correct
+    ).length;
+
+    const passMark = Number.isInteger(
+      saved.passMark
+    )
+      ? saved.passMark
+      : Math.ceil(answers.length * 0.75);
+
     return {
       answers,
-      correct: answers.filter(
-        answer => answer.correct
-      ).length,
+      correct,
       total: answers.length,
-      passMark:
-        Number.isInteger(parsed.passMark)
-          ? parsed.passMark
-          : 5
+      passMark,
+      attempt: Number.isInteger(saved.attempt)
+        ? saved.attempt
+        : 0
     };
   } catch {
     return null;
   }
 }
 
-/* ============================================
-   SHORT CORRECTIVE PRACTICE
+/* ==========================================
+   MATCH RESULTS WITH QUIZ QUESTIONS
    ========================================== */
 
-const REVIEW_CHECKS = [
-  {
-    outcome: 'LO1',
-    prompt:
-      'You push 1, 2 and 3 onto a stack. ' +
-      'Which value is popped first?',
-    options: [
-      ['1', false],
-      ['2', false],
-      ['3', true],
-      ['Not sure', false]
-    ],
-    explanation:
-      'A stack follows Last In, First Out. ' +
-      'The last value pushed was 3.'
-  },
-  {
-    outcome: 'LO2',
-    prompt:
-      'DFS has just visited leaf node 20. ' +
-      'Node 40 is still waiting. What happens next?',
-    options: [
-      ['Stop the traversal', false],
-      ['Visit node 40', true],
-      ['Restart at the root', false],
-      ['Not sure', false]
-    ],
-    explanation:
-      'DFS continues with pending node 40 ' +
-      'instead of stopping at the leaf.'
-  },
-  {
-    outcome: 'LO3',
-    prompt:
-      'Which traversal visits the root before ' +
-      'its left and right subtrees?',
-    options: [
-      ['Pre-order', true],
-      ['In-order', false],
-      ['Post-order', false],
-      ['Not sure', false]
-    ],
-    explanation:
-      'Pre-order uses Root → Left → Right.'
-  },
-  {
-    outcome: 'LO4',
-    prompt:
-      'The stack is [40, 70], top first. ' +
-      'Which node is removed next?',
-    options: [
-      ['70', false],
-      ['40', true],
-      ['Both', false],
-      ['Not sure', false]
-    ],
-    explanation:
-      'The top is 40, so it is popped first.'
-  },
-  {
-    outcome: 'LO5',
-    prompt:
-      'Which algorithm uses BST value comparisons ' +
-      'to decide whether to go left or right?',
-    options: [
-      ['Plain DFS', false],
-      ['BST lookup', true],
-      ['Both always do', false],
-      ['Not sure', false]
-    ],
-    explanation:
-      'BST lookup uses comparisons. ' +
-      'Plain DFS follows traversal order.'
+function areaFor(answer, bankItem) {
+  if (
+    ['bst', 'dfs', 'traversal'].includes(
+      bankItem?.section
+    )
+  ) {
+    return bankItem.section;
   }
-];
 
-/* ============================================
-   MAIN PAGE
+  const slot = Number(answer.slot);
+
+  // Fallback for the updated 8-question bank.
+  if (slot <= 2) return 'bst';
+  if (slot <= 5) return 'dfs';
+
+  return 'traversal';
+}
+
+function answerName(item, savedAnswer) {
+  if (
+    savedAnswer === undefined ||
+    savedAnswer === null
+  ) {
+    return null;
+  }
+
+  if (Array.isArray(savedAnswer)) {
+    return savedAnswer.join(' → ');
+  }
+
+  if (savedAnswer === '__unsure__') {
+    return 'Not sure';
+  }
+
+  if (item?.type === 'choice') {
+    return item.options?.find(
+      opt =>
+        String(opt.id) === String(savedAnswer)
+    )?.text || String(savedAnswer);
+  }
+
+  return String(savedAnswer);
+}
+
+function expectedName(item) {
+  if (!item) return null;
+
+  if (
+    item.type === 'order' &&
+    Array.isArray(item.answer)
+  ) {
+    return item.answer.join(' → ');
+  }
+
+  if (item.type === 'choice') {
+    return item.options?.find(
+      opt => opt.correct === true
+    )?.text || null;
+  }
+
+  return null;
+}
+
+/* ==========================================
+   REVIEW TREE VISUAL
+   ========================================== */
+
+function reviewTree() {
+  const points = [
+    [44, 180, 28],
+    [21, 94, 95],
+    [68, 266, 95],
+    [15, 49, 166],
+    [32, 139, 166],
+    [59, 221, 166],
+    [79, 311, 166]
+  ];
+
+  const edges = [
+    [44, 21],
+    [44, 68],
+    [21, 15],
+    [21, 32],
+    [68, 59],
+    [68, 79]
+  ];
+
+  const position = new Map(
+    points.map(([v, x, y]) => [
+      v,
+      { x, y }
+    ])
+  );
+
+  const svg = rvSvg('svg', {
+    viewBox: '0 0 360 207',
+    role: 'img',
+    'aria-label':
+      'BST with root 44, left child 21, ' +
+      'right child 68, and leaves 15, 32, 59 and 79'
+  });
+
+  for (const [a, b] of edges) {
+    const p = position.get(a);
+    const c = position.get(b);
+
+    svg.append(
+      rvSvg('line', {
+        x1: p.x,
+        y1: p.y,
+        x2: c.x,
+        y2: c.y,
+        class: 'review-tree-edge'
+      })
+    );
+  }
+
+  for (const [value, x, y] of points) {
+    const circle = rvSvg('circle', {
+      cx: x,
+      cy: y,
+      r: 22,
+      class: value === 44 ? 'review-root' : ''
+    });
+
+    const label = rvSvg('text', {
+      x,
+      y,
+      class: 'review-tree-number'
+    });
+
+    label.textContent = String(value);
+
+    svg.append(circle, label);
+  }
+
+  const frame = rvEl(
+    'div',
+    'review-tree-frame'
+  );
+
+  frame.append(
+    svg,
+    rvEl(
+      'p',
+      'review-muted',
+      'Review example tree'
+    )
+  );
+
+  return frame;
+}
+
+/* ==========================================
+   MAIN REVIEW PAGE
    ========================================== */
 
 export function render(screen, container) {
-  const page = reviewEl('div', 'review-page');
+  const page = rvEl('main', 'review-page');
 
-  const quizResult = loadQuizResults();
-  const completed = new Set();
-  const reviewedTopics = new Set();
-  const checkCorrect = new Set();
+  let stored = readReviewResult();
+  let bank = new Map();
+  let destroyed = false;
 
-  let chosenPlan = '';
-
-  // ==========================================
-  // HEADER OFFSET
-  // ==========================================
-
-  const header = document.querySelector('.app-header');
-  let headerObserver = null;
-
-  function measureHeader() {
-    if (!header) return;
-
-    document.documentElement.style.setProperty(
-      '--app-header-height',
-      `${Math.ceil(
-        header.getBoundingClientRect().height
-      )}px`
-    );
-  }
-
-  measureHeader();
-
-  if (
-    header &&
-    typeof ResizeObserver !== 'undefined'
-  ) {
-    headerObserver = new ResizeObserver(measureHeader);
-    headerObserver.observe(header);
-  }
+  const recheckState = new Map();
 
   // ==========================================
-  // PROGRESS
+  // HEADER
   // ==========================================
 
-  const progress = reviewEl(
-    'div',
-    'lesson-progress'
-  );
-
-  const progressHeader = reviewEl(
-    'div',
-    'lesson-progress__header'
-  );
-
-  const progressTitle = reviewEl(
-    'strong',
-    '',
-    'GUIDED REVIEW'
-  );
-
-  const progressCount = reviewEl(
-    'span',
-    '',
-    'Step 0 of 4'
-  );
-
-  progressHeader.append(
-    progressTitle,
-    progressCount
-  );
-
-  const progressTrack = reviewEl(
-    'div',
-    'lesson-progress__track'
-  );
-
-  progressTrack.setAttribute(
-    'role',
-    'progressbar'
-  );
-
-  progressTrack.setAttribute(
-    'aria-label',
-    'Guided review activity progress'
-  );
-
-  progressTrack.setAttribute('aria-valuemin', '0');
-  progressTrack.setAttribute('aria-valuemax', '4');
-  progressTrack.setAttribute('aria-valuenow', '0');
-
-  const progressFill = reviewEl(
-    'div',
-    'lesson-progress__fill'
-  );
-
-  progressFill.style.width = '0%';
-
-  progressTrack.appendChild(progressFill);
-
-  progress.append(
-    progressHeader,
-    progressTrack
-  );
-
-  function markComplete(key) {
-    if (completed.has(key)) return;
-
-    completed.add(key);
-
-    progressCount.textContent =
-      `Step ${completed.size} of 4`;
-
-    progressFill.style.width =
-      `${completed.size * 25}%`;
-
-    progressTrack.setAttribute(
-      'aria-valuenow',
-      String(completed.size)
-    );
-  }
-
-  // ==========================================
-  // INTRODUCTION
-  // ==========================================
-
-  const intro = reviewEl(
-    'section',
-    'review-card review-intro'
+  const intro = rvEl(
+    'header',
+    'review-intro'
   );
 
   intro.append(
-    reviewEl(
-      'span',
-      'review-eyebrow',
-      'PAGE 7 / LEARN FROM FEEDBACK'
-    ),
-    reviewEl(
+    rvEl(
       'h1',
       '',
-      'Feedback and Guided Review'
+      'Results & Guided Review'
     ),
-    reviewEl(
-      'p',
-      'review-lead',
-      'Review what you understand, correct ' +
-      'misconceptions and practise again ' +
-      'before the learning summary.'
-    ),
-    reviewEl(
+    rvEl(
       'p',
       'review-muted',
-      'Mistakes and uncertainty are useful ' +
-      'signals for learning. This review is ' +
-      'not graded.'
+      'See how you did in the quiz, understand ' +
+      'any mistakes, and revisit the ideas you need. ' +
+      'Your quiz is formative, not a recorded grade.'
     )
   );
 
   // ==========================================
-  // DETERMINE AREAS TO REVIEW
+  // TAB NAVIGATION
   // ==========================================
 
-  const weakOutcomes = new Set();
-  const misconceptionCodes = new Set();
-
-  if (quizResult) {
-    quizResult.answers.forEach(answer => {
-      if (!answer.correct) {
-        weakOutcomes.add(answer.outcome);
-
-        if (answer.misconception) {
-          misconceptionCodes.add(
-            answer.misconception
-          );
-        }
-      }
-    });
-  }
-
-  const focusTopics = REVIEW_TOPICS.filter(
-    topic => weakOutcomes.has(topic.id)
-  );
-
-  // If no quiz result or no incorrect answers,
-  // make the full concept library available.
-  const recommendedTopics = focusTopics.length
-    ? focusTopics
-    : REVIEW_TOPICS;
-
-  // ==========================================
-  // 01 — UNDERSTAND RESULTS
-  // ==========================================
-
-  const resultsSection = reviewEl(
-    'section',
-    'review-card review-results'
-  );
-
-  resultsSection.append(
-    reviewEl(
-      'span',
-      'review-eyebrow',
-      '01 / UNDERSTAND YOUR RESULTS'
-    ),
-    reviewEl(
-      'h2',
-      '',
-      'What should you review?'
-    )
-  );
-
-  const resultSummary = reviewEl(
-    'div',
-    'review-result-summary'
-  );
-
-  if (quizResult) {
-    const ready =
-      quizResult.correct >= quizResult.passMark;
-
-    resultSummary.append(
-      reviewEl(
-        'strong',
-        'review-result-score',
-        `${quizResult.correct} / ${quizResult.total}`
-      ),
-      reviewEl(
-        'p',
-        '',
-        ready
-          ? 'You reached the quiz readiness guideline.'
-          : 'Some concepts would benefit from review.'
-      )
-    );
-
-    if (weakOutcomes.size) {
-      resultSummary.appendChild(
-        reviewEl(
-          'p',
-          'review-muted',
-          'Recommended learning outcomes: ' +
-          [...weakOutcomes].join(', ')
-        )
-      );
-    } else {
-      resultSummary.appendChild(
-        reviewEl(
-          'p',
-          'review-muted',
-          'You answered all questions correctly. ' +
-          'Use the concept cards below to reinforce ' +
-          'your understanding.'
-        )
-      );
-    }
-
-    const highConfidenceErrors =
-      quizResult.answers.filter(answer =>
-        !answer.correct &&
-        answer.confidence === 'certain'
-      ).length;
-
-    if (highConfidenceErrors > 0) {
-      resultSummary.appendChild(
-        reviewEl(
-          'p',
-          'review-confidence-note',
-          `${highConfidenceErrors} incorrect ` +
-          'answer(s) were marked Certain. ' +
-          'Compare your reasoning with the ' +
-          'explanations below.'
-        )
-      );
-    }
-  } else {
-    resultSummary.append(
-      reviewEl(
-        'strong',
-        '',
-        'Review available'
-      ),
-      reviewEl(
-        'p',
-        '',
-        'No completed quiz result was found ' +
-        'in this browser tab. You can still ' +
-        'review every concept.'
-      )
-    );
-  }
-
-  const resultAction = reviewEl(
-    'button',
-    'review-button review-button--primary',
-    'I understand my results'
-  );
-
-  resultAction.type = 'button';
-
-  resultAction.addEventListener('click', () => {
-    markComplete('results');
-
-    resultAction.textContent =
-      'Results reviewed ✓';
-
-    resultAction.disabled = true;
-  });
-
-  resultsSection.append(
-    resultSummary,
-    resultAction
-  );
-
-  // ==========================================
-  // 02 — GUIDED CONCEPT REVIEW
-  // ==========================================
-
-  const conceptsSection = reviewEl(
-    'section',
-    'review-concepts'
-  );
-
-  conceptsSection.append(
-    reviewEl(
-      'span',
-      'review-eyebrow',
-      '02 / CORRECT MISCONCEPTIONS'
-    ),
-    reviewEl(
-      'h2',
-      '',
-      'Review the important ideas'
-    ),
-    reviewEl(
-      'p',
-      'review-muted',
-      'Open the recommended concepts. ' +
-      'Each explanation includes an example ' +
-      'and an activity you can revisit.'
-    )
-  );
-
-  const conceptGrid = reviewEl(
-    'div',
-    'review-concepts-grid'
-  );
-
-  const conceptStatus = reviewEl(
-    'p',
-    'review-concepts-status',
-    ''
-  );
-
-  conceptStatus.setAttribute(
-    'aria-live',
-    'polite'
-  );
-
-  const requiredTopicIds = new Set(
-    recommendedTopics.map(topic => topic.id)
-  );
-
-  function updateConceptProgress() {
-    const done = [...requiredTopicIds]
-      .filter(id => reviewedTopics.has(id)).length;
-
-    conceptStatus.textContent =
-      `${done} of ${requiredTopicIds.size} ` +
-      'recommended concepts reviewed.';
-
-    if (done === requiredTopicIds.size) {
-      markComplete('concepts');
-    }
-  }
-
-  // Show recommended topics first.
-  const orderedTopics = [
-    ...recommendedTopics,
-    ...REVIEW_TOPICS.filter(topic =>
-      !requiredTopicIds.has(topic.id)
-    )
+  const tabDefs = [
+    ['results', '1. My Results'],
+    ['concepts', '2. Key Ideas'],
+    ['check', '3. Quick Check'],
+    ['next', '4. Next Steps']
   ];
 
-  orderedTopics.forEach(topic => {
-    const details = reviewEl(
-      'details',
-      'review-concept-card'
+  const tabs = rvEl(
+    'div',
+    'review-tabs'
+  );
+
+  tabs.setAttribute('role', 'tablist');
+  tabs.setAttribute(
+    'aria-label',
+    'Guided review sections'
+  );
+
+  const panels = tabDefs.map(([id]) => {
+    const p = rvEl('section', 'review-panel');
+
+    p.id = `review-panel-${id}`;
+
+    p.setAttribute('role', 'tabpanel');
+
+    p.setAttribute(
+      'aria-labelledby',
+      `review-tab-${id}`
     );
 
-    if (requiredTopicIds.has(topic.id)) {
-      details.classList.add('is-recommended');
-    }
+    p.tabIndex = -1;
 
-    const summary = reviewEl(
-      'summary',
-      'review-concept-summary'
-    );
-
-    const heading = reviewEl(
-      'div',
-      'review-concept-heading'
-    );
-
-    heading.append(
-      reviewEl(
-        'span',
-        'review-concept-code',
-        topic.id
-      ),
-      reviewEl(
-        'strong',
-        '',
-        topic.title
-      ),
-      reviewEl(
-        'span',
-        'review-concept-label',
-        topic.label
-      )
-    );
-
-    summary.append(
-      heading,
-      reviewEl(
-        'span',
-        'review-concept-chevron',
-        '⌄'
-      )
-    );
-
-    const body = reviewEl(
-      'div',
-      'review-concept-body'
-    );
-
-    body.append(
-      reviewEl(
-        'p',
-        'review-concept-lead',
-        topic.summary
-      ),
-      reviewEl(
-        'p',
-        '',
-        topic.explanation
-      )
-    );
-
-    const example = reviewEl(
-      'div',
-      'review-example'
-    );
-
-    example.append(
-      reviewEl(
-        'strong',
-        '',
-        'Example'
-      ),
-      reviewEl(
-        'p',
-        '',
-        topic.example
-      )
-    );
-
-    if (topic.cue === 'tree') {
-      const diagram = reviewEl(
-        'div',
-        'review-diagram'
-      );
-
-      diagram.appendChild(makeMiniTree());
-      example.appendChild(diagram);
-    }
-
-    if (topic.cue === 'stack') {
-      example.appendChild(
-        makeStackDiagram()
-      );
-    }
-
-    if (topic.cue === 'orders') {
-      example.appendChild(
-        makeOrderDiagram()
-      );
-    }
-
-    const takeaway = reviewEl(
-      'div',
-      'review-takeaway'
-    );
-
-    takeaway.append(
-      reviewEl(
-        'strong',
-        '',
-        'Remember'
-      ),
-      reviewEl(
-        'p',
-        '',
-        topic.takeaway
-      )
-    );
-
-    const link = reviewEl(
-      'a',
-      'review-topic-link',
-      topic.routeText + ' →'
-    );
-
-    link.href = topic.route;
-
-    body.append(
-      example,
-      takeaway,
-      link
-    );
-
-    details.append(
-      summary,
-      body
-    );
-
-    details.addEventListener('toggle', () => {
-      if (!details.open) return;
-
-      reviewedTopics.add(topic.id);
-      updateConceptProgress();
-    });
-
-    conceptGrid.appendChild(details);
+    return p;
   });
 
-  conceptsSection.append(
-    conceptGrid,
-    conceptStatus
-  );
+  let active = 0;
 
-  updateConceptProgress();
-
-  // ==========================================
-  // MISCONCEPTION-SPECIFIC FEEDBACK
-  // ==========================================
-
-  const misconceptionSection = reviewEl(
-    'section',
-    'review-card review-misconceptions'
-  );
-
-  misconceptionSection.append(
-    reviewEl(
-      'span',
-      'review-eyebrow',
-      'MISCONCEPTION FEEDBACK'
-    ),
-    reviewEl(
-      'h2',
-      '',
-      'Common misunderstandings'
-    )
-  );
-
-  const misconceptionList = reviewEl(
-    'div',
-    'review-misconception-list'
-  );
-
-  const codesToDisplay = misconceptionCodes.size
-    ? [...misconceptionCodes]
-    : ['M1', 'M3', 'M4', 'M5'];
-
-  codesToDisplay.forEach(code => {
-    const info = REVIEW_MISCONCEPTIONS[code];
-
-    const item = reviewEl(
-      'article',
-      'review-misconception-item'
-    );
-
-    item.appendChild(
-      reviewEl(
-        'span',
-        'review-misconception-code',
-        code
-      )
-    );
-
-    if (info) {
-      item.append(
-        reviewEl(
-          'h3',
-          '',
-          info.title
-        ),
-        reviewEl(
-          'p',
-          '',
-          info.description
-        )
-      );
-    } else {
-      item.append(
-        reviewEl(
-          'h3',
-          '',
-          'Review this misconception'
-        ),
-        reviewEl(
-          'p',
-          '',
-          'The quiz recorded this misconception ' +
-          'code, but no matching explanation ' +
-          'is configured in this review page.'
-        )
-      );
-    }
-
-    misconceptionList.appendChild(item);
-  });
-
-  misconceptionSection.appendChild(
-    misconceptionList
-  );
-
-  // ==========================================
-  // 03 — CORRECTIVE PRACTICE
-  // ==========================================
-
-  const practiceSection = reviewEl(
-    'section',
-    'review-card review-practice'
-  );
-
-  practiceSection.append(
-    reviewEl(
-      'span',
-      'review-eyebrow',
-      '03 / TRY AGAIN'
-    ),
-    reviewEl(
-      'h2',
-      '',
-      'Check your understanding'
-    ),
-    reviewEl(
-      'p',
-      'review-muted',
-      'Try these short questions after reviewing. ' +
-      'Wrong answers open explanations, and you ' +
-      'can retry.'
-    )
-  );
-
-  // Prioritise questions from weak outcomes.
-  const targetedChecks = [
-    ...REVIEW_CHECKS.filter(check =>
-      weakOutcomes.has(check.outcome)
-    ),
-    ...REVIEW_CHECKS.filter(check =>
-      !weakOutcomes.has(check.outcome)
-    )
-  ].slice(0, 2);
-
-  const practiceGrid = reviewEl(
-    'div',
-    'review-practice-grid'
-  );
-
-  function updatePracticeProgress() {
-    if (
-      targetedChecks.every(check =>
-        checkCorrect.has(check.outcome)
-      )
-    ) {
-      markComplete('practice');
-    }
-  }
-
-  targetedChecks.forEach((check, index) => {
-    const question = reviewEl(
-      'article',
-      'review-practice-question'
-    );
-
-    question.append(
-      reviewEl(
-        'span',
-        'review-question-code',
-        `QUESTION ${index + 1} · ${check.outcome}`
-      ),
-      reviewEl(
-        'h3',
-        '',
-        check.prompt
-      )
-    );
-
-    const options = reviewEl(
-      'div',
-      'review-answer-options'
-    );
-
-    const feedback = reviewEl(
-      'div',
-      'review-feedback'
-    );
-
-    feedback.setAttribute(
-      'aria-live',
-      'polite'
-    );
-
-    check.options.forEach(([label, correct]) => {
-      const button = reviewEl(
-        'button',
-        'review-answer',
-        label
+  const tabButtons = tabDefs.map(
+    ([id, label], i) => {
+      const b = rvBtn(
+        label,
+        'review-tab'
       );
 
-      button.type = 'button';
-      button.setAttribute(
-        'aria-pressed',
-        'false'
+      b.id = `review-tab-${id}`;
+
+      b.setAttribute('role', 'tab');
+
+      b.setAttribute(
+        'aria-controls',
+        panels[i].id
       );
 
-      button.addEventListener('click', () => {
-        options.querySelectorAll('button')
-          .forEach(other => {
-            other.setAttribute(
-              'aria-pressed',
-              String(other === button)
-            );
-          });
-
-        feedback.className = correct
-          ? 'review-feedback is-correct'
-          : 'review-feedback is-review';
-
-        feedback.textContent = correct
-          ? `Correct! ${check.explanation}`
-          : `Review this idea. ${check.explanation} ` +
-            'Try again.';
-
-        if (correct) {
-          checkCorrect.add(check.outcome);
-          updatePracticeProgress();
-        }
+      b.addEventListener('click', () => {
+        switchTab(i);
       });
 
-      options.appendChild(button);
-    });
-
-    question.append(
-      options,
-      feedback
-    );
-
-    practiceGrid.appendChild(question);
-  });
-
-  practiceSection.appendChild(
-    practiceGrid
-  );
-
-  // ==========================================
-  // 04 — LEARNING PLAN
-  // ==========================================
-
-  const planSection = reviewEl(
-    'section',
-    'review-card review-plan'
-  );
-
-  planSection.append(
-    reviewEl(
-      'span',
-      'review-eyebrow',
-      '04 / PLAN YOUR NEXT STEP'
-    ),
-    reviewEl(
-      'h2',
-      '',
-      'What will you do next?'
-    ),
-    reviewEl(
-      'p',
-      'review-muted',
-      'Choose a learning action. ' +
-      'You can return to the lessons at any time.'
-    )
-  );
-
-  const planOptions = reviewEl(
-    'div',
-    'review-plan-options'
-  );
-
-  const plans = [
-    {
-      id: 'bst',
-      title: 'Review BST Basics',
-      description:
-        'Revisit roots, children and BST ordering.',
-      href: '#/concept-bst'
-    },
-    {
-      id: 'dfs',
-      title: 'Revisit DFS Introduction',
-      description:
-        'Review stack behavior and backtracking.',
-      href: '#/concept-idea'
-    },
-    {
-      id: 'explorer',
-      title: 'Explore DFS again',
-      description:
-        'Compare traversal orders step by step.',
-      href: '#/worked-example'
-    },
-    {
-      id: 'summary',
-      title: 'Continue to Learning Summary',
-      description:
-        'Reflect on the most important ideas.',
-      href: '#/summary'
+      tabs.append(b);
+      return b;
     }
-  ];
-
-  const planFeedback = reviewEl(
-    'p',
-    'review-plan-feedback'
   );
 
-  planFeedback.setAttribute(
-    'aria-live',
-    'polite'
-  );
+  function switchTab(index) {
+    active = index;
 
-  plans.forEach(plan => {
-    const button = reviewEl(
-      'button',
-      'review-plan-option'
-    );
-
-    button.type = 'button';
-    button.setAttribute(
-      'aria-pressed',
-      'false'
-    );
-
-    button.append(
-      reviewEl(
-        'strong',
-        '',
-        plan.title
-      ),
-      reviewEl(
-        'span',
-        '',
-        plan.description
-      )
-    );
-
-    button.addEventListener('click', () => {
-      chosenPlan = plan.id;
-
-      planOptions.querySelectorAll('button')
-        .forEach(other => {
-          other.setAttribute(
-            'aria-pressed',
-            String(other === button)
-          );
-        });
-
-      planFeedback.textContent =
-        `Selected: ${plan.title}.`;
-
-      markComplete('plan');
-
-      planLink.href = plan.href;
-      planLink.textContent =
-        plan.title + ' →';
+    panels.forEach((p, i) => {
+      p.hidden = i !== index;
     });
 
-    planOptions.appendChild(button);
-  });
+    tabButtons.forEach((b, i) => {
+      b.classList.toggle(
+        'is-active',
+        i === index
+      );
 
-  const planLink = reviewEl(
-    'a',
-    'review-button review-button--primary',
-    'Choose an action above'
-  );
+      b.setAttribute(
+        'aria-selected',
+        String(i === index)
+      );
 
-  planLink.href = '#/summary';
+      b.tabIndex = i === index ? 0 : -1;
+    });
+  }
 
-  planLink.addEventListener('click', event => {
-    if (!chosenPlan) {
+  tabs.addEventListener('keydown', event => {
+    const i = tabButtons.indexOf(
+      document.activeElement
+    );
+
+    if (i < 0) return;
+
+    let next = -1;
+
+    if (event.key === 'ArrowRight') {
+      next = (i + 1) % tabButtons.length;
+    }
+
+    if (event.key === 'ArrowLeft') {
+      next =
+        (i - 1 + tabButtons.length) %
+        tabButtons.length;
+    }
+
+    if (event.key === 'Home') next = 0;
+
+    if (event.key === 'End') {
+      next = tabButtons.length - 1;
+    }
+
+    if (next !== -1) {
       event.preventDefault();
-      planFeedback.textContent =
-        'Choose a learning action before continuing.';
+
+      switchTab(next);
+      tabButtons[next].focus();
     }
   });
-
-  planSection.append(
-    planOptions,
-    planFeedback,
-    planLink
-  );
 
   // ==========================================
   // BOTTOM NAVIGATION
   // ==========================================
 
-  const navigation = reviewEl(
+  const navigation = rvEl(
     'nav',
     'review-navigation'
   );
 
   navigation.setAttribute(
     'aria-label',
-    'Guided review navigation'
+    'Review navigation'
   );
 
-  const backLink = reviewEl(
+  const back = rvEl(
     'a',
-    'review-navigation__back',
+    'review-button',
     '← Readiness Quiz'
   );
 
-  backLink.href = '#/quiz';
+  back.href = '#/quiz';
 
-  const nextLink = reviewEl(
+  const forward = rvEl(
     'a',
-    'review-navigation__next',
-    'Next Lesson →'
+    'review-button review-primary',
+    'Learning Summary →'
   );
 
-  nextLink.href = '#/summary';
+  forward.href = '#/summary';
 
-  navigation.append(
-    backLink,
-    nextLink
-  );
-
-  // ==========================================
-  // ASSEMBLE PAGE
-  // ==========================================
+  navigation.append(back, forward);
 
   page.append(
-    progress,
     intro,
-    resultsSection,
-    conceptsSection,
-    misconceptionSection,
-    practiceSection,
-    planSection,
+    tabs,
+    ...panels,
     navigation
   );
 
-  container.appendChild(page);
+  container.replaceChildren(page);
+
+  // ==========================================
+  // QUIZ RESULT HELPERS
+  // ==========================================
+
+  function quizItem(answer) {
+    return bank.get(answer.id);
+  }
+
+  function weakAreas() {
+    if (!stored) return [];
+
+    return [
+      ...new Set(
+        stored.answers
+          .filter(a => !a.correct)
+          .map(a =>
+            areaFor(a, quizItem(a))
+          )
+      )
+    ];
+  }
+
+  function summaryStats() {
+    return REVIEW_AREAS.map(area => {
+      const related = stored?.answers.filter(
+        a =>
+          areaFor(a, quizItem(a)) === area.id
+      ) || [];
+
+      return {
+        ...area,
+        total: related.length,
+        correct: related.filter(
+          a => a.correct
+        ).length
+      };
+    });
+  }
+
+  /* ==========================================
+     TAB 1 — MY RESULTS
+     ========================================== */
+
+  function renderResults() {
+    const panel = panels[0];
+    panel.replaceChildren();
+
+    // No quiz result yet.
+    if (!stored) {
+      const empty = rvEl(
+        'div',
+        'review-card review-empty'
+      );
+
+      empty.append(
+        rvEl(
+          'h2',
+          '',
+          'No completed quiz results yet'
+        ),
+        rvEl(
+          'p',
+          'review-muted',
+          'Complete the Readiness Quiz, choose ' +
+          'See Results, then open Guided Review ' +
+          'in the same browser tab. The score ' +
+          'will appear here automatically.'
+        ),
+        rvEl(
+          'p',
+          'review-muted',
+          'You can still use Key Ideas and ' +
+          'Quick Check without taking the quiz.'
+        )
+      );
+
+      const quiz = rvEl(
+        'a',
+        'review-button review-primary',
+        'Open Readiness Quiz →'
+      );
+
+      quiz.href = '#/quiz';
+
+      const refresh = rvBtn(
+        'Refresh results'
+      );
+
+      refresh.addEventListener('click', () => {
+        stored = readReviewResult();
+        renderAll();
+      });
+
+      const row = rvEl(
+        'div',
+        'review-actions'
+      );
+
+      row.append(quiz, refresh);
+      empty.append(row);
+      panel.append(empty);
+
+      return;
+    }
+
+    // ------------------------------------------
+    // SCORE
+    // ------------------------------------------
+
+    const incorrect =
+      stored.total - stored.correct;
+
+    const met =
+      stored.correct >= stored.passMark;
+
+    const scoreCard = rvEl(
+      'div',
+      'review-card review-score-card'
+    );
+
+    const scoreLeft = rvEl(
+      'div',
+      'review-score-main'
+    );
+
+    scoreLeft.append(
+      rvEl(
+        'span',
+        'review-eyebrow',
+        `QUIZ ATTEMPT ${stored.attempt + 1}`
+      ),
+      rvEl(
+        'h2',
+        '',
+        'Your quiz results'
+      ),
+      rvEl(
+        'p',
+        'review-score',
+        `${stored.correct} / ${stored.total}`
+      ),
+      rvEl(
+        'p',
+        'review-muted',
+        met
+          ? 'You met the quiz readiness guideline.'
+          : 'Review the areas below and try ' +
+            'again when ready.'
+      )
+    );
+
+    const tiles = rvEl(
+      'div',
+      'review-metrics'
+    );
+
+    [
+      ['Correct', String(stored.correct)],
+      ['To review', String(incorrect)],
+      [
+        'Guideline',
+        `${stored.passMark} / ${stored.total}`
+      ]
+    ].forEach(([label, number]) => {
+      const tile = rvEl(
+        'div',
+        'review-metric'
+      );
+
+      tile.append(
+        rvEl('strong', '', number),
+        rvEl('span', '', label)
+      );
+
+      tiles.append(tile);
+    });
+
+    scoreCard.append(
+      scoreLeft,
+      tiles
+    );
+
+    panel.append(scoreCard);
+
+    // ------------------------------------------
+    // RESULTS BY TOPIC
+    // ------------------------------------------
+
+    const breakdown = rvEl(
+      'section',
+      'review-card'
+    );
+
+    breakdown.append(
+      rvEl('h2', '', 'Results by topic'),
+      rvEl(
+        'p',
+        'review-muted',
+        'See which skills are secure and ' +
+        'which need another look.'
+      )
+    );
+
+    const areaGrid = rvEl(
+      'div',
+      'review-area-grid'
+    );
+
+    summaryStats().forEach(area => {
+      if (!area.total) return;
+
+      const row = rvEl(
+        'div',
+        'review-area-row'
+      );
+
+      row.append(
+        rvEl(
+          'strong',
+          '',
+          area.title
+        ),
+        rvEl(
+          'span',
+          '',
+          `${area.correct} of ${area.total} correct`
+        ),
+        rvEl(
+          'span',
+          area.correct === area.total
+            ? 'review-area-good'
+            : 'review-area-needs',
+          area.correct === area.total
+            ? 'Reinforce'
+            : 'Review recommended'
+        )
+      );
+
+      areaGrid.append(row);
+    });
+
+    breakdown.append(areaGrid);
+
+    // Confidence reflection
+    const certainWrong =
+      stored.answers.filter(
+        a =>
+          !a.correct &&
+          a.confidence === 'certain'
+      ).length;
+
+    if (certainWrong) {
+      breakdown.append(
+        rvEl(
+          'p',
+          'review-note',
+          `${certainWrong} incorrect answer(s) ` +
+          'were marked “Certain”. Read those ' +
+          'explanations to check your reasoning.'
+        )
+      );
+    }
+
+    panel.append(breakdown);
+
+    // ------------------------------------------
+    // EACH QUESTION'S RESULTS
+    // ------------------------------------------
+
+    const questions = rvEl(
+      'section',
+      'review-card'
+    );
+
+    questions.append(
+      rvEl(
+        'h2',
+        '',
+        'Question-by-question feedback'
+      ),
+      rvEl(
+        'p',
+        'review-muted',
+        'Open any question to see the correct ' +
+        'answer and what to remember.'
+      )
+    );
+
+    const questionList = rvEl(
+      'div',
+      'review-question-list'
+    );
+
+    stored.answers.forEach((a, i) => {
+      const item = quizItem(a);
+
+      const area = REVIEW_AREAS.find(
+        x =>
+          x.id === areaFor(a, item)
+      );
+
+      const card = rvEl(
+        'details',
+        `review-question-row ${
+          a.correct ? 'is-correct' : 'is-review'
+        }`
+      );
+
+      const heading = rvEl(
+        'summary',
+        'review-question-summary'
+      );
+
+      heading.append(
+        rvEl(
+          'strong',
+          '',
+          `Question ${a.slot || i + 1}`
+        ),
+        rvEl(
+          'span',
+          'review-question-topic',
+          area?.title || a.outcome || 'Quiz'
+        ),
+        rvEl(
+          'span',
+          'review-status',
+          a.correct
+            ? '✓ Correct'
+            : '↻ Review'
+        )
+      );
+
+      const body = rvEl(
+        'div',
+        'review-question-body'
+      );
+
+      body.append(
+        rvEl(
+          'p',
+          'review-prompt',
+          item?.prompt ||
+          'Question wording unavailable; ' +
+          'the saved outcome and result ' +
+          'are still shown.'
+        )
+      );
+
+      // The Quiz may optionally store
+      // each student's selected response.
+      if (
+        Object.prototype.hasOwnProperty.call(
+          a,
+          'response'
+        )
+      ) {
+        const own = answerName(
+          item,
+          a.response
+        );
+
+        if (own !== null) {
+          body.append(
+            rvEl(
+              'p',
+              '',
+              `Your answer: ${own}`
+            )
+          );
+        }
+      }
+
+      const expected = expectedName(item);
+
+      if (expected) {
+        body.append(
+          rvEl(
+            'p',
+            'review-correct-answer',
+            `Correct answer: ${expected}`
+          )
+        );
+      }
+
+      if (
+        a.confidence &&
+        a.confidence !== 'not-set'
+      ) {
+        body.append(
+          rvEl(
+            'p',
+            'review-muted',
+            'Confidence: ' +
+            String(a.confidence).replaceAll(
+              '-',
+              ' '
+            )
+          )
+        );
+      }
+
+      const explanation =
+        a.explanation ||
+        (
+          a.misconception &&
+          REVIEW_ERRORS[a.misconception]
+        ) ||
+        area?.explanation ||
+        'Review the relevant lesson and ' +
+        'try the skill again.';
+
+      const advice = rvEl(
+        'div',
+        'review-callout'
+      );
+
+      advice.append(
+        rvEl(
+          'strong',
+          '',
+          a.correct
+            ? 'Why it works'
+            : 'What to review'
+        ),
+        rvEl(
+          'p',
+          '',
+          explanation
+        )
+      );
+
+      body.append(advice);
+
+      const link = rvEl(
+        'a',
+        'review-text-link',
+        area?.action || 'Review lesson'
+      );
+
+      link.href =
+        area?.route || '#/practice';
+
+      body.append(link);
+
+      card.append(
+        heading,
+        body
+      );
+
+      questionList.append(card);
+    });
+
+    questions.append(questionList);
+    panel.append(questions);
+  }
+
+  /* ==========================================
+     TAB 2 — KEY IDEAS
+     ========================================== */
+
+  function renderConcepts() {
+    const panel = panels[1];
+    panel.replaceChildren();
+
+    const weak = weakAreas();
+
+    // Recommend areas linked to wrong answers.
+    const ordered = [...REVIEW_AREAS].sort(
+      (a, b) =>
+        Number(weak.includes(b.id)) -
+        Number(weak.includes(a.id))
+    );
+
+    const header = rvEl(
+      'div',
+      'review-card'
+    );
+
+    header.append(
+      rvEl(
+        'h2',
+        '',
+        'Review the important ideas'
+      ),
+      rvEl(
+        'p',
+        'review-muted',
+        weak.length
+          ? 'Topics linked to incorrect quiz ' +
+            'answers are shown first. Expand ' +
+            'a topic for an explanation and example.'
+          : 'Explore the three concepts taught ' +
+            'in BST Basics and DFS Introduction.'
+      )
+    );
+
+    panel.append(header);
+
+    ordered.forEach(area => {
+      const recommended =
+        weak.includes(area.id);
+
+      const details = rvEl(
+        'details',
+        `review-concept ${
+          recommended
+            ? 'is-recommended'
+            : ''
+        }`
+      );
+
+      details.open = recommended;
+
+      const summary = rvEl(
+        'summary',
+        'review-concept-summary'
+      );
+
+      summary.append(
+        rvEl(
+          'strong',
+          '',
+          area.title
+        ),
+        rvEl(
+          'span',
+          '',
+          recommended
+            ? 'Recommended review'
+            : 'Review concept'
+        )
+      );
+
+      const content = rvEl(
+        'div',
+        'review-concept-content'
+      );
+
+      const call = rvEl(
+        'div',
+        'review-callout'
+      );
+
+      call.append(
+        rvEl(
+          'strong',
+          '',
+          'Remember the rule'
+        ),
+        rvEl(
+          'p',
+          '',
+          area.rule
+        )
+      );
+
+      content.append(
+        call,
+        rvEl(
+          'p',
+          '',
+          area.explanation
+        )
+      );
+
+      const example = rvEl(
+        'div',
+        'review-example'
+      );
+
+      example.append(
+        rvEl(
+          'strong',
+          '',
+          'Worked example'
+        ),
+        rvEl(
+          'p',
+          '',
+          area.example
+        )
+      );
+
+      if (area.id !== 'dfs') {
+        example.append(reviewTree());
+      } else {
+        const stack = rvEl(
+          'div',
+          'review-mini-stack'
+        );
+
+        stack.append(
+          rvEl(
+            'span',
+            '',
+            '21  ·  TOP'
+          ),
+          rvEl(
+            'span',
+            '',
+            '68  ·  WAITING'
+          )
+        );
+
+        example.append(stack);
+      }
+
+      content.append(example);
+
+      const link = rvEl(
+        'a',
+        'review-button',
+        area.action + ' →'
+      );
+
+      link.href = area.route;
+
+      content.append(link);
+
+      details.append(
+        summary,
+        content
+      );
+
+      panel.append(details);
+    });
+  }
+
+  /* ==========================================
+     TAB 3 — QUICK CHECK
+     ========================================== */
+
+  function renderCheck() {
+    const panel = panels[2];
+    panel.replaceChildren();
+
+    const weak = weakAreas();
+
+    const keys = weak.length
+      ? weak
+      : REVIEW_AREAS.map(a => a.id);
+
+    const header = rvEl(
+      'div',
+      'review-card'
+    );
+
+    header.append(
+      rvEl(
+        'h2',
+        '',
+        'Quick check: apply what you reviewed'
+      ),
+      rvEl(
+        'p',
+        'review-muted',
+        weak.length
+          ? 'These short questions focus on ' +
+            'the topics you missed in the quiz. ' +
+            'Try again until you understand.'
+          : 'Try these fresh questions to ' +
+            'reinforce what you have learned. ' +
+            'They do not change your quiz score.'
+      )
+    );
+
+    panel.append(header);
+
+    keys.forEach(key => {
+      const area = REVIEW_AREAS.find(
+        a => a.id === key
+      );
+
+      const question =
+        REVIEW_CHECKS[key];
+
+      const article = rvEl(
+        'article',
+        'review-card review-check-card'
+      );
+
+      article.append(
+        rvEl(
+          'span',
+          'review-eyebrow',
+          area.title
+        ),
+        rvEl(
+          'h3',
+          '',
+          question.prompt
+        )
+      );
+
+      const choices = rvEl(
+        'div',
+        'review-choices'
+      );
+
+      const feedback = rvEl(
+        'div',
+        'review-check-feedback'
+      );
+
+      feedback.setAttribute(
+        'aria-live',
+        'polite'
+      );
+
+      question.choices.forEach(
+        (choice, i) => {
+          const b = rvBtn(
+            choice,
+            'review-choice'
+          );
+
+          const saved =
+            recheckState.get(key);
+
+          if (saved?.correct) {
+            b.disabled = true;
+          }
+
+          b.setAttribute(
+            'aria-pressed',
+            String(saved?.selected === i)
+          );
+
+          b.addEventListener('click', () => {
+            const correct =
+              i === question.correct;
+
+            recheckState.set(key, {
+              selected: i,
+              correct
+            });
+
+            choices
+              .querySelectorAll('button')
+              .forEach(other => {
+                other.setAttribute(
+                  'aria-pressed',
+                  String(other === b)
+                );
+
+                other.disabled = correct;
+              });
+
+            feedback.className =
+              'review-check-feedback ' +
+              (
+                correct
+                  ? 'is-correct'
+                  : 'is-review'
+              );
+
+            feedback.textContent =
+              (
+                correct
+                  ? 'Correct! '
+                  : 'Not quite. '
+              ) +
+              question.explanation +
+              (
+                correct
+                  ? ''
+                  : ' Try another answer.'
+              );
+          });
+
+          choices.append(b);
+        }
+      );
+
+      const saved =
+        recheckState.get(key);
+
+      if (saved) {
+        feedback.className =
+          'review-check-feedback ' +
+          (
+            saved.correct
+              ? 'is-correct'
+              : 'is-review'
+          );
+
+        feedback.textContent =
+          (
+            saved.correct
+              ? 'Correct! '
+              : 'Not quite. '
+          ) +
+          question.explanation;
+      }
+
+      article.append(
+        choices,
+        feedback
+      );
+
+      panel.append(article);
+    });
+  }
+
+  /* ==========================================
+     TAB 4 — NEXT STEPS
+     ========================================== */
+
+  function renderNext() {
+    const panel = panels[3];
+    panel.replaceChildren();
+
+    const weak = weakAreas();
+
+    const card = rvEl(
+      'div',
+      'review-card'
+    );
+
+    card.append(
+      rvEl(
+        'h2',
+        '',
+        'Choose your next step'
+      ),
+      rvEl(
+        'p',
+        'review-muted',
+        weak.length
+          ? 'Revisit a recommended lesson, ' +
+            'practise again, or continue to the ' +
+            'learning summary.'
+          : 'You can revisit any lesson, ' +
+            'practise again, or continue to the ' +
+            'learning summary.'
+      )
+    );
+
+    const items = [
+      ...REVIEW_AREAS
+        .filter(a =>
+          weak.includes(a.id)
+        )
+        .map(a => ({
+          title: a.action,
+          detail:
+            a.title + ' · recommended',
+          href: a.route
+        })),
+      {
+        title: 'Practise with new trees',
+        detail:
+          'Return to independent practice',
+        href: '#/practice'
+      },
+      {
+        title: 'Retake the quiz',
+        detail:
+          'Start another quiz attempt',
+        href: '#/quiz'
+      },
+      {
+        title:
+          'Continue to Learning Summary',
+        detail:
+          'Finish the learning sequence',
+        href: '#/summary'
+      }
+    ];
+
+    const links = rvEl(
+      'div',
+      'review-next-grid'
+    );
+
+    items.forEach(item => {
+      const a = rvEl(
+        'a',
+        'review-next-link'
+      );
+
+      a.href = item.href;
+
+      a.append(
+        rvEl(
+          'strong',
+          '',
+          item.title
+        ),
+        rvEl(
+          'span',
+          '',
+          item.detail
+        )
+      );
+
+      links.append(a);
+    });
+
+    card.append(links);
+    panel.append(card);
+  }
+
+  /* ==========================================
+     PAGE REFRESH
+     ========================================== */
+
+  function renderAll() {
+    renderResults();
+    renderConcepts();
+    renderCheck();
+    renderNext();
+    switchTab(active);
+  }
+
+  // Display the saved score immediately.
+  renderAll();
+
+  // Load question wording and correct answers.
+  // If the bank fails, the saved score still works.
+  (async () => {
+    try {
+      const response = await fetch(
+        '/data/quiz-bank.json',
+        { cache: 'no-store' }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `HTTP ${response.status}`
+        );
+      }
+
+      const data = await response.json();
+
+      if (!Array.isArray(data.items)) {
+        throw new Error(
+          'Invalid quiz-bank.json'
+        );
+      }
+
+      if (destroyed) return;
+
+      bank = new Map(
+        data.items
+          .filter(q => q.id)
+          .map(q => [q.id, q])
+      );
+
+      // Update question details and recommendations.
+      // Keep Quick Check selections unchanged.
+      renderResults();
+      renderConcepts();
+      renderNext();
+
+    } catch {
+      // Saved quiz results remain available
+      // even when the question bank can't load.
+    }
+  })();
 
   return () => {
-    headerObserver?.disconnect();
+    destroyed = true;
   };
 }

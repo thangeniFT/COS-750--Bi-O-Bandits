@@ -1,7 +1,6 @@
-
 /* ============================================
    COS212 DFS TUTOR — DFS INTRODUCTION
-   FIGMA PAGE 3
+   FIGMA PAGE 3 (tabbed, short-page layout)
    ============================================ */
 
 .dfs-lesson-page {
@@ -10,6 +9,7 @@
   --dfs-border: #dce1e5;
   --dfs-light: #f5f6f8;
   --dfs-white: #ffffff;
+  --dfs-accent: #334155;
   --dfs-success: #216b46;
   --dfs-success-bg: #e8f5ec;
   --dfs-warning: #8b541b;
@@ -17,7 +17,7 @@
 
   width: min(1270px, calc(100% - 48px));
   margin: 0 auto;
-  padding: 32px 0 80px;
+  padding: 24px 0 56px;
 
   color: var(--dfs-ink);
   font-family: Inter, Arial, sans-serif;
@@ -42,13 +42,39 @@
 }
 
 .dfs-lesson-page button:focus-visible,
-.dfs-lesson-page a:focus-visible {
+.dfs-lesson-page a:focus-visible,
+.dfs-lesson-page summary:focus-visible,
+.dfs-lesson-page [tabindex]:focus-visible {
   outline: 3px solid #6086b5;
   outline-offset: 3px;
 }
 
+.dfs-lesson-page .dfs-panel:focus {
+  outline: none;
+}
+
 /* ============================================
-   STICKY ACTIVITY PROGRESS
+   TITLE
+   ============================================ */
+
+.dfs-lesson-page .dfs-title {
+  margin-bottom: 16px;
+}
+
+.dfs-lesson-page .dfs-title h1 {
+  margin: 0 0 4px;
+  font-size: clamp(26px, 3.2vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.7px;
+  line-height: 1.25;
+}
+
+.dfs-lesson-page .dfs-title p {
+  margin: 0;
+}
+
+/* ============================================
+   STICKY PROGRESS (compact)
    ============================================ */
 
 .dfs-lesson-page .lesson-progress {
@@ -56,9 +82,8 @@
   top: calc(var(--app-header-height, 72px) + 8px);
   z-index: 40;
 
-  width: 100%;
-  margin-bottom: 28px;
-  padding: 17px 22px;
+  margin-bottom: 14px;
+  padding: 12px 20px;
 
   background: #ffffff;
   border: 1px solid var(--dfs-border);
@@ -71,16 +96,15 @@
   justify-content: space-between;
   align-items: center;
   gap: 15px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 
-  color: var(--dfs-ink);
   font-size: 13px;
   font-weight: 700;
 }
 
 .dfs-lesson-page .lesson-progress__track {
   width: 100%;
-  height: 9px;
+  height: 8px;
   overflow: hidden;
   border-radius: 99px;
   background: #e3e7eb;
@@ -95,21 +119,106 @@
 }
 
 /* ============================================
-   TYPOGRAPHY AND CARDS
+   TABS
    ============================================ */
 
-.dfs-lesson-page h1,
+.dfs-lesson-page .dfs-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+
+  scroll-margin-top: calc(var(--app-header-height, 72px) + 90px);
+}
+
+.dfs-lesson-page .dfs-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  min-height: 46px;
+  padding: 8px 18px;
+  flex: 1 1 0;
+  justify-content: center;
+
+  border: 1px solid var(--dfs-border);
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--dfs-muted);
+
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.dfs-lesson-page .dfs-tab:hover {
+  background: #eef1f4;
+}
+
+.dfs-lesson-page .dfs-tab.is-active {
+  border-color: var(--dfs-ink);
+  background: var(--dfs-ink);
+  color: #ffffff;
+}
+
+.dfs-lesson-page .dfs-tab__number {
+  display: grid;
+  place-items: center;
+
+  width: 24px;
+  height: 24px;
+
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 12px;
+}
+
+.dfs-lesson-page .dfs-tab.is-done .dfs-tab__number {
+  border-color: var(--dfs-success);
+  background: var(--dfs-success);
+  color: #ffffff;
+  font-size: 0;
+}
+
+.dfs-lesson-page .dfs-tab.is-done .dfs-tab__number::before {
+  content: "\2713";
+  font-size: 13px;
+}
+
+/* ============================================
+   CARDS AND TYPOGRAPHY
+   ============================================ */
+
 .dfs-lesson-page h2,
-.dfs-lesson-page h3,
-.dfs-lesson-page h4 {
+.dfs-lesson-page h3 {
   color: var(--dfs-ink);
   line-height: 1.35;
 }
 
+.dfs-lesson-page .dfs-lesson-card {
+  min-width: 0;
+  padding: 24px;
+
+  border: 1px solid var(--dfs-border);
+  border-radius: 14px;
+  background: var(--dfs-white);
+}
+
+.dfs-lesson-page .dfs-lesson-card h2 {
+  margin: 4px 0 12px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.dfs-lesson-page .dfs-lesson-card h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
 .dfs-lesson-page .dfs-lesson-eyebrow {
   display: inline-block;
-  margin-bottom: 12px;
-
   color: var(--dfs-muted);
   font-size: 12px;
   font-weight: 700;
@@ -119,194 +228,338 @@
 
 .dfs-lesson-page .dfs-lesson-muted {
   color: var(--dfs-muted);
-  font-size: 15px;
-  line-height: 1.75;
-}
-
-.dfs-lesson-page .dfs-lesson-card {
-  min-width: 0;
-  padding: 28px;
-
-  border: 1px solid var(--dfs-border);
-  border-radius: 14px;
-  background: var(--dfs-white);
-}
-
-.dfs-lesson-page .dfs-lesson-card h2 {
-  margin: 8px 0 14px;
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.dfs-lesson-page .dfs-lesson-card h3 {
-  margin: 0 0 12px;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.dfs-lesson-page section,
-.dfs-lesson-page .dfs-section-heading {
-  scroll-margin-top:
-    calc(var(--app-header-height, 72px) + 125px);
-}
-
-/* ============================================
-   INTRODUCTION
-   ============================================ */
-
-.dfs-lesson-page .dfs-lesson-intro {
-  margin-bottom: 28px;
-  padding: 30px 34px;
-}
-
-.dfs-lesson-page .dfs-lesson-intro h1 {
-  max-width: 1000px;
-  margin: 0 0 18px;
-
-  font-size: clamp(29px, 3.5vw, 38px);
-  font-weight: 700;
-  letter-spacing: -0.8px;
+  font-size: 14px;
+  line-height: 1.7;
 }
 
 .dfs-lesson-page .dfs-lesson-lead {
-  max-width: 950px;
-  margin: 0 0 14px;
-  font-size: 17px;
+  margin: 0 0 12px;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.dfs-lesson-page .dfs-small-heading {
+  margin: 20px 0 8px !important;
+  font-size: 15px !important;
+}
+
+/* Two-column grid used by every tab */
+
+.dfs-lesson-page .dfs-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+/* ============================================
+   TAB 1 — MEET DFS
+   ============================================ */
+
+.dfs-lesson-page .dfs-type-links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.dfs-lesson-page .dfs-type-link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  padding: 12px 14px;
+
+  border: 1px solid #cbd5df;
+  border-radius: 10px;
+  background: var(--dfs-light);
+  color: var(--dfs-ink);
+
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dfs-lesson-page .dfs-type-link strong {
+  font-size: 14px;
+}
+
+.dfs-lesson-page .dfs-type-link span {
+  color: var(--dfs-muted);
+  font-size: 12px;
+}
+
+.dfs-lesson-page .dfs-type-link:hover {
+  border-color: var(--dfs-accent);
+  background: #e8eef3;
+}
+
+.dfs-lesson-page .dfs-ideas {
+  margin: 0;
+  padding-left: 22px;
+  color: #374151;
+  font-size: 14px;
   line-height: 1.8;
 }
 
-.dfs-lesson-page .dfs-lesson-intro
-.dfs-lesson-muted {
-  max-width: 950px;
-  margin: 0;
-}
-
-/* BST prerequisite callout */
-
 .dfs-lesson-page .dfs-prerequisite {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-
-  margin-top: 24px;
-  padding: 16px 19px;
-
-  border: 1px solid #d5dfe8;
-  border-radius: 10px;
-  background: #f3f6f9;
-}
-
-.dfs-lesson-page .dfs-prerequisite p {
-  margin: 0;
+  margin: 14px 0 0;
   color: #374151;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .dfs-lesson-page .dfs-prerequisite a {
   color: #244a71;
-  font-size: 14px;
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
-/* ============================================
-   01 — VOCABULARY
-   ============================================ */
+/* Concept explorer */
 
-.dfs-lesson-page .dfs-vocabulary {
-  margin-bottom: 34px;
+.dfs-lesson-page .dfs-connect {
+  background: var(--dfs-light);
 }
 
-.dfs-lesson-page .dfs-vocabulary__chips {
+.dfs-lesson-page .dfs-connect .dfs-lesson-muted {
+  margin: 0 0 14px;
+}
+
+.dfs-lesson-page .dfs-term-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 22px;
+  gap: 8px;
 }
 
-.dfs-lesson-page .dfs-vocabulary__chip {
-  min-height: 46px;
-  padding: 10px 20px;
+.dfs-lesson-page .dfs-term-chip {
+  min-height: 40px;
+  padding: 6px 14px;
 
   border: 1px solid #cbd5df;
-  border-radius: 24px;
+  border-radius: 22px;
+  background: #ffffff;
+  color: var(--dfs-accent);
 
-  background: white;
-  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dfs-lesson-page .dfs-term-chip:hover,
+.dfs-lesson-page .dfs-term-chip[aria-pressed="true"] {
+  border-color: var(--dfs-accent);
+  background: #e1e8ef;
+}
+
+.dfs-lesson-page .dfs-term-detail {
+  margin-top: 16px;
+  padding: 16px 18px;
+
+  border: 1px solid var(--dfs-border);
+  border-left: 4px solid var(--dfs-accent);
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.dfs-lesson-page .dfs-term-title {
+  margin: 0 0 6px !important;
+  font-size: 17px !important;
+}
+
+.dfs-lesson-page .dfs-term-definition {
+  margin: 0 0 10px;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.dfs-lesson-page .dfs-term-relations {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dfs-lesson-page .dfs-term-relations li {
+  padding: 6px 0;
+  border-top: 1px solid var(--dfs-border);
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.dfs-lesson-page .dfs-term-link {
+  padding: 1px 10px;
+
+  border: 1px solid #b9c6d3;
+  border-radius: 14px;
+  background: #eef3f8;
+  color: #244a71;
+
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dfs-lesson-page .dfs-term-link:hover {
+  background: #dce6f0;
+}
+
+/* ============================================
+   TAB 2 — TRAVERSAL TYPES
+   ============================================ */
+
+.dfs-lesson-page .dfs-segmented {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0 16px;
+}
+
+.dfs-lesson-page .dfs-segment {
+  flex: 1;
+  min-height: 44px;
+  padding: 8px 10px;
+
+  border: 1px solid #cbd3da;
+  border-radius: 9px;
+  background: #ffffff;
+  color: var(--dfs-accent);
 
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
 }
 
-.dfs-lesson-page .dfs-vocabulary__chip:hover,
-.dfs-lesson-page
-.dfs-vocabulary__chip[aria-pressed="true"] {
-  border-color: #334155;
-  background: #e8eef3;
+.dfs-lesson-page .dfs-segment:hover {
+  background: #e8edf2;
 }
 
-.dfs-lesson-page .dfs-vocabulary__feedback {
-  min-height: 48px;
-  margin: 19px 0 0;
-  padding: 14px 17px;
+.dfs-lesson-page .dfs-segment[aria-pressed="true"] {
+  border-color: var(--dfs-ink);
+  background: var(--dfs-ink);
+  color: #ffffff;
+}
 
-  border-radius: 9px;
-  background: #f3f5f7;
+.dfs-lesson-page .dfs-rule {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.dfs-lesson-page .dfs-rule__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 6px 14px 6px 8px;
+
+  border: 1px solid #cbd3da;
+  border-radius: 22px;
+  background: #ffffff;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dfs-lesson-page .dfs-rule__pill.is-root {
+  border-color: var(--dfs-ink);
+  background: #e8edf2;
+}
+
+.dfs-lesson-page .dfs-rule__number {
+  display: grid;
+  place-items: center;
+
+  width: 24px;
+  height: 24px;
+
+  border-radius: 50%;
+  background: var(--dfs-ink);
+  color: #ffffff;
+  font-size: 12px;
+}
+
+.dfs-lesson-page .dfs-rule__arrow {
+  color: var(--dfs-muted);
+}
+
+.dfs-lesson-page .dfs-use {
+  margin: 0 0 14px;
   color: #374151;
+  font-size: 14px;
+}
 
+.dfs-lesson-page .dfs-compare {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+
+  border: 1px solid var(--dfs-border);
+  border-radius: 10px;
+  background: var(--dfs-light);
+}
+
+.dfs-lesson-page .dfs-compare__title {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.dfs-lesson-page .dfs-compare__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.dfs-lesson-page .dfs-compare__row.is-active {
+  background: #dfe7ef;
+  font-weight: 700;
+}
+
+.dfs-lesson-page .dfs-compare__name {
+  flex: none;
+  min-width: 88px;
+}
+
+.dfs-lesson-page .dfs-compare__order {
+  text-align: right;
+}
+
+/* Step caption box (shared) */
+
+.dfs-lesson-page .dfs-step-explanation {
+  padding: 14px 18px;
+
+  border: 1px solid var(--dfs-border);
+  border-left: 4px solid var(--dfs-accent);
+  border-radius: 10px;
+  background: var(--dfs-light);
+}
+
+.dfs-lesson-page .dfs-step-explanation__heading {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 16px;
+}
+
+.dfs-lesson-page .dfs-step-explanation__message {
+  margin: 0;
+  color: #374151;
   font-size: 14px;
   line-height: 1.7;
 }
 
 /* ============================================
-   02 — WALKTHROUGH HEADER
-   ============================================ */
-
-.dfs-lesson-page .dfs-section-heading {
-  margin: 34px 0 24px;
-}
-
-.dfs-lesson-page .dfs-section-heading h2 {
-  margin: 8px 0;
-  font-size: 28px;
-  font-weight: 700;
-}
-
-.dfs-lesson-page .dfs-section-heading p {
-  margin: 0;
-}
-
-/* ============================================
-   TWO-COLUMN LAYOUT
-   ============================================ */
-
-.dfs-lesson-page .dfs-lesson-layout {
-  display: grid;
-  grid-template-columns:
-    minmax(0, 1.8fr)
-    minmax(300px, 1fr);
-
-  gap: 24px;
-  align-items: start;
-  margin-bottom: 42px;
-}
-
-.dfs-lesson-page .dfs-tree-card {
-  min-width: 0;
-}
-
-.dfs-lesson-page .dfs-tree-card >
-.dfs-lesson-muted {
-  margin: 0 0 20px;
-}
-
-/* ============================================
    SVG TREE
    ============================================ */
+
+.dfs-lesson-page .dfs-tree-card {
+  position: sticky;
+  top: calc(var(--app-header-height, 72px) + 100px);
+}
 
 .dfs-lesson-page .dfs-tree-viewport {
   display: flex;
@@ -314,9 +567,8 @@
   justify-content: center;
 
   width: 100%;
-  min-height: 345px;
-  margin: 18px 0;
-  padding: 16px 8px;
+  margin: 10px 0 14px;
+  padding: 10px 6px;
 
   border: 1px solid var(--dfs-border);
   border-radius: 12px;
@@ -328,8 +580,8 @@
 .dfs-lesson-page .dfs-lesson-svg {
   display: block;
   width: 100%;
-  min-width: 530px;
-  max-width: 700px;
+  min-width: 400px;
+  max-width: 560px;
   height: auto;
   margin: 0 auto;
   overflow: visible;
@@ -341,16 +593,12 @@
   stroke-linecap: round;
 }
 
-/* Default node */
-
 .dfs-lesson-page .dfs-lesson-node circle {
   fill: #ffffff;
   stroke: #242b33;
   stroke-width: 2.5;
 
-  transition:
-    fill 0.2s ease,
-    stroke 0.2s ease;
+  transition: fill 0.2s ease, stroke 0.2s ease;
 }
 
 .dfs-lesson-page .dfs-lesson-value {
@@ -362,31 +610,23 @@
   dominant-baseline: central;
 }
 
-/* State labels displayed below nodes */
-
 .dfs-lesson-page .dfs-lesson-node-state {
   fill: #374151;
   font-family: Inter, Arial, sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
-  text-anchor: middle;
   letter-spacing: 0.5px;
+  text-anchor: middle;
 }
-
-/* Currently visited node */
 
 .dfs-lesson-page .dfs-lesson-node.is-current circle {
   fill: #242b33;
-  stroke: #242b33;
   stroke-width: 4;
 }
 
-.dfs-lesson-page .dfs-lesson-node.is-current
-.dfs-lesson-value {
-  fill: white;
+.dfs-lesson-page .dfs-lesson-node.is-current .dfs-lesson-value {
+  fill: #ffffff;
 }
-
-/* Previously visited nodes */
 
 .dfs-lesson-page .dfs-lesson-node.is-visited circle {
   fill: #e8f5ec;
@@ -394,12 +634,9 @@
   stroke-width: 3;
 }
 
-.dfs-lesson-page .dfs-lesson-node.is-visited
-.dfs-lesson-value {
+.dfs-lesson-page .dfs-lesson-node.is-visited .dfs-lesson-value {
   fill: #185c39;
 }
-
-/* Pending nodes — dashed outlines */
 
 .dfs-lesson-page .dfs-lesson-node.is-pending circle {
   fill: #fff0d6;
@@ -408,199 +645,65 @@
   stroke-dasharray: 5 4;
 }
 
-.dfs-lesson-page .dfs-lesson-node.is-pending
-.dfs-lesson-value {
+.dfs-lesson-page .dfs-lesson-node.is-pending .dfs-lesson-value {
   fill: #684412;
 }
 
-/* ============================================
-   NON-COLOUR LEGEND
-   ============================================ */
+/* Legend (symbols as well as colours) */
 
 .dfs-lesson-page .dfs-lesson-legend {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 18px;
-  margin: 22px 0;
+  gap: 14px;
+  margin: 0 0 14px;
 }
 
 .dfs-lesson-page .dfs-legend-item {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
 
   color: #374151;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .dfs-lesson-page .dfs-legend-symbol {
   display: grid;
   place-items: center;
 
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
 
   border: 1px solid #475569;
   border-radius: 6px;
-
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 800;
 }
 
-.dfs-lesson-page .dfs-legend-symbol--default {
-  background: white;
-  color: #334155;
-}
-
-.dfs-lesson-page .dfs-legend-symbol--current {
-  background: #242b33;
-  color: white;
-}
-
-.dfs-lesson-page .dfs-legend-symbol--visited {
-  background: #e8f5ec;
-  color: #216b46;
-}
-
+.dfs-lesson-page .dfs-legend-symbol--default { background: #ffffff; }
+.dfs-lesson-page .dfs-legend-symbol--current { background: #242b33; color: #ffffff; }
+.dfs-lesson-page .dfs-legend-symbol--visited { background: #e8f5ec; color: #216b46; }
 .dfs-lesson-page .dfs-legend-symbol--pending {
   border-style: dashed;
   background: #fff0d6;
   color: #805019;
 }
 
-/* ============================================
-   PREDICT BEFORE REVEAL
-   ============================================ */
+/* Visited list */
 
-.dfs-lesson-page .dfs-prediction {
-  margin: 12px 0 23px;
-  padding: 22px;
-
-  border: 1px solid #cbd5df;
-  border-radius: 11px;
-  background: #f4f6f8;
-}
-
-.dfs-lesson-page .dfs-prediction h4 {
-  margin: 0 0 10px;
-  font-size: 18px;
-}
-
-.dfs-lesson-page .dfs-prediction__hint {
-  margin: 0;
-  color: #4b5563;
-  font-size: 14px;
-}
-
-.dfs-lesson-page .dfs-prediction__options {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.dfs-lesson-page .dfs-prediction__option {
-  min-height: 46px;
-  padding: 10px 12px;
-
-  border: 1px solid #cbd3da;
-  border-radius: 8px;
-
-  background: white;
-  color: #242b33;
-
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.dfs-lesson-page .dfs-prediction__option:hover {
-  background: #e8edf2;
-}
-
-.dfs-lesson-page
-.dfs-prediction__option[aria-pressed="true"] {
-  border-color: #334155;
-  background: #e1e8ef;
-}
-
-.dfs-lesson-page .dfs-prediction__feedback {
-  min-height: 22px;
-  margin: 14px 0 0;
-
-  font-size: 14px;
-  line-height: 1.7;
-}
-
-.dfs-lesson-page .dfs-prediction__feedback.is-correct {
-  padding: 12px 15px;
-  border: 1px solid #c9e5d3;
-  border-radius: 9px;
-  background: #e8f5ec;
-  color: #216b46;
-}
-
-.dfs-lesson-page .dfs-prediction__feedback.is-review {
-  padding: 12px 15px;
-  border: 1px solid #ead5b5;
-  border-radius: 9px;
-  background: #fff4e6;
-  color: #8b541b;
-}
-
-/* ============================================
-   STEP EXPLANATION
-   ============================================ */
-
-.dfs-lesson-page .dfs-step-explanation {
-  margin: 10px 0 23px;
-  padding: 20px 22px;
-
-  border: 1px solid var(--dfs-border);
-  border-left: 4px solid #334155;
-  border-radius: 10px;
-
-  background: var(--dfs-light);
-}
-
-.dfs-lesson-page
-.dfs-step-explanation__heading {
+.dfs-lesson-page .dfs-order-title {
   display: block;
-  margin-bottom: 10px;
-  font-size: 17px;
-  font-weight: 700;
-}
-
-.dfs-lesson-page
-.dfs-step-explanation__message {
-  margin: 0;
-  color: #374151;
+  margin-bottom: 8px;
   font-size: 14px;
-  line-height: 1.8;
-}
-
-/* ============================================
-   TRAVERSAL ORDER
-   ============================================ */
-
-.dfs-lesson-page .dfs-visited-section {
-  padding: 20px 0;
-  border-top: 1px solid var(--dfs-border);
-}
-
-.dfs-lesson-page .dfs-visited-section strong {
-  display: block;
-  margin-bottom: 15px;
-  font-size: 16px;
 }
 
 .dfs-lesson-page .dfs-visited-list {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 9px;
-  min-height: 42px;
+  gap: 7px;
+  min-height: 38px;
+  margin-bottom: 4px;
 }
 
 .dfs-lesson-page .dfs-visit-chip {
@@ -608,26 +711,25 @@
   justify-content: center;
   align-items: center;
 
-  min-width: 42px;
-  min-height: 42px;
-  padding: 8px 12px;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 6px 10px;
 
   border: 1px solid var(--dfs-border);
   border-radius: 8px;
-
   background: var(--dfs-light);
-  font-size: 15px;
+
+  font-size: 14px;
   font-weight: 700;
 }
 
 .dfs-lesson-page .dfs-visit-arrow {
   color: var(--dfs-muted);
-  font-size: 18px;
 }
 
 .dfs-lesson-page .dfs-visit-empty {
   color: var(--dfs-muted);
-  font-size: 14px;
+  font-size: 13px;
   font-style: italic;
 }
 
@@ -639,10 +741,10 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
 
-  margin-top: 20px;
-  padding-top: 22px;
+  margin-top: 12px;
+  padding-top: 14px;
 
   border-top: 1px solid var(--dfs-border);
 }
@@ -652,39 +754,34 @@
   align-items: center;
   justify-content: center;
 
-  min-height: 46px;
-  padding: 10px 18px;
+  min-height: 44px;
+  padding: 8px 16px;
 
-  border: 1px solid #334155;
+  border: 1px solid var(--dfs-accent);
   border-radius: 8px;
-
-  background: white;
-  color: #334155;
+  background: #ffffff;
+  color: var(--dfs-accent);
 
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
 }
 
-.dfs-lesson-page
-.dfs-lesson-controls .btn--primary {
-  background: #334155;
-  color: white;
+.dfs-lesson-page .dfs-lesson-controls .btn--primary {
+  background: var(--dfs-accent);
+  color: #ffffff;
 }
 
-.dfs-lesson-page
-.dfs-lesson-controls .btn:hover:not(:disabled) {
+.dfs-lesson-page .dfs-lesson-controls .btn:hover:not(:disabled) {
   background: #e8edf2;
 }
 
-.dfs-lesson-page
-.dfs-lesson-controls .btn--primary:hover:not(:disabled) {
+.dfs-lesson-page .dfs-lesson-controls .btn--primary:hover:not(:disabled) {
   background: #475569;
-  color: white;
+  color: #ffffff;
 }
 
-.dfs-lesson-page
-.dfs-lesson-controls .btn:disabled {
+.dfs-lesson-page .dfs-lesson-controls .btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
@@ -697,29 +794,95 @@
 }
 
 /* ============================================
-   LIVE STACK
+   TAB 3 — STACK AND PREDICTION
    ============================================ */
+
+.dfs-lesson-page .dfs-side-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.dfs-lesson-page .dfs-prediction {
+  background: var(--dfs-light);
+}
+
+.dfs-lesson-page .dfs-prediction .dfs-lesson-muted {
+  margin: 0;
+}
+
+.dfs-lesson-page .dfs-prediction__options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.dfs-lesson-page .dfs-prediction__option {
+  min-height: 44px;
+  padding: 8px 6px;
+
+  border: 1px solid #cbd3da;
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--dfs-ink);
+
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dfs-lesson-page .dfs-prediction__option:hover {
+  background: #e8edf2;
+}
+
+.dfs-lesson-page .dfs-prediction__option[aria-pressed="true"] {
+  border-color: var(--dfs-accent);
+  background: #e1e8ef;
+}
+
+.dfs-lesson-page .dfs-prediction__feedback {
+  min-height: 20px;
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.dfs-lesson-page .dfs-prediction__feedback.is-correct,
+.dfs-lesson-page .dfs-check__feedback.is-correct {
+  padding: 11px 14px;
+  border: 1px solid #c9e5d3;
+  border-radius: 9px;
+  background: var(--dfs-success-bg);
+  color: var(--dfs-success);
+}
+
+.dfs-lesson-page .dfs-prediction__feedback.is-review,
+.dfs-lesson-page .dfs-check__feedback.is-review {
+  padding: 11px 14px;
+  border: 1px solid #ead5b5;
+  border-radius: 9px;
+  background: var(--dfs-warning-bg);
+  color: var(--dfs-warning);
+}
 
 .dfs-lesson-page .dfs-stack-card {
   background: var(--dfs-light);
 }
 
-.dfs-lesson-page .dfs-stack-card h3 {
-  margin: 3px 0 12px;
-}
-
 .dfs-lesson-page .dfs-stack-status {
-  margin: 24px 0 14px;
+  margin: 10px 0;
   color: #374151;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .dfs-lesson-page .dfs-lesson-stack {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  min-height: 130px;
+  gap: 8px;
+  min-height: 100px;
 }
 
 .dfs-lesson-page .dfs-stack-item {
@@ -727,20 +890,20 @@
   align-items: center;
   justify-content: space-between;
 
-  min-height: 55px;
-  padding: 12px 18px;
+  min-height: 46px;
+  padding: 8px 16px;
 
   border: 1px solid var(--dfs-border);
   border-radius: 9px;
-  background: white;
+  background: #ffffff;
 
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   animation: dfs-stack-appear 0.25s ease;
 }
 
 .dfs-lesson-page .dfs-stack-item.is-top {
-  border: 2px dashed #334155;
+  border: 2px dashed var(--dfs-accent);
   background: #e8edf2;
 }
 
@@ -753,11 +916,11 @@
 
 .dfs-lesson-page .dfs-stack-empty {
   margin: 0;
-  padding: 28px 16px;
+  padding: 22px 14px;
 
   border: 1px dashed #cbd5df;
   border-radius: 9px;
-  background: white;
+  background: #ffffff;
 
   color: var(--dfs-muted);
   font-size: 14px;
@@ -765,146 +928,58 @@
 }
 
 .dfs-lesson-page .dfs-stack-note {
-  margin-top: 28px;
-  padding: 20px;
-
-  border: 1px solid var(--dfs-border);
-  border-radius: 10px;
-  background: white;
-
+  margin: 14px 0 0;
   color: #374151;
-  font-size: 14px;
-  line-height: 1.75;
+  font-size: 13px;
+  line-height: 1.7;
 }
 
-/* ============================================
-   03 — FOUR CONCEPT CARDS
-   ============================================ */
-
-.dfs-lesson-page .dfs-concepts {
-  margin-top: 50px;
-  padding-top: 12px;
+.dfs-lesson-page .dfs-code {
+  margin-top: 12px;
 }
 
-.dfs-lesson-page .dfs-concepts h2 {
-  margin: 8px 0 25px;
-  font-size: 28px;
-}
-
-.dfs-lesson-page .dfs-concepts-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.dfs-lesson-page .dfs-concept-card {
-  min-height: 190px;
-  padding: 25px;
+.dfs-lesson-page .dfs-code summary {
+  padding: 10px 14px;
 
   border: 1px solid var(--dfs-border);
-  border-radius: 12px;
-  background: white;
-}
+  border-radius: 8px;
+  background: #ffffff;
 
-.dfs-lesson-page .dfs-concept-number {
-  display: block;
-  margin-bottom: 24px;
-
-  color: var(--dfs-muted);
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 1px;
-}
-
-.dfs-lesson-page .dfs-concept-card h3 {
-  margin: 0 0 11px;
-  font-size: 18px;
-}
-
-.dfs-lesson-page .dfs-concept-card p {
-  margin: 0;
-  color: var(--dfs-muted);
-  font-size: 14px;
-  line-height: 1.75;
-}
-
-/* ============================================
-   PSEUDOCODE AND RECURSION
-   ============================================ */
-
-.dfs-lesson-page .dfs-algorithm-card {
-  margin-top: 28px;
-  padding: 28px;
-
-  border: 1px solid var(--dfs-border);
-  border-radius: 14px;
-  background: var(--dfs-light);
-}
-
-.dfs-lesson-page .dfs-algorithm-card h3 {
-  margin: 0 0 12px;
-  font-size: 22px;
-}
-
-.dfs-lesson-page .dfs-algorithm-card p {
-  max-width: 900px;
-  margin: 0 0 19px;
-  color: #374151;
-  font-size: 15px;
-  line-height: 1.75;
+  cursor: pointer;
 }
 
 .dfs-lesson-page .dfs-pseudocode {
-  margin: 0;
-  padding: 22px 24px;
+  margin: 8px 0 0;
+  padding: 14px 16px;
 
   border: 1px solid #cbd5df;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #ffffff;
 
   color: #1f2937;
   font-family: Consolas, monospace;
-  font-size: 14px;
-  line-height: 1.85;
+  font-size: 12px;
+  line-height: 1.8;
 
   overflow-x: auto;
 }
 
 /* ============================================
-   REMINDER
+   TAB 4 — CHECK
    ============================================ */
-
-.dfs-lesson-page .dfs-reminder-card {
-  margin-top: 30px;
-  background: var(--dfs-light);
-}
-
-.dfs-lesson-page .dfs-reminder-card p {
-  margin: 0;
-  max-width: 950px;
-  color: #374151;
-  font-size: 15px;
-  line-height: 1.8;
-}
-
-/* ============================================
-   04 — KNOWLEDGE CHECK
-   ============================================ */
-
-.dfs-lesson-page .dfs-check {
-  margin-top: 32px;
-}
 
 .dfs-lesson-page .dfs-check__grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-  margin-top: 24px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
 }
 
 .dfs-lesson-page .dfs-check__question {
   min-width: 0;
-  padding: 22px;
+  padding: 18px;
 
   border: 1px solid var(--dfs-border);
   border-radius: 12px;
@@ -912,14 +987,13 @@
 }
 
 .dfs-lesson-page .dfs-check__question h3 {
-  min-height: 58px;
-  font-size: 17px;
+  min-height: 70px;
+  font-size: 15px !important;
 }
 
 .dfs-lesson-page .dfs-check__options {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
+  gap: 8px;
 }
 
 .dfs-lesson-page .dfs-check__option {
@@ -927,14 +1001,13 @@
   align-items: center;
 
   width: 100%;
-  min-height: 54px;
-  padding: 12px 16px;
+  min-height: 44px;
+  padding: 8px 14px;
 
   border: 1px solid #cbd3da;
   border-radius: 8px;
-
-  background: white;
-  color: #242b33;
+  background: #ffffff;
+  color: var(--dfs-ink);
 
   font-size: 14px;
   font-weight: 600;
@@ -946,53 +1019,33 @@
   background: #e8edf2;
 }
 
-.dfs-lesson-page
-.dfs-check__option[aria-pressed="true"] {
-  border-color: #334155;
+.dfs-lesson-page .dfs-check__option[aria-pressed="true"] {
+  border-color: var(--dfs-accent);
   background: #e2e9f0;
 }
 
 .dfs-lesson-page .dfs-check__feedback {
-  margin: 16px 0 0;
-  min-height: 22px;
-
-  font-size: 14px;
-  line-height: 1.75;
-}
-
-.dfs-lesson-page .dfs-check__feedback.is-correct {
-  padding: 13px 16px;
-  border: 1px solid #c9e5d3;
-  border-radius: 9px;
-  background: #e8f5ec;
-  color: #216b46;
-}
-
-.dfs-lesson-page .dfs-check__feedback.is-review {
-  padding: 13px 16px;
-  border: 1px solid #ead5b5;
-  border-radius: 9px;
-  background: #fff4e6;
-  color: #8b541b;
-}
-
-.dfs-lesson-page .dfs-check__result {
-  margin-top: 22px;
-  padding: 18px 20px;
-
-  border: 1px solid #c9e5d3;
-  border-radius: 10px;
-
-  background: #e8f5ec;
-  color: #216b46;
-
-  font-size: 15px;
-  font-weight: 700;
+  min-height: 20px;
+  margin: 12px 0 0;
+  font-size: 13px;
   line-height: 1.7;
 }
 
+.dfs-lesson-page .dfs-check__result {
+  margin-top: 16px;
+  padding: 14px 18px;
+
+  border: 1px solid #c9e5d3;
+  border-radius: 10px;
+  background: var(--dfs-success-bg);
+  color: var(--dfs-success);
+
+  font-size: 15px;
+  font-weight: 700;
+}
+
 /* ============================================
-   PAGE NAVIGATION
+   BOTTOM NAVIGATION
    ============================================ */
 
 .dfs-lesson-page .dfs-page-navigation {
@@ -1001,51 +1054,49 @@
   align-items: center;
   gap: 16px;
 
-  margin-top: 36px;
-  padding: 26px 0;
+  margin-top: 20px;
+  padding-top: 18px;
 
   border-top: 1px solid var(--dfs-border);
 }
 
-.dfs-lesson-page .dfs-page-navigation a {
+.dfs-lesson-page .dfs-nav {
   display: inline-flex;
   justify-content: center;
   align-items: center;
 
-  min-height: 52px;
-  padding: 13px 25px;
+  min-height: 48px;
+  padding: 10px 24px;
 
-  border: 1px solid #242b33;
+  border: 1px solid var(--dfs-ink);
   border-radius: 9px;
 
   font-size: 15px;
   font-weight: 700;
   text-decoration: none;
+  cursor: pointer;
 
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
-.dfs-lesson-page .dfs-page-navigation__back {
-  background: white;
-  color: #242b33;
+.dfs-lesson-page .dfs-nav--back {
+  background: #ffffff;
+  color: var(--dfs-ink);
 }
 
-.dfs-lesson-page .dfs-page-navigation__back:hover {
-  background: #f5f6f8;
-  color: #242b33;
+.dfs-lesson-page .dfs-nav--back:hover {
+  background: var(--dfs-light);
 }
 
-.dfs-lesson-page .dfs-page-navigation__next {
+.dfs-lesson-page .dfs-nav--next {
   margin-left: auto;
-  background: #242b33;
-  color: white;
+  background: var(--dfs-ink);
+  color: #ffffff;
 }
 
-.dfs-lesson-page .dfs-page-navigation__next:hover {
+.dfs-lesson-page .dfs-nav--next:hover {
   background: #414b56;
-  color: white;
+  color: #ffffff;
   transform: translateY(-2px);
 }
 
@@ -1066,46 +1117,52 @@
 }
 
 /* ============================================
-   RESPONSIVE DESIGN
+   RESPONSIVE
    ============================================ */
 
-@media (max-width: 1050px) {
-  .dfs-lesson-page .dfs-lesson-layout {
+@media (max-width: 1000px) {
+  .dfs-lesson-page .dfs-grid {
     grid-template-columns: 1fr;
   }
 
-  .dfs-lesson-page .dfs-concepts-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .dfs-lesson-page .dfs-tree-card {
+    position: static;
   }
-}
 
-@media (max-width: 800px) {
   .dfs-lesson-page .dfs-check__grid {
     grid-template-columns: 1fr;
+  }
+
+  .dfs-lesson-page .dfs-check__question h3 {
+    min-height: 0;
   }
 }
 
 @media (max-width: 700px) {
   .dfs-lesson-page {
     width: calc(100% - 28px);
-    padding: 24px 0 55px;
+    padding: 18px 0 44px;
   }
 
-  .dfs-lesson-page .dfs-lesson-card,
-  .dfs-lesson-page .dfs-algorithm-card {
-    padding: 20px;
+  .dfs-lesson-page .dfs-lesson-card {
+    padding: 18px;
   }
 
   .dfs-lesson-page .lesson-progress {
-    padding: 14px;
+    padding: 10px 14px;
   }
 
-  .dfs-lesson-page .dfs-lesson-intro h1 {
-    font-size: 30px;
+  .dfs-lesson-page .dfs-tab {
+    flex: none;
+    padding: 8px 14px;
   }
 
-  .dfs-lesson-page .dfs-concepts-grid {
+  .dfs-lesson-page .dfs-type-links {
     grid-template-columns: 1fr;
+  }
+
+  .dfs-lesson-page .dfs-segmented {
+    flex-direction: column;
   }
 
   .dfs-lesson-page .dfs-prediction__options {
@@ -1113,7 +1170,7 @@
   }
 
   .dfs-lesson-page .dfs-lesson-controls .btn {
-    flex: 1 1 125px;
+    flex: 1 1 110px;
   }
 
   .dfs-lesson-page .dfs-step-counter {
@@ -1131,7 +1188,7 @@
     align-items: stretch;
   }
 
-  .dfs-lesson-page .dfs-page-navigation a {
+  .dfs-lesson-page .dfs-nav {
     width: 100%;
   }
 }
@@ -1147,11 +1204,216 @@
 
   .dfs-lesson-page .lesson-progress__fill,
   .dfs-lesson-page .dfs-lesson-node circle,
-  .dfs-lesson-page .dfs-page-navigation a {
+  .dfs-lesson-page .dfs-nav {
     transition: none;
   }
 
-  .dfs-lesson-page .dfs-page-navigation a:hover {
+  .dfs-lesson-page .dfs-nav:hover {
     transform: none;
+  }
+}
+
+.dfs-lesson-page .dfs-controls-card {
+  background: var(--dfs-light);
+}
+
+.dfs-lesson-page .dfs-controls-card .dfs-lesson-controls {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* Hide the DFS progress bar */
+.dfs-lesson-page .lesson-progress {
+  display: none !important;
+}
+
+
+/* ============================================
+   TAB 3 — WATCH THE STACK: UPDATED LAYOUT
+   ============================================ */
+
+/* Balanced columns */
+.dfs-lesson-page .dfs-stack-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.05fr)
+    minmax(0, 0.95fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* The tree card should not stick while scrolling.
+   This avoids covering other page content. */
+.dfs-lesson-page .dfs-stack-tree-card {
+  position: static;
+  top: auto;
+  min-width: 0;
+}
+
+/* ============================================
+   TREE + LEGEND INSIDE ONE BORDERED FRAME
+   ============================================ */
+
+.dfs-lesson-page .dfs-stack-tree-frame {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--dfs-border);
+  border-radius: 12px;
+  background: #fcfcfd;
+  overflow: hidden;
+}
+
+/* The outer frame supplies the border. */
+.dfs-lesson-page .dfs-stack-tree-frame
+.dfs-tree-viewport {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* Legend at the bottom, but still INSIDE the frame. */
+.dfs-lesson-page .dfs-stack-tree-frame
+.dfs-lesson-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+
+  margin: 0;
+  padding: 12px 14px;
+
+  border-top: 1px solid var(--dfs-border);
+  background: #f8fafc;
+}
+
+.dfs-lesson-page .dfs-stack-tree-frame
+.dfs-legend-item {
+  font-size: 12px;
+}
+
+/* ============================================
+   TREE EXPLANATION + VISITED LIST + ALGORITHM
+   ============================================ */
+
+.dfs-lesson-page .dfs-stack-tree-card
+.dfs-step-explanation {
+  margin-top: 14px;
+}
+
+.dfs-lesson-page .dfs-stack-tree-card
+.dfs-order-title {
+  display: block;
+  margin: 17px 0 8px;
+}
+
+.dfs-lesson-page .dfs-stack-tree-card
+.dfs-visited-list {
+  margin-bottom: 14px;
+}
+
+.dfs-lesson-page .dfs-stack-tree-card
+.dfs-code {
+  margin-top: 14px;
+}
+
+/* ============================================
+   RIGHT COLUMN
+   ============================================ */
+
+.dfs-lesson-page .dfs-stack-grid
+.dfs-side-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Keep the stack compact */
+.dfs-lesson-page .dfs-stack-grid
+.dfs-stack-card {
+  background: var(--dfs-light);
+}
+
+/* Your Turn with integrated Next Step controls */
+.dfs-lesson-page .dfs-stack-grid
+.dfs-prediction {
+  background: var(--dfs-light);
+  min-width: 0;
+}
+
+.dfs-lesson-page .dfs-stack-grid
+.dfs-prediction__options {
+  margin-top: 12px;
+}
+
+/* Remove extra spacing when no feedback is shown. */
+.dfs-lesson-page .dfs-stack-grid
+.dfs-prediction__feedback:empty {
+  display: none;
+}
+
+/* Next Step controls now live inside Your Turn */
+.dfs-lesson-page .dfs-stack-grid
+.dfs-prediction .dfs-lesson-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--dfs-border);
+}
+
+/* Make Reveal Next Step prominent */
+.dfs-lesson-page .dfs-stack-grid
+.dfs-prediction .dfs-lesson-controls
+.btn--primary {
+  flex: 1 1 100%;
+  width: 100%;
+}
+
+/* Previous and Restart sit on the next row */
+.dfs-lesson-page .dfs-stack-grid
+.dfs-prediction .dfs-lesson-controls
+.btn:not(.btn--primary) {
+  flex: 0 1 auto;
+}
+
+/* Counter remains aligned */
+.dfs-lesson-page .dfs-stack-grid
+.dfs-step-counter {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 950px) {
+  .dfs-lesson-page .dfs-stack-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 550px) {
+  .dfs-lesson-page .dfs-stack-tree-frame
+  .dfs-lesson-legend {
+    gap: 8px 12px;
+    padding: 10px;
+  }
+
+  .dfs-lesson-page .dfs-stack-grid
+  .dfs-prediction .dfs-lesson-controls {
+    gap: 8px;
+  }
+
+  .dfs-lesson-page .dfs-stack-grid
+  .dfs-step-counter {
+    width: 100%;
+    margin-left: 0;
   }
 }

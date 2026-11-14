@@ -1,236 +1,408 @@
 
 /**
- * COS212 DFS Tutor — Interactive DFS Explorer
- * Figma Page 4
+ * COS212 DFS Tutor — Explorer
  *
- * Supports:
- * - Pre-order, in-order and post-order
- * - Full traversal or target search
- * - Correct iterative stack operations
- * - Step controls and automatic playback
- * - Predict before reveal
- * - BST insertion and reset
- * - Four learning milestones
+ * Tab 1: Build a BST
+ * Tab 2: Run DFS
+ * Tab 3: Traversal Challenge
+ *
+ * Uses different values from the earlier lessons.
+ * No progress bar or backend changes required.
  */
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
-const INITIAL = [50, 30, 70, 20, 40, 60, 80];
+const START_VALUES = [48, 27, 76, 14, 39, 63, 91, 34];
 const MAX_NODES = 15;
 
 function el(tag, className = '', text = '') {
-  const element = document.createElement(tag);
-  if (className) element.className = className;
-  element.textContent = text;
-  return element;
+  const result = document.createElement(tag);
+
+  if (className) result.className = className;
+
+  result.textContent = text;
+  return result;
 }
 
-function svgEl(tag, attributes = {}) {
-  const element = document.createElementNS(SVG_NS, tag);
-  Object.entries(attributes).forEach(([key, value]) => {
-    element.setAttribute(key, String(value));
+function svgEl(tag, attrs = {}) {
+  const result = document.createElementNS(SVG_NS, tag);
+
+  Object.entries(attrs).forEach(([key, value]) => {
+    result.setAttribute(key, String(value));
   });
-  return element;
+
+  return result;
 }
 
-function createNode(value, parent = null) {
-  return { value, parent, left: null, right: null };
+function button(text, css = 'explorer-btn') {
+  const result = el('button', css, text);
+  result.type = 'button';
+  return result;
 }
 
-function insertNode(root, value) {
-  if (!root) return createNode(value);
+/* ==========================================
+   BST HELPERS
+   ========================================== */
+
+function makeNode(value, parent = null) {
+  return {
+    value,
+    parent,
+    left: null,
+    right: null
+  };
+}
+
+function insert(root, value) {
+  if (!root) return makeNode(value);
 
   let current = root;
 
   while (true) {
-    if (value === current.value) return root;
+    if (current.value === value) return root;
 
-    const side = value < current.value ? 'left' : 'right';
+    const side = value < current.value
+      ? 'left'
+      : 'right';
 
     if (current[side]) {
       current = current[side];
     } else {
-      current[side] = createNode(value, current);
-      break;
+      current[side] = makeNode(value, current);
+      return root;
     }
   }
-  return root;
 }
 
-function makeTree() {
+function makeTree(values) {
   let root = null;
-  INITIAL.forEach(value => {
-    root = insertNode(root, value);
+
+  values.forEach(value => {
+    root = insert(root, value);
   });
+
   return root;
 }
 
-function findNode(root, value) {
-  let current = root;
-
-  while (current) {
-    if (value === current.value) return current;
-    current = value < current.value
-      ? current.left : current.right;
-  }
-  return null;
-}
-
-function countNodes(root) {
-  return root
-    ? 1 + countNodes(root.left) + countNodes(root.right)
-    : 0;
-}
-
-/**
- * Iterative DFS using operation frames.
- *
- * PRE:  visit, left, right
- * IN:   left, visit, right
- * POST: left, right, visit
- *
- * The stack's top is the last array element.
- * The visual stack reverses this for display.
- */
-function generateSteps(root, order, mode, target) {
+function inorderNodes(root) {
   if (!root) return [];
 
-  const stack = [{ node: root, action: 'enter' }];
-  const visited = [];
-  const steps = [];
+  return [
+    ...inorderNodes(root.left),
+    root,
+    ...inorderNodes(root.right)
+  ];
+}
 
-  function snapshot(current, explanation) {
-    return {
-      current,
-      visited: [...visited],
-      stack: [...stack].reverse().map(task => ({
-        value: task.node.value,
-        action: task.action
-      })),
-      explanation
-    };
+function find(root, value) {
+  return inorderNodes(root).find(
+    node => node.value === value
+  ) || null;
+}
+
+function orderValues(root, order) {
+  const result = [];
+
+  function walk(node) {
+    if (!node) return;
+
+    if (order === 'pre') {
+      result.push(node.value);
+    }
+
+    walk(node.left);
+
+    if (order === 'in') {
+      result.push(node.value);
+    }
+
+    walk(node.right);
+
+    if (order === 'post') {
+      result.push(node.value);
+    }
   }
 
-  steps.push(snapshot(
-    null,
-    'The root is ready. Predict the first node, ' +
-    'then reveal the next step.'
-  ));
+  walk(root);
+  return result;
+}
 
-  while (stack.length > 0) {
-    const task = stack.pop();
-    const node = task.node;
+const ORDER_INFO = {
+  pre: {
+    title: 'Pre-order',
+    rule: 'Root → Left → Right'
+  },
+  in: {
+    title: 'In-order',
+    rule: 'Left → Root → Right'
+  },
+  post: {
+    title: 'Post-order',
+    rule: 'Left → Right → Root'
+  }
+};
 
-    if (task.action === 'visit') {
+/* ==========================================
+   GENERATE DFS STEPS
+   ========================================== */
+
+function traversalSteps(root, order) {
+  // Pre-order: actual iterative DFS with a LIFO stack.
+  if (order === 'pre') {
+    const stack = [root];
+    const visited = [];
+
+    const steps = [{
+      current: null,
+      visited: [],
+      pending: [root.value],
+      description:
+        `Node ${root.value} is on the stack. ` +
+        'Which node comes off first?'
+    }];
+
+    while (stack.length > 0) {
+      const node = stack.pop();
+
       visited.push(node.value);
 
-      let explanation =
-        `Visit ${node.value}. ` +
-        `The traversal has visited ${visited.length} ` +
-        `${visited.length === 1 ? 'node' : 'nodes'}.`;
+      // Push right first so left is visited first.
+      if (node.right) stack.push(node.right);
+      if (node.left) stack.push(node.left);
 
-      const found =
-        mode === 'search' && node.value === target;
+      const pending = [...stack]
+        .reverse()
+        .map(item => item.value);
 
-      if (found) {
-        explanation =
-          `Target ${target} found! DFS visited ` +
-          `${visited.length} nodes.`;
-        stack.length = 0;
-      }
+      const pushed = [
+        node.right,
+        node.left
+      ]
+        .filter(Boolean)
+        .map(item => item.value);
 
-      steps.push(snapshot(node.value, explanation));
-      if (found) break;
-      continue;
+      const detail = pushed.length
+        ? `Push ${pushed.join(', then ')}. ` +
+          `${pending[0]} is now on top.`
+        : 'This node is a leaf, so continue with the stack.';
+
+      steps.push({
+        current: node.value,
+        visited: [...visited],
+        pending,
+        description:
+          `Visit ${node.value}. ${detail}` +
+          (
+            pending.length
+              ? ''
+              : ' The traversal is complete.'
+          )
+      });
     }
 
-    if (order === 'PRE_ORDER') {
-      if (node.right) {
-        stack.push({
-          node: node.right,
-          action: 'enter'
-        });
-      }
-
-      if (node.left) {
-        stack.push({
-          node: node.left,
-          action: 'enter'
-        });
-      }
-
-      stack.push({ node, action: 'visit' });
-    }
-
-    if (order === 'IN_ORDER') {
-      if (node.right) {
-        stack.push({
-          node: node.right,
-          action: 'enter'
-        });
-      }
-
-      stack.push({ node, action: 'visit' });
-
-      if (node.left) {
-        stack.push({
-          node: node.left,
-          action: 'enter'
-        });
-      }
-    }
-
-    if (order === 'POST_ORDER') {
-      stack.push({ node, action: 'visit' });
-
-      if (node.right) {
-        stack.push({
-          node: node.right,
-          action: 'enter'
-        });
-      }
-
-      if (node.left) {
-        stack.push({
-          node: node.left,
-          action: 'enter'
-        });
-      }
-    }
+    return steps;
   }
+
+  // In-order and post-order:
+  // Display the visit sequence, not a LIFO stack.
+  const sequence = orderValues(root, order);
+
+  const steps = [{
+    current: null,
+    visited: [],
+    pending: [...sequence],
+    description:
+      `${ORDER_INFO[order].title} uses ` +
+      `${ORDER_INFO[order].rule}. ` +
+      'Predict the first visit.'
+  }];
+
+  sequence.forEach((value, index) => {
+    const reason = order === 'in'
+      ? 'The left subtree is handled before the node, ' +
+        'then the right.'
+      : 'Both subtrees are handled before their parent.';
+
+    steps.push({
+      current: value,
+      visited: sequence.slice(0, index + 1),
+      pending: sequence.slice(index + 1),
+      description:
+        `Visit ${value}. ${reason}` +
+        (
+          index === sequence.length - 1
+            ? ' All nodes have been visited.'
+            : ''
+        )
+    });
+  });
 
   return steps;
 }
 
-/* ============================================
-   DRAW THE TREE
-   ============================================ */
+/* ==========================================
+   HIGHLIGHTED EXPLANATIONS
+   ========================================== */
 
-function drawTree(svg, root, step) {
+function makeCallout(title, initial = '') {
+  const box = el('div', 'explorer-callout');
+
+  const heading = el(
+    'strong',
+    'explorer-callout-title',
+    title
+  );
+
+  const message = el(
+    'p',
+    'explorer-callout-text',
+    initial
+  );
+
+  box.append(heading, message);
+  box.setAttribute('aria-live', 'polite');
+
+  return {
+    box,
+    heading,
+    message
+  };
+}
+
+function say(callout, heading, message) {
+  callout.heading.textContent = heading;
+  callout.message.textContent = message;
+
+  callout.box.classList.remove('is-flash');
+
+  // Restart the explanation highlight animation.
+  void callout.box.offsetWidth;
+
+  callout.box.classList.add('is-flash');
+}
+
+/* ==========================================
+   TREE VIEW WITH LEGEND
+   ========================================== */
+
+function makeTreeView(kind = 'dfs') {
+  const frame = el('div', 'explorer-tree-frame');
+
+  const viewport = el(
+    'div',
+    'explorer-tree-viewport'
+  );
+
+  const svg = svgEl('svg', {
+    class: 'explorer-svg',
+    role: 'group',
+    'aria-label': 'Interactive binary search tree'
+  });
+
+  viewport.appendChild(svg);
+
+  const legend = el('div', 'explorer-legend');
+
+  const items = kind === 'build'
+    ? [
+        ['○', 'Node', 'normal'],
+        ['●', 'Comparing', 'current'],
+        ['↗', 'Path', 'path'],
+        ['+', 'New', 'added']
+      ]
+    : kind === 'challenge'
+      ? [
+          ['○', 'Not selected', 'normal'],
+          ['#', 'Selected', 'visited'],
+          ['×', 'Try again', 'error']
+        ]
+      : [
+          ['○', 'Not visited', 'normal'],
+          ['●', 'Current', 'current'],
+          ['✓', 'Visited', 'visited'],
+          ['◌', 'Waiting', 'pending']
+        ];
+
+  const waitingLabel = el(
+    'span',
+    '',
+    'Waiting'
+  );
+
+  items.forEach(([symbol, label, type]) => {
+    const item = el(
+      'span',
+      'explorer-legend-item'
+    );
+
+    const caption = type === 'pending'
+      ? waitingLabel
+      : document.createTextNode(label);
+
+    item.append(
+      el(
+        'span',
+        `explorer-legend-dot ${type}`,
+        symbol
+      ),
+      caption
+    );
+
+    legend.appendChild(item);
+  });
+
+  frame.append(viewport, legend);
+
+  return {
+    frame,
+    svg,
+    waitingLabel
+  };
+}
+
+/* ==========================================
+   DRAW INTERACTIVE TREE
+   ========================================== */
+
+function drawTree(view, root, state, onPick) {
+  const svg = view.svg;
   svg.replaceChildren();
 
   const entries = [];
 
   function collect(node, depth = 0) {
     if (!node) return;
+
     collect(node.left, depth + 1);
-    entries.push({ node, depth });
+
+    entries.push({
+      node,
+      depth
+    });
+
     collect(node.right, depth + 1);
   }
 
   collect(root);
 
-  const maxDepth = Math.max(
-    0, ...entries.map(entry => entry.depth)
+  if (entries.length === 0) return;
+
+  const width = Math.max(
+    670,
+    entries.length * 91
   );
 
-  const width = Math.max(640, entries.length * 85);
-  const height = Math.max(345, 120 + maxDepth * 105);
+  const depth = Math.max(
+    ...entries.map(entry => entry.depth)
+  );
 
-  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-  svg.setAttribute('role', 'img');
+  const height = Math.max(
+    320,
+    115 + depth * 102
+  );
+
   svg.setAttribute(
-    'aria-label',
-    'Interactive tree showing Depth-First Search progress'
+    'viewBox',
+    `0 0 ${width} ${height}`
   );
 
   const positions = new Map();
@@ -243,1130 +415,1660 @@ function drawTree(svg, root, step) {
 
     positions.set(node, {
       x,
-      y: 54 + depth * 105
+      y: 53 + depth * 102
     });
   });
 
-  // Draw connections.
+  const path = new Set(state.path || []);
+  const visited = state.visited || [];
+  const pending = state.pending || [];
+
+  // Draw connections behind nodes.
   entries.forEach(({ node }) => {
     if (!node.parent) return;
 
     const parent = positions.get(node.parent);
     const child = positions.get(node);
 
+    const inPath =
+      path.has(node.value) &&
+      path.has(node.parent.value);
+
     svg.appendChild(svgEl('line', {
       x1: parent.x,
       y1: parent.y,
       x2: child.x,
       y2: child.y,
-      class: 'explorer-edge'
+      class:
+        'explorer-edge' +
+        (inPath ? ' is-path' : '')
     }));
   });
 
-  const visited = new Set(step.visited);
-  const pending = new Set(
-    step.stack.map(item => item.value)
-  );
-
+  // Draw interactive nodes.
   entries.forEach(({ node }) => {
     const { x, y } = positions.get(node);
 
     const classes = ['explorer-node'];
 
-    let state = 'Not visited';
+    const visitedIndex = visited.indexOf(
+      node.value
+    );
 
-    if (node.value === step.current) {
+    if (node.value === state.current) {
       classes.push('is-current');
-      state = 'Current node';
-    } else if (visited.has(node.value)) {
+    } else if (visitedIndex >= 0) {
       classes.push('is-visited');
-      state = 'Visited';
-    } else if (pending.has(node.value)) {
+    } else if (pending.includes(node.value)) {
       classes.push('is-pending');
-      state = 'Waiting on stack';
+    }
+
+    if (path.has(node.value)) {
+      classes.push('is-path');
+    }
+
+    if (node.value === state.added) {
+      classes.push('is-added');
+    }
+
+    if (node.value === state.error) {
+      classes.push('is-error');
+    }
+
+    if (node.value === state.selected) {
+      classes.push('is-selected');
     }
 
     const group = svgEl('g', {
       class: classes.join(' '),
-      'aria-label': `Node ${node.value}: ${state}`
+      role: 'button',
+      tabindex: '0',
+      'data-value': node.value,
+      'aria-label':
+        `Node ${node.value}. ` +
+        (
+          node.parent
+            ? `Child of ${node.parent.value}.`
+            : 'Root.'
+        )
     });
 
-    const circle = svgEl('circle', {
-      cx: x,
-      cy: y,
-      r: 26
-    });
-
-    const number = svgEl('text', {
+    const label = svgEl('text', {
       x,
       y,
       class: 'explorer-node-value'
     });
 
-    number.textContent = String(node.value);
+    label.textContent = String(node.value);
 
-    const symbol = svgEl('text', {
+    const tag = svgEl('text', {
       x,
-      y: y + 43,
-      class: 'explorer-node-symbol'
+      y: y + 42,
+      class: 'explorer-node-tag'
     });
 
-    symbol.textContent =
-      node.value === step.current ? 'NOW' :
-      visited.has(node.value) ? '✓' :
-      pending.has(node.value) ? 'WAIT' : '';
+    tag.textContent =
+      node.value === state.current
+        ? 'NOW'
+        : visitedIndex >= 0
+          ? `#${visitedIndex + 1}`
+          : pending.includes(node.value)
+            ? 'WAIT'
+            : '';
 
-    group.append(circle, number, symbol);
+    group.append(
+      svgEl('circle', {
+        cx: x,
+        cy: y,
+        r: 25
+      }),
+      label,
+      tag
+    );
+
+    const choose = () => onPick(node);
+
+    group.addEventListener('click', choose);
+
+    group.addEventListener('keydown', event => {
+      if (
+        event.key === 'Enter' ||
+        event.key === ' '
+      ) {
+        event.preventDefault();
+        choose();
+        return;
+      }
+
+      const moves = {
+        ArrowUp: node.parent,
+        ArrowDown: node.left || node.right,
+        ArrowLeft: node.left,
+        ArrowRight: node.right
+      };
+
+      if (!(event.key in moves)) return;
+
+      event.preventDefault();
+
+      const target = moves[event.key];
+
+      if (target) {
+        svg.querySelector(
+          `[data-value="${target.value}"]`
+        )?.focus();
+      }
+    });
+
     svg.appendChild(group);
   });
 }
 
-/* ============================================
-   MAIN EXPLORER
-   ============================================ */
+function renderTrail(target, numbers, blankText) {
+  target.replaceChildren();
+
+  if (numbers.length === 0) {
+    target.appendChild(
+      el('span', 'explorer-muted', blankText)
+    );
+    return;
+  }
+
+  numbers.forEach((value, index) => {
+    target.appendChild(
+      el(
+        'span',
+        'explorer-trail-chip',
+        String(value)
+      )
+    );
+
+    if (index < numbers.length - 1) {
+      target.appendChild(
+        el('span', 'explorer-arrow', '→')
+      );
+    }
+  });
+}
+
+/* ==========================================
+   MAIN SCREEN
+   ========================================== */
 
 export function render(screen, container) {
-  const page = el('div', 'explorer-page');
+  const page = el('main', 'explorer-page');
 
-  let root = makeTree();
-  let order = screen.order || 'PRE_ORDER';
-  let mode = 'search';
-  let target = Number.isInteger(Number(screen.target))
-    ? Number(screen.target) : 60;
+  let root = makeTree(START_VALUES);
+  let addedValues = [];
 
-  let steps = [];
-  let stepIndex = 0;
-  let prediction = null;
-  let playing = false;
-  let playTimer = null;
-  let treeEdited = false;
+  let activeTab = 0;
 
-  const completed = new Set();
-  const completedOrders = new Set();
+  // BST insertion state
+  let pendingInsert = null;
+  let lastAdded = null;
+  let selectedBuild = null;
 
-  // Track header height for sticky progress.
-  const header = document.querySelector('.app-header');
-  let headerObserver = null;
+  // DFS exploration state
+  let labOrder = 'pre';
+  let labSteps = traversalSteps(root, labOrder);
+  let labIndex = 0;
+  let labTimer = null;
+  let selectedLab = null;
 
-  function measureHeader() {
-    if (!header) return;
+  // Challenge state
+  let challengeOrder = 'in';
+  let challengeVisited = [];
+  let challengeWrong = null;
 
-    document.documentElement.style.setProperty(
-      '--app-header-height',
-      `${Math.ceil(header.getBoundingClientRect().height)}px`
-    );
-  }
+  // ------------------------------------------
+  // PAGE HEADER
+  // ------------------------------------------
 
-  measureHeader();
-
-  if (header && typeof ResizeObserver !== 'undefined') {
-    headerObserver = new ResizeObserver(measureHeader);
-    headerObserver.observe(header);
-  }
-
-  // ==========================================
-  // STICKY PROGRESS
-  // ==========================================
-
-  const progress = el('div', 'lesson-progress');
-  const progressHeader = el(
-    'div', 'lesson-progress__header'
-  );
-
-  const progressLabel = el(
-    'span', '', 'DFS EXPLORER'
-  );
-
-  const progressCount = el(
-    'span', '', 'Step 0 of 4'
-  );
-
-  progressHeader.append(progressLabel, progressCount);
-
-  const progressTrack = el(
-    'div', 'lesson-progress__track'
-  );
-
-  progressTrack.setAttribute('role', 'progressbar');
-  progressTrack.setAttribute(
-    'aria-label', 'Explorer activity progress'
-  );
-  progressTrack.setAttribute('aria-valuemin', '0');
-  progressTrack.setAttribute('aria-valuemax', '4');
-  progressTrack.setAttribute('aria-valuenow', '0');
-
-  const progressFill = el(
-    'div', 'lesson-progress__fill'
-  );
-
-  progressFill.style.width = '0%';
-  progressTrack.appendChild(progressFill);
-  progress.append(progressHeader, progressTrack);
-
-  function markComplete(key) {
-    if (completed.has(key)) return;
-
-    completed.add(key);
-
-    progressCount.textContent =
-      `Step ${completed.size} of 4`;
-
-    progressFill.style.width =
-      `${completed.size * 25}%`;
-
-    progressTrack.setAttribute(
-      'aria-valuenow',
-      String(completed.size)
-    );
-  }
-
-  // ==========================================
-  // PAGE INTRODUCTION
-  // ==========================================
-
-  const intro = el('section', 'explorer-intro');
+  const intro = el('header', 'explorer-intro');
 
   intro.append(
+    el('h1', '', 'DFS Explorer'),
+    el(
+      'p',
+      'explorer-muted',
+      'A new tree, new values and three ways to apply ' +
+      'what you learned. Build it, explore it, then ' +
+      'solve a traversal challenge.'
+    )
+  );
+
+  // ------------------------------------------
+  // THREE TABS
+  // ------------------------------------------
+
+  const tabInfo = [
+    ['build', '1. Build the BST'],
+    ['run', '2. Run DFS'],
+    ['challenge', '3. Challenge']
+  ];
+
+  const tabBar = el('div', 'explorer-tabs');
+  tabBar.setAttribute('role', 'tablist');
+
+  const panels = tabInfo.map(([id]) => {
+    const panel = el(
+      'section',
+      'explorer-panel'
+    );
+
+    panel.id = `explorer-panel-${id}`;
+    panel.setAttribute('role', 'tabpanel');
+
+    panel.setAttribute(
+      'aria-labelledby',
+      `explorer-tab-${id}`
+    );
+
+    panel.tabIndex = -1;
+
+    return panel;
+  });
+
+  const tabButtons = tabInfo.map(([id, label], i) => {
+    const tab = button(label, 'explorer-tab');
+
+    tab.id = `explorer-tab-${id}`;
+    tab.setAttribute('role', 'tab');
+
+    tab.setAttribute(
+      'aria-controls',
+      panels[i].id
+    );
+
+    tab.addEventListener('click', () => {
+      showTab(i);
+    });
+
+    tabBar.appendChild(tab);
+
+    return tab;
+  });
+
+  function showTab(index) {
+    if (index < 0 || index >= panels.length) {
+      return;
+    }
+
+    if (activeTab === 1 && index !== 1) {
+      stopLab();
+    }
+
+    activeTab = index;
+
+    panels.forEach((panel, i) => {
+      panel.hidden = i !== index;
+    });
+
+    tabButtons.forEach((tab, i) => {
+      const selected = i === index;
+
+      tab.classList.toggle(
+        'is-active',
+        selected
+      );
+
+      tab.setAttribute(
+        'aria-selected',
+        String(selected)
+      );
+
+      tab.tabIndex = selected ? 0 : -1;
+    });
+  }
+
+  tabBar.addEventListener('keydown', event => {
+    const current = tabButtons.indexOf(
+      document.activeElement
+    );
+
+    if (current < 0) return;
+
+    let next = null;
+
+    if (event.key === 'ArrowRight') {
+      next = (current + 1) % 3;
+    }
+
+    if (event.key === 'ArrowLeft') {
+      next = (current + 2) % 3;
+    }
+
+    if (event.key === 'Home') next = 0;
+    if (event.key === 'End') next = 2;
+
+    if (next !== null) {
+      event.preventDefault();
+      showTab(next);
+      tabButtons[next].focus();
+    }
+  });
+
+  /* ==========================================
+     TAB 1 — BUILD A BST
+     ========================================== */
+
+  const buildLayout = el(
+    'div',
+    'explorer-layout'
+  );
+
+  const buildTreeCard = el(
+    'article',
+    'explorer-card'
+  );
+
+  const buildTreeView = makeTreeView('build');
+
+  const buildCount = el(
+    'span',
+    'explorer-count'
+  );
+
+  const buildHeading = el(
+    'div',
+    'explorer-heading'
+  );
+
+  buildHeading.append(
+    el('h2', '', 'Your Binary Search Tree'),
+    buildCount
+  );
+
+  const buildTrail = el(
+    'div',
+    'explorer-trail'
+  );
+
+  buildTreeCard.append(
+    buildHeading,
+    buildTreeView.frame,
+    el(
+      'strong',
+      'explorer-small-heading',
+      'Comparison path'
+    ),
+    buildTrail
+  );
+
+  const buildSide = el(
+    'div',
+    'explorer-side'
+  );
+
+  const buildCard = el(
+    'article',
+    'explorer-card explorer-task'
+  );
+
+  buildCard.append(
     el(
       'span',
       'explorer-eyebrow',
-      'INTERACTIVE LEARNING'
+      'YOUR DECISION'
     ),
-    el('h1', '', 'Explore Depth-First Search'),
     el(
-      'p',
+      'h2',
       '',
-      'Choose a traversal order, search for a value, ' +
-      'or change the tree. Predict the next node and ' +
-      'see how DFS works.'
-    )
-  );
-
-  // ==========================================
-  // 01 — EXPLORER CONFIGURATION
-  // ==========================================
-
-  const setup = el('section', 'explorer-card explorer-setup');
-
-  setup.append(
-    el('span', 'explorer-eyebrow', '01 / EXPLORE'),
-    el('h2', '', 'Choose your exploration')
-  );
-
-  const configGrid = el('div', 'explorer-config-grid');
-
-  const orderField = el('label', 'explorer-field');
-  orderField.appendChild(
-    el('span', '', 'Traversal order')
-  );
-
-  const orderSelect = el('select');
-
-  [
-    ['PRE_ORDER', 'Pre-order — Root, Left, Right'],
-    ['IN_ORDER', 'In-order — Left, Root, Right'],
-    ['POST_ORDER', 'Post-order — Left, Right, Root']
-  ].forEach(([value, label]) => {
-    const option = el('option', '', label);
-    option.value = value;
-    orderSelect.appendChild(option);
-  });
-
-  orderSelect.value = order;
-  orderField.appendChild(orderSelect);
-
-  const modeField = el('label', 'explorer-field');
-  modeField.appendChild(el('span', '', 'Activity'));
-
-  const modeSelect = el('select');
-
-  [
-    ['search', 'Search for a value'],
-    ['traverse', 'Visit every node']
-  ].forEach(([value, label]) => {
-    const option = el('option', '', label);
-    option.value = value;
-    modeSelect.appendChild(option);
-  });
-
-  modeSelect.value = mode;
-  modeField.appendChild(modeSelect);
-
-  const targetField = el('label', 'explorer-field');
-  targetField.appendChild(el('span', '', 'Target value'));
-
-  const targetInput = el('input');
-  targetInput.type = 'number';
-  targetInput.min = '0';
-  targetInput.max = '99';
-  targetInput.step = '1';
-  targetInput.value = String(target);
-
-  targetField.appendChild(targetInput);
-
-  const configureButton = el(
-    'button',
-    'explorer-button explorer-button--primary',
-    'Start exploration'
-  );
-
-  configureButton.type = 'button';
-
-  const configFeedback = el(
-    'p', 'explorer-feedback'
-  );
-  configFeedback.setAttribute('aria-live', 'polite');
-
-  configGrid.append(
-    orderField,
-    modeField,
-    targetField,
-    configureButton
-  );
-
-  setup.append(configGrid, configFeedback);
-
-  // ==========================================
-  // INTERACTIVE VISUALIZATION
-  // ==========================================
-
-  const layout = el('div', 'explorer-layout');
-
-  const treeCard = el(
-    'section', 'explorer-card explorer-tree-card'
-  );
-
-  const treeHeading = el('div', 'explorer-card-heading');
-
-  const treeTitle = el(
-    'h2', '', 'Interactive tree'
-  );
-
-  const nodeCount = el('span', 'explorer-count');
-
-  treeHeading.append(treeTitle, nodeCount);
-
-  const treeViewport = el('div', 'explorer-tree-viewport');
-
-  const svg = svgEl('svg', {
-    class: 'explorer-svg'
-  });
-
-  treeViewport.appendChild(svg);
-
-  // State legend: colour plus symbols.
-  const legend = el('div', 'explorer-legend');
-
-  [
-    ['○', 'Not visited', 'default'],
-    ['●', 'Current', 'current'],
-    ['✓', 'Visited', 'visited'],
-    ['◌', 'Pending', 'pending']
-  ].forEach(([symbol, name, type]) => {
-    const item = el('span', 'explorer-legend-item');
-
-    item.append(
-      el(
-        'span',
-        `explorer-legend-symbol explorer-legend-symbol--${type}`,
-        symbol
-      ),
-      document.createTextNode(name)
-    );
-
-    legend.appendChild(item);
-  });
-
-  // Prediction panel
-  const predictBox = el(
-    'section', 'explorer-prediction'
-  );
-
-  predictBox.append(
-    el('span', 'explorer-eyebrow', 'PREDICT BEFORE REVEAL'),
-    el('h3', '', 'Which node will be visited next?')
-  );
-
-  const predictOptions = el(
-    'div', 'explorer-prediction-options'
-  );
-
-  const predictFeedback = el(
-    'p', 'explorer-feedback'
-  );
-  predictFeedback.setAttribute('aria-live', 'polite');
-
-  predictBox.append(predictOptions, predictFeedback);
-
-  // Explanation of current step
-  const explanation = el(
-    'div', 'explorer-explanation'
-  );
-
-  const explanationTitle = el(
-    'strong', '', 'Ready to begin'
-  );
-
-  const explanationText = el('p');
-  explanationText.setAttribute('aria-live', 'polite');
-
-  explanation.append(
-    explanationTitle,
-    explanationText
-  );
-
-  // Visited sequence
-  const traversalPanel = el(
-    'div', 'explorer-traversal'
-  );
-
-  traversalPanel.appendChild(
-    el('h3', '', 'Visited order')
-  );
-
-  const visitedList = el(
-    'div', 'explorer-visited-list'
-  );
-
-  traversalPanel.appendChild(visitedList);
-
-  // Player
-  const controls = el('div', 'explorer-controls');
-
-  const previousButton = el(
-    'button', 'explorer-button', '← Previous'
-  );
-
-  const nextButton = el(
-    'button',
-    'explorer-button explorer-button--primary',
-    'Next Step →'
-  );
-
-  const playButton = el(
-    'button', 'explorer-button', 'Play'
-  );
-
-  const restartButton = el(
-    'button', 'explorer-button', 'Restart'
-  );
-
-  [previousButton, nextButton, playButton, restartButton]
-    .forEach(button => {
-      button.type = 'button';
-    });
-
-  const speedLabel = el('label', 'explorer-speed');
-  speedLabel.appendChild(el('span', '', 'Speed'));
-
-  const speedSelect = el('select');
-
-  [
-    ['1500', 'Slow'],
-    ['900', 'Normal'],
-    ['400', 'Fast']
-  ].forEach(([value, label]) => {
-    const option = el('option', '', label);
-    option.value = value;
-    speedSelect.appendChild(option);
-  });
-
-  speedSelect.value = '900';
-  speedLabel.appendChild(speedSelect);
-
-  const stepCounter = el(
-    'span', 'explorer-step-counter'
-  );
-
-  controls.append(
-    previousButton,
-    nextButton,
-    playButton,
-    restartButton,
-    speedLabel,
-    stepCounter
-  );
-
-  treeCard.append(
-    treeHeading,
-    treeViewport,
-    legend,
-    predictBox,
-    explanation,
-    traversalPanel,
-    controls
-  );
-
-  // ==========================================
-  // LIVE STACK
-  // ==========================================
-
-  const stackCard = el(
-    'aside',
-    'explorer-card explorer-stack-card'
-  );
-
-  stackCard.append(
-    el('span', 'explorer-eyebrow', 'LIVE ALGORITHM STATE'),
-    el('h2', '', 'Operation stack'),
+      'Where should the new value go?'
+    ),
     el(
       'p',
       'explorer-muted',
-      'The top operation is handled first. ' +
-      'VISIT records a node. EXPLORE opens a branch.'
+      'Choose a value and work through the comparisons. ' +
+      'A wrong choice gives feedback so you can try again.'
     )
   );
 
-  const stackStatus = el(
-    'p', 'explorer-stack-status'
+  const buildForm = el(
+    'form',
+    'explorer-form'
   );
 
-  const stackList = el(
-    'div', 'explorer-stack-list'
+  const buildLabel = el(
+    'label',
+    '',
+    'Value to insert'
   );
 
-  const stackNote = el(
+  const buildInput = el('input');
+
+  buildInput.type = 'number';
+  buildInput.min = '0';
+  buildInput.max = '99';
+  buildInput.step = '1';
+  buildInput.value = '68';
+  buildInput.id = 'explorer-value';
+
+  buildLabel.htmlFor = buildInput.id;
+
+  const buildStart = button(
+    'Start insertion',
+    'explorer-btn explorer-primary'
+  );
+
+  buildStart.type = 'submit';
+
+  buildForm.append(
+    buildLabel,
+    buildInput,
+    buildStart
+  );
+
+  const suggestions = el(
     'div',
-    'explorer-stack-note',
-    'The stack also stores pending operations. ' +
-    'That is how in-order and post-order correctly ' +
-    'delay visiting parent nodes.'
+    'explorer-suggestions'
   );
 
-  stackCard.append(
-    stackStatus,
-    stackList,
-    stackNote
+  suggestions.append(
+    el('span', 'explorer-muted', 'Try: ')
   );
 
-  layout.append(treeCard, stackCard);
-
-  // ==========================================
-  // 02 — COMPARE ORDERS
-  // ==========================================
-
-  const compareCard = el(
-    'section', 'explorer-card explorer-info-card'
-  );
-
-  compareCard.append(
-    el('span', 'explorer-eyebrow', '02 / COMPARE'),
-    el('h2', '', 'Try a different traversal'),
-    el(
-      'p',
-      'explorer-muted',
-      'Run a complete traversal using a second order. ' +
-      'Compare the visited sequences. ' +
-      'In-order traversal of a BST produces ascending values.'
-    )
-  );
-
-  // ==========================================
-  // 03 — EXPERIMENT WITH THE TREE
-  // ==========================================
-
-  const experiment = el(
-    'section', 'explorer-card explorer-experiment'
-  );
-
-  experiment.append(
-    el('span', 'explorer-eyebrow', '03 / EXPERIMENT'),
-    el('h2', '', 'Change the tree'),
-    el(
-      'p',
-      'explorer-muted',
-      'Insert a unique whole number between 0 and 99, ' +
-      'then run DFS again to see how the result changes.'
-    )
-  );
-
-  const insertForm = el('form', 'explorer-insert-form');
-
-  const insertLabel = el('label', 'explorer-field');
-  insertLabel.appendChild(
-    el('span', '', 'New node value')
-  );
-
-  const insertInput = el('input');
-  insertInput.type = 'number';
-  insertInput.min = '0';
-  insertInput.max = '99';
-  insertInput.step = '1';
-  insertInput.placeholder = 'e.g. 65';
-
-  insertLabel.appendChild(insertInput);
-
-  const insertButton = el(
-    'button',
-    'explorer-button explorer-button--primary',
-    'Insert node'
-  );
-
-  insertButton.type = 'submit';
-
-  const resetTreeButton = el(
-    'button', 'explorer-button', 'Reset tree'
-  );
-
-  resetTreeButton.type = 'button';
-
-  const insertFeedback = el(
-    'p', 'explorer-feedback'
-  );
-  insertFeedback.setAttribute('aria-live', 'polite');
-
-  insertForm.append(
-    insertLabel, insertButton, resetTreeButton
-  );
-
-  experiment.append(
-    insertForm, insertFeedback
-  );
-
-  // ==========================================
-  // 04 — REFLECT
-  // ==========================================
-
-  const reflect = el(
-    'section', 'explorer-card explorer-reflect'
-  );
-
-  reflect.append(
-    el('span', 'explorer-eyebrow', '04 / REFLECT'),
-    el('h2', '', 'What did you discover?'),
-    el(
-      'p',
-      '',
-      'Which traversal lists the values of a ' +
-      'Binary Search Tree in ascending order?'
-    )
-  );
-
-  const reflectOptions = el(
-    'div', 'explorer-reflect-options'
-  );
-
-  const reflectFeedback = el(
-    'p', 'explorer-feedback'
-  );
-
-  reflectFeedback.setAttribute('aria-live', 'polite');
-
-  [
-    ['Pre-order', false],
-    ['In-order', true],
-    ['Post-order', false],
-    ['Not sure', false]
-  ].forEach(([label, correct]) => {
-    const button = el(
-      'button', 'explorer-answer', label
+  [68, 22, 83].forEach(value => {
+    const preset = button(
+      String(value),
+      'explorer-chip'
     );
 
-    button.type = 'button';
-    button.setAttribute('aria-pressed', 'false');
-
-    button.addEventListener('click', () => {
-      reflectOptions.querySelectorAll('button')
-        .forEach(other => {
-          other.setAttribute(
-            'aria-pressed',
-            String(other === button)
-          );
-        });
-
-      reflectFeedback.className = correct
-        ? 'explorer-feedback is-correct'
-        : 'explorer-feedback is-review';
-
-      reflectFeedback.textContent = correct
-        ? 'Correct! In-order visits the left subtree, ' +
-          'then the node, then the right subtree.'
-        : 'Try again. In a BST, smaller values are on ' +
-          'the left and larger values are on the right.';
-
-      if (correct) markComplete('reflect');
+    preset.addEventListener('click', () => {
+      buildInput.value = String(value);
+      buildInput.focus();
     });
 
-    reflectOptions.appendChild(button);
+    suggestions.appendChild(preset);
   });
 
-  reflect.append(
-    reflectOptions,
-    reflectFeedback
+  const buildCallout = makeCallout(
+    'Try an insertion',
+    'Start with 68. Compare each value with the nodes you meet.'
   );
 
-  // ==========================================
-  // NEXT PAGE
-  // ==========================================
-
-  const navigation = el(
-    'nav', 'explorer-page-navigation'
+  const buildChoices = el(
+    'div',
+    'explorer-choices'
   );
 
-  navigation.setAttribute(
-    'aria-label', 'Explorer navigation'
+  const goLeft = button('← Go left');
+  const goRight = button('Go right →');
+  const insertHint = button('Hint');
+  const cancelInsert = button('Cancel');
+
+  buildChoices.append(
+    goLeft,
+    goRight,
+    insertHint,
+    cancelInsert
   );
 
-  const backLink = el(
-    'a',
-    'explorer-page-navigation__back',
-    '← Previous Lesson'
+  const resetTree = button(
+    'Reset original tree',
+    'explorer-btn explorer-reset'
   );
 
-  backLink.href = '#/concept-idea';
-
-  const nextLink = el(
-    'a',
-    'explorer-page-navigation__next',
-    'Next: Practice →'
+  buildCard.append(
+    buildForm,
+    suggestions,
+    buildCallout.box,
+    buildChoices,
+    resetTree
   );
 
-  nextLink.href = '#/practice';
+  buildSide.appendChild(buildCard);
 
-  navigation.append(backLink, nextLink);
+  buildLayout.append(
+    buildTreeCard,
+    buildSide
+  );
 
-  // ==========================================
-  // PLAYER STATE AND BEHAVIOUR
-  // ==========================================
+  panels[0].appendChild(buildLayout);
 
-  function stopPlayback() {
-    if (playTimer !== null) {
-      clearInterval(playTimer);
-      playTimer = null;
-    }
+  function updateBuild() {
+    const state = {
+      current:
+        pendingInsert?.current.value ?? null,
+      path: pendingInsert?.path ?? [],
+      added: lastAdded,
+      selected: selectedBuild
+    };
 
-    playing = false;
-  }
+    drawTree(
+      buildTreeView,
+      root,
+      state,
+      node => {
+        selectedBuild = node.value;
 
-  function finishRun() {
-    if (mode === 'traverse') {
-      completedOrders.add(order);
+        updateBuild();
 
-      if (completedOrders.size >= 1) {
-        markComplete('explore');
-      }
+        const position = node.parent
+          ? (
+              node.parent.left === node
+                ? 'left'
+                : 'right'
+            ) + ` child of ${node.parent.value}`
+          : 'root of the tree';
 
-      if (completedOrders.size >= 2) {
-        markComplete('compare');
-      }
-    }
-
-    if (treeEdited) {
-      markComplete('experiment');
-    }
-  }
-
-  function renderStack(step) {
-    stackList.replaceChildren();
-
-    stackStatus.textContent =
-      `${step.stack.length} pending operations`;
-
-    if (step.stack.length === 0) {
-      stackList.appendChild(
-        el(
-          'p',
-          'explorer-stack-empty',
-          'No pending operations.'
-        )
-      );
-      return;
-    }
-
-    step.stack.forEach((task, index) => {
-      const item = el(
-        'div', 'explorer-stack-item'
-      );
-
-      if (index === 0) {
-        item.classList.add('is-top');
-      }
-
-      const label = task.action === 'visit'
-        ? 'VISIT'
-        : 'EXPLORE';
-
-      item.append(
-        el('strong', '', String(task.value)),
-        el('span', '', label)
-      );
-
-      stackList.appendChild(item);
-    });
-  }
-
-  function renderVisited(step) {
-    visitedList.replaceChildren();
-
-    if (!step.visited.length) {
-      visitedList.appendChild(
-        el(
-          'span',
-          'explorer-visit-empty',
-          'No nodes visited yet.'
-        )
-      );
-      return;
-    }
-
-    step.visited.forEach((value, index) => {
-      visitedList.appendChild(
-        el('span', 'explorer-visit-chip', String(value))
-      );
-
-      if (index < step.visited.length - 1) {
-        visitedList.appendChild(
-          el('span', 'explorer-visit-arrow', '→')
+        say(
+          buildCallout,
+          `Node ${node.value}`,
+          `This node is the ${position}. ` +
+          (
+            node.left || node.right
+              ? 'It has children.'
+              : 'It is a leaf.'
+          )
         );
       }
-    });
-  }
-
-  function updateButtons() {
-    const finished = stepIndex >= steps.length - 1;
-
-    previousButton.disabled = stepIndex === 0;
-    nextButton.disabled =
-      finished || prediction === null;
-
-    playButton.disabled = finished;
-    playButton.textContent = playing ? 'Pause' : 'Play';
-
-    nextButton.textContent = finished
-      ? 'Completed ✓'
-      : 'Reveal Next Step →';
-
-    stepCounter.textContent =
-      `Step ${stepIndex} of ${Math.max(0, steps.length - 1)}`;
-  }
-
-  function renderPrediction() {
-    predictOptions.replaceChildren();
-    predictFeedback.textContent = '';
-    predictFeedback.className = 'explorer-feedback';
-    prediction = null;
-
-    if (stepIndex >= steps.length - 1) {
-      predictBox.hidden = true;
-      return;
-    }
-
-    predictBox.hidden = false;
-
-    const correctValue = steps[stepIndex + 1].current;
-
-    // Three distinct node options plus Not sure.
-    const options = [correctValue];
-
-    for (const nodeValue of INITIAL) {
-      if (options.length >= 3) break;
-      if (
-        findNode(root, nodeValue) &&
-        !options.includes(nodeValue)
-      ) {
-        options.push(nodeValue);
-      }
-    }
-
-    function selectPrediction(value, button) {
-      prediction = value;
-
-      predictOptions.querySelectorAll('button')
-        .forEach(other => {
-          other.setAttribute(
-            'aria-pressed',
-            String(other === button)
-          );
-        });
-
-      const correct = value === correctValue;
-
-      predictFeedback.className = correct
-        ? 'explorer-feedback is-correct'
-        : 'explorer-feedback is-review';
-
-      predictFeedback.textContent = correct
-        ? `Correct! ${correctValue} is visited next.`
-        : `The next node is ${correctValue}. ` +
-          'Review the operation stack, then reveal the step.';
-
-      updateButtons();
-    }
-
-    options.forEach(value => {
-      const button = el(
-        'button', 'explorer-answer', String(value)
-      );
-
-      button.type = 'button';
-      button.setAttribute('aria-pressed', 'false');
-
-      button.addEventListener('click', () => {
-        selectPrediction(value, button);
-      });
-
-      predictOptions.appendChild(button);
-    });
-
-    const unsure = el(
-      'button', 'explorer-answer', 'Not sure'
     );
 
-    unsure.type = 'button';
+    buildCount.textContent =
+      `${inorderNodes(root).length} nodes`;
 
-    unsure.addEventListener('click', () => {
-      selectPrediction('unsure', unsure);
-    });
-
-    predictOptions.appendChild(unsure);
-  }
-
-  function update() {
-    const step = steps[stepIndex];
-    if (!step) return;
-
-    nodeCount.textContent = `${countNodes(root)} nodes`;
-
-    drawTree(svg, root, step);
-    renderStack(step);
-    renderVisited(step);
-
-    const finished = stepIndex === steps.length - 1;
-    const found = mode === 'search' &&
-      step.current === target;
-
-    explanationTitle.textContent =
-      finished
-        ? found
-          ? 'Target found!'
-          : 'Exploration complete'
-        : stepIndex === 0
-          ? 'Ready to begin'
-          : `Step ${stepIndex}: Visit ${step.current}`;
-
-    explanationText.textContent =
-      finished && mode === 'search' && !found
-        ? `Target ${target} was not found after visiting ` +
-          `${step.visited.length} nodes.`
-        : step.explanation;
-
-    if (finished) finishRun();
-
-    renderPrediction();
-    updateButtons();
-  }
-
-  function advance() {
-    if (stepIndex >= steps.length - 1) return;
-
-    stepIndex += 1;
-    update();
-  }
-
-  function restartRun(message = '') {
-    stopPlayback();
-
-    steps = generateSteps(root, order, mode, target);
-    stepIndex = 0;
-    prediction = null;
-
-    update();
-
-    if (message) {
-      configFeedback.textContent = message;
-    }
-  }
-
-  function startPlayback() {
-    if (playing || stepIndex >= steps.length - 1) {
-      return;
-    }
-
-    playing = true;
-    updateButtons();
-
-    playTimer = setInterval(() => {
-      if (stepIndex >= steps.length - 1) {
-        stopPlayback();
-        updateButtons();
-        return;
-      }
-
-      // Automatic playback bypasses prediction.
-      // Manual Next requires a prediction first.
-      advance();
-
-      if (stepIndex >= steps.length - 1) {
-        stopPlayback();
-        updateButtons();
-      }
-    }, Number(speedSelect.value));
-  }
-
-  previousButton.addEventListener('click', () => {
-    stopPlayback();
-
-    if (stepIndex > 0) {
-      stepIndex -= 1;
-      update();
-    }
-  });
-
-  nextButton.addEventListener('click', () => {
-    if (prediction !== null) {
-      stopPlayback();
-      advance();
-    }
-  });
-
-  playButton.addEventListener('click', () => {
-    if (playing) {
-      stopPlayback();
-      updateButtons();
-    } else {
-      startPlayback();
-    }
-  });
-
-  restartButton.addEventListener('click', () => {
-    restartRun();
-  });
-
-  speedSelect.addEventListener('change', () => {
-    if (!playing) return;
-    stopPlayback();
-    startPlayback();
-  });
-
-  function applyConfiguration() {
-    const selectedMode = modeSelect.value;
-    const selectedOrder = orderSelect.value;
-
-    if (selectedMode === 'search') {
-      const raw = targetInput.value.trim();
-      const number = Number(raw);
-
-      if (
-        raw === '' ||
-        !Number.isInteger(number) ||
-        number < 0 ||
-        number > 99
-      ) {
-        configFeedback.className =
-          'explorer-feedback is-review';
-
-        configFeedback.textContent =
-          'Enter a whole number between 0 and 99.';
-        return;
-      }
-
-      target = number;
-    }
-
-    order = selectedOrder;
-    mode = selectedMode;
-
-    configFeedback.className = 'explorer-feedback';
-
-    restartRun(
-      mode === 'search'
-        ? `Searching for ${target} using ${order.replace('_', '-').toLowerCase()}.`
-        : 'Ready to visit all nodes. Predict the first node.'
+    renderTrail(
+      buildTrail,
+      pendingInsert?.path ?? [],
+      'No comparisons yet.'
     );
+
+    buildInput.disabled = Boolean(pendingInsert);
+    buildStart.disabled = Boolean(pendingInsert);
+
+    [
+      goLeft,
+      goRight,
+      insertHint,
+      cancelInsert
+    ].forEach(control => {
+      control.hidden = !pendingInsert;
+    });
   }
 
-  configureButton.addEventListener(
-    'click', applyConfiguration
-  );
-
-  modeSelect.addEventListener('change', () => {
-    targetField.hidden = modeSelect.value !== 'search';
-  });
-
-  insertForm.addEventListener('submit', event => {
-    event.preventDefault();
-
-    const raw = insertInput.value.trim();
+  function startInsertion(raw) {
     const value = Number(raw);
 
-    insertFeedback.className = 'explorer-feedback';
-
     if (
-      raw === '' ||
+      !raw.trim() ||
       !Number.isInteger(value) ||
       value < 0 ||
       value > 99
     ) {
-      insertFeedback.className =
-        'explorer-feedback is-review';
-      insertFeedback.textContent =
-        'Please enter a whole number between 0 and 99.';
+      say(
+        buildCallout,
+        'Check the value',
+        'Enter a whole number from 0 to 99.'
+      );
       return;
     }
 
-    if (findNode(root, value)) {
-      insertFeedback.className =
-        'explorer-feedback is-review';
-      insertFeedback.textContent =
-        `${value} is already in the tree. Try another value.`;
+    if (find(root, value)) {
+      say(
+        buildCallout,
+        'Duplicate value',
+        `${value} already exists. ` +
+        'A BST cannot contain duplicate keys.'
+      );
       return;
     }
 
-    if (countNodes(root) >= MAX_NODES) {
-      insertFeedback.className =
-        'explorer-feedback is-review';
-      insertFeedback.textContent =
-        'The tree has reached 15 nodes. Reset to continue.';
+    if (inorderNodes(root).length >= MAX_NODES) {
+      say(
+        buildCallout,
+        'Tree limit',
+        'This exercise allows a maximum of 15 nodes. ' +
+        'Reset the tree to try again.'
+      );
       return;
     }
 
-    root = insertNode(root, value);
-    treeEdited = true;
+    lastAdded = null;
+    selectedBuild = null;
 
-    insertFeedback.className =
-      'explorer-feedback is-correct';
+    pendingInsert = {
+      value,
+      current: root,
+      path: []
+    };
 
-    insertFeedback.textContent =
-      `${value} was inserted successfully. ` +
-      'Run DFS to see the new traversal.';
+    updateBuild();
 
-    insertInput.value = '';
-    restartRun();
+    say(
+      buildCallout,
+      'Your turn',
+      `Compare ${value} with ${root.value}. ` +
+      'Should you move left or right?'
+    );
+  }
+
+  buildForm.addEventListener('submit', event => {
+    event.preventDefault();
+
+    startInsertion(buildInput.value);
   });
 
-  resetTreeButton.addEventListener('click', () => {
-    root = makeTree();
-    treeEdited = false;
-    insertInput.value = '';
+  function chooseSide(side) {
+    if (!pendingInsert) return;
 
-    insertFeedback.className = 'explorer-feedback';
-    insertFeedback.textContent =
-      'Original tree restored.';
+    const { value, current } = pendingInsert;
 
-    restartRun();
+    const expected = value < current.value
+      ? 'left'
+      : 'right';
+
+    const relation = expected === 'left'
+      ? '<'
+      : '>';
+
+    if (side !== expected) {
+      say(
+        buildCallout,
+        'Try again',
+        `${value} ${relation} ${current.value}. ` +
+        'Recheck whether smaller values go left ' +
+        'or larger values go right.'
+      );
+      return;
+    }
+
+    pendingInsert.path.push(current.value);
+
+    if (current[side]) {
+      pendingInsert.current = current[side];
+
+      updateBuild();
+
+      say(
+        buildCallout,
+        'Correct comparison',
+        `${value} ${relation} ${current.value}: ` +
+        `move ${side}. Now compare ${value} with ` +
+        `${pendingInsert.current.value}.`
+      );
+    } else {
+      // Correctly reached an empty child position.
+      root = insert(root, value);
+
+      addedValues.push(value);
+      lastAdded = value;
+      pendingInsert = null;
+
+      updateBuild();
+
+      // The changed tree invalidates old saved traversals.
+      Object.keys(savedOrders).forEach(key => {
+        delete savedOrders[key];
+      });
+
+      updateSavedComparison();
+      resetLab();
+      resetChallenge();
+
+      say(
+        buildCallout,
+        'Inserted successfully!',
+        `${value} ${relation} ${current.value}. ` +
+        `The ${side} position was empty, so ${value} ` +
+        `is now a child of ${current.value}. ` +
+        'Try Run DFS to see what changes.'
+      );
+    }
+  }
+
+  goLeft.addEventListener('click', () => {
+    chooseSide('left');
   });
 
-  // ==========================================
-  // ASSEMBLE THE PAGE
-  // ==========================================
+  goRight.addEventListener('click', () => {
+    chooseSide('right');
+  });
+
+  insertHint.addEventListener('click', () => {
+    if (!pendingInsert) return;
+
+    const { value, current } = pendingInsert;
+
+    say(
+      buildCallout,
+      'Hint',
+      `${value} ${value < current.value ? '<' : '>'} ` +
+      `${current.value}. Choose ` +
+      `${value < current.value ? 'left' : 'right'}.`
+    );
+  });
+
+  cancelInsert.addEventListener('click', () => {
+    pendingInsert = null;
+
+    updateBuild();
+
+    say(
+      buildCallout,
+      'Cancelled',
+      'Choose a value and start again when ready.'
+    );
+  });
+
+  resetTree.addEventListener('click', () => {
+    root = makeTree(START_VALUES);
+    addedValues = [];
+
+    pendingInsert = null;
+    selectedBuild = null;
+    lastAdded = null;
+
+    buildInput.value = '68';
+
+    updateBuild();
+
+    Object.keys(savedOrders).forEach(key => {
+      delete savedOrders[key];
+    });
+
+    updateSavedComparison();
+    resetLab();
+    resetChallenge();
+
+    say(
+      buildCallout,
+      'Tree restored',
+      'The original example tree is back. ' +
+      'Try a new value.'
+    );
+  });
+
+  /* ==========================================
+     TAB 2 — RUN DFS
+     ========================================== */
+
+  const lab = el('div', 'explorer-lab');
+
+  const labToolbar = el(
+    'div',
+    'explorer-order-tabs'
+  );
+
+  const labOrderButtons = {};
+
+  Object.entries(ORDER_INFO).forEach(
+    ([key, info]) => {
+      const control = button(
+        info.title,
+        'explorer-order'
+      );
+
+      control.setAttribute(
+        'aria-pressed',
+        'false'
+      );
+
+      control.addEventListener('click', () => {
+        labOrder = key;
+        resetLab();
+      });
+
+      labOrderButtons[key] = control;
+      labToolbar.appendChild(control);
+    }
+  );
+
+  const labRule = el(
+    'span',
+    'explorer-rule'
+  );
+
+  labToolbar.appendChild(labRule);
+
+  const labLayout = el(
+    'div',
+    'explorer-layout'
+  );
+
+  const labTreeCard = el(
+    'article',
+    'explorer-card'
+  );
+
+  const labView = makeTreeView();
+
+  const labVisited = el(
+    'div',
+    'explorer-trail'
+  );
+
+  labTreeCard.append(
+    el('h2', '', 'Follow the traversal'),
+    labView.frame,
+    el(
+      'strong',
+      'explorer-small-heading',
+      'Visited order'
+    ),
+    labVisited
+  );
+
+  // Compact comparison of the runs students finish.
+  const savedOrders = {};
+
+  const comparison = el(
+    'details',
+    'explorer-comparison'
+  );
+
+  comparison.appendChild(
+    el(
+      'summary',
+      '',
+      'Compare completed traversals'
+    )
+  );
+
+  const comparisonContent = el(
+    'div',
+    'explorer-comparison-content'
+  );
+
+  comparison.appendChild(comparisonContent);
+  labTreeCard.appendChild(comparison);
+
+  const labSide = el(
+    'div',
+    'explorer-side'
+  );
+
+  const stackCard = el(
+    'article',
+    'explorer-card explorer-stack-card'
+  );
+
+  const stackTitle = el(
+    'h2',
+    '',
+    'Live stack'
+  );
+
+  const stackSub = el(
+    'p',
+    'explorer-muted'
+  );
+
+  const stackContents = el(
+    'div',
+    'explorer-stack'
+  );
+
+  stackCard.append(
+    stackTitle,
+    stackSub,
+    stackContents
+  );
+
+  const labCallout = makeCallout(
+    'Ready',
+    'Choose a traversal and begin.'
+  );
+
+  const labActivity = el(
+    'article',
+    'explorer-card explorer-task'
+  );
+
+  labActivity.append(
+    el(
+      'span',
+      'explorer-eyebrow',
+      'OPTIONAL PREDICTION'
+    ),
+    el(
+      'h2',
+      '',
+      'Which node comes next?'
+    )
+  );
+
+  const guesses = el(
+    'div',
+    'explorer-guess-buttons'
+  );
+
+  const guessFeedback = el(
+    'p',
+    'explorer-feedback'
+  );
+
+  guessFeedback.setAttribute(
+    'aria-live',
+    'polite'
+  );
+
+  const labControls = el(
+    'div',
+    'explorer-controls'
+  );
+
+  const labNext = button(
+    'Reveal Next Step →',
+    'explorer-btn explorer-primary'
+  );
+
+  const labPrev = button('← Previous');
+  const labPlay = button('Play');
+  const labRestart = button('Restart');
+
+  const labSpeed = el(
+    'select',
+    'explorer-speed'
+  );
+
+  [
+    ['1800', 'Slow'],
+    ['1100', 'Normal'],
+    ['650', 'Fast']
+  ].forEach(([value, label]) => {
+    const option = el('option', '', label);
+
+    option.value = value;
+    labSpeed.appendChild(option);
+  });
+
+  labSpeed.value = '1100';
+
+  labSpeed.setAttribute(
+    'aria-label',
+    'Playback speed'
+  );
+
+  const labCounter = el(
+    'span',
+    'explorer-counter'
+  );
+
+  labControls.append(
+    labNext,
+    labPrev,
+    labPlay,
+    labRestart,
+    labSpeed,
+    labCounter
+  );
+
+  labActivity.append(
+    guesses,
+    guessFeedback,
+    labControls
+  );
+
+  labSide.append(
+    stackCard,
+    labCallout.box,
+    labActivity
+  );
+
+  labLayout.append(
+    labTreeCard,
+    labSide
+  );
+
+  lab.append(
+    labToolbar,
+    labLayout
+  );
+
+  panels[1].appendChild(lab);
+
+  function stopLab() {
+    if (labTimer !== null) {
+      clearInterval(labTimer);
+    }
+
+    labTimer = null;
+    labPlay.textContent = 'Play';
+  }
+
+  function resetLab() {
+    stopLab();
+
+    labSteps = traversalSteps(
+      root,
+      labOrder
+    );
+
+    labIndex = 0;
+    selectedLab = null;
+
+    refreshLab();
+  }
+
+  function updateSavedComparison() {
+    comparisonContent.replaceChildren();
+
+    if (!Object.keys(savedOrders).length) {
+      comparisonContent.append(
+        el(
+          'p',
+          'explorer-muted',
+          'Complete a traversal to record its sequence.'
+        )
+      );
+    }
+
+    Object.entries(savedOrders).forEach(
+      ([key, sequence]) => {
+        comparisonContent.appendChild(
+          el(
+            'p',
+            '',
+            `${ORDER_INFO[key].title}: ` +
+            sequence.join(' → ')
+          )
+        );
+      }
+    );
+  }
+
+  function refreshLab() {
+    const step = labSteps[labIndex];
+
+    labView.waitingLabel.textContent =
+      labOrder === 'pre'
+        ? 'On stack'
+        : 'Upcoming';
+
+    drawTree(
+      labView,
+      root,
+      {
+        current: step.current,
+        visited: step.visited,
+        pending: step.pending,
+        selected: selectedLab
+      },
+      node => {
+        selectedLab = node.value;
+
+        refreshLab();
+
+        say(
+          labCallout,
+          `Node ${node.value}`,
+          node.parent
+            ? `This node has parent ${node.parent.value}. ` +
+              'Explore the subtrees to discover when it is visited.'
+            : 'This is the root of the tree.'
+        );
+      }
+    );
+
+    renderTrail(
+      labVisited,
+      step.visited,
+      'No nodes visited yet.'
+    );
+
+    Object.entries(labOrderButtons).forEach(
+      ([key, control]) => {
+        control.setAttribute(
+          'aria-pressed',
+          String(key === labOrder)
+        );
+      }
+    );
+
+    labRule.textContent =
+      ORDER_INFO[labOrder].rule;
+
+    stackTitle.textContent =
+      labOrder === 'pre'
+        ? 'Live stack (LIFO)'
+        : 'Upcoming visits';
+
+    stackSub.textContent =
+      labOrder === 'pre'
+        ? 'The top of the stack is visited next. ' +
+          'Right children are pushed before left children.'
+        : 'This is the traversal sequence, not a LIFO stack.';
+
+    stackContents.replaceChildren();
+
+    if (!step.pending.length) {
+      stackContents.append(
+        el(
+          'p',
+          'explorer-muted',
+          'Nothing left to visit.'
+        )
+      );
+    }
+
+    step.pending.forEach((value, index) => {
+      const item = el(
+        'div',
+        'explorer-stack-row'
+      );
+
+      item.append(
+        el('strong', '', String(value))
+      );
+
+      if (index === 0) {
+        item.append(
+          el(
+            'span',
+            'explorer-stack-top',
+            labOrder === 'pre' ? 'TOP' : 'NEXT'
+          )
+        );
+      }
+
+      stackContents.appendChild(item);
+    });
+
+    // Prediction is optional.
+    guesses.replaceChildren();
+
+    guessFeedback.textContent = '';
+    guessFeedback.className = 'explorer-feedback';
+
+    const finished =
+      labIndex === labSteps.length - 1;
+
+    if (!finished) {
+      const correct =
+        labSteps[labIndex + 1].current;
+
+      const distractors = inorderNodes(root)
+        .map(node => node.value)
+        .filter(
+          value =>
+            value !== correct &&
+            !step.visited.includes(value)
+        )
+        .slice(0, 2);
+
+      if (distractors.length < 2) {
+        inorderNodes(root)
+          .map(node => node.value)
+          .forEach(value => {
+            if (
+              value !== correct &&
+              !distractors.includes(value) &&
+              distractors.length < 2
+            ) {
+              distractors.push(value);
+            }
+          });
+      }
+
+      [
+        correct,
+        ...distractors,
+        'Not sure'
+      ].forEach(value => {
+        const choice = button(
+          String(value),
+          'explorer-guess'
+        );
+
+        choice.setAttribute(
+          'aria-pressed',
+          'false'
+        );
+
+        choice.addEventListener('click', () => {
+          guesses.querySelectorAll('button')
+            .forEach(other => {
+              other.setAttribute(
+                'aria-pressed',
+                String(other === choice)
+              );
+            });
+
+          const good = value === correct;
+
+          guessFeedback.className =
+            `explorer-feedback ${
+              good ? 'is-correct' : 'is-review'
+            }`;
+
+          guessFeedback.textContent = good
+            ? `Correct! ${correct} is next.`
+            : `Next is ${correct}. Look at the ` +
+              (
+                labOrder === 'pre'
+                  ? 'stack'
+                  : 'traversal rule'
+              ) +
+              ' and try the next step.';
+
+          say(
+            labCallout,
+            'Prediction feedback',
+            guessFeedback.textContent
+          );
+        });
+
+        guesses.appendChild(choice);
+      });
+    } else {
+      guesses.append(
+        el(
+          'p',
+          'explorer-muted',
+          'Finished! Try another order and compare.'
+        )
+      );
+
+      savedOrders[labOrder] = [
+        ...step.visited
+      ];
+
+      updateSavedComparison();
+    }
+
+    labPrev.disabled = labIndex === 0;
+    labNext.disabled = finished;
+    labPlay.disabled = finished;
+
+    labNext.textContent = finished
+      ? 'Traversal complete ✓'
+      : 'Reveal Next Step →';
+
+    labCounter.textContent =
+      `Step ${labIndex} of ${labSteps.length - 1}`;
+
+    say(
+      labCallout,
+      finished
+        ? 'Traversal complete'
+        : labIndex
+          ? `Step ${labIndex}: visit ${step.current}`
+          : 'Ready to begin',
+      step.description
+    );
+  }
+
+  function labAdvance() {
+    if (labIndex >= labSteps.length - 1) {
+      return;
+    }
+
+    labIndex++;
+    selectedLab = null;
+
+    refreshLab();
+
+    if (labIndex === labSteps.length - 1) {
+      stopLab();
+    }
+  }
+
+  labNext.addEventListener('click', () => {
+    stopLab();
+    labAdvance();
+  });
+
+  labPrev.addEventListener('click', () => {
+    stopLab();
+
+    if (labIndex > 0) {
+      labIndex--;
+      refreshLab();
+    }
+  });
+
+  labRestart.addEventListener(
+    'click',
+    resetLab
+  );
+
+  labPlay.addEventListener('click', () => {
+    if (labTimer !== null) {
+      stopLab();
+      return;
+    }
+
+    if (labIndex >= labSteps.length - 1) {
+      return;
+    }
+
+    labPlay.textContent = 'Pause';
+
+    labTimer = setInterval(
+      labAdvance,
+      Number(labSpeed.value)
+    );
+  });
+
+  labSpeed.addEventListener('change', () => {
+    if (labTimer === null) return;
+
+    stopLab();
+    labPlay.click();
+  });
+
+  /* ==========================================
+     TAB 3 — TRAVERSAL CHALLENGE
+     ========================================== */
+
+  const challengeToolbar = el(
+    'div',
+    'explorer-order-tabs'
+  );
+
+  const challengeOrderButtons = {};
+
+  Object.entries(ORDER_INFO).forEach(
+    ([key, info]) => {
+      const control = button(
+        info.title,
+        'explorer-order'
+      );
+
+      control.addEventListener('click', () => {
+        challengeOrder = key;
+        resetChallenge();
+      });
+
+      challengeOrderButtons[key] = control;
+      challengeToolbar.appendChild(control);
+    }
+  );
+
+  const challengeRule = el(
+    'span',
+    'explorer-rule'
+  );
+
+  challengeToolbar.appendChild(challengeRule);
+
+  const challengeLayout = el(
+    'div',
+    'explorer-layout'
+  );
+
+  const challengeTreeCard = el(
+    'article',
+    'explorer-card'
+  );
+
+  const challengeTreeView = makeTreeView(
+    'challenge'
+  );
+
+  const challengeTrail = el(
+    'div',
+    'explorer-trail'
+  );
+
+  challengeTreeCard.append(
+    el(
+      'h2',
+      '',
+      'Click the nodes in order'
+    ),
+    el(
+      'p',
+      'explorer-muted',
+      'Choose each node on the tree. Correct choices ' +
+      'are numbered. Wrong choices can be retried.'
+    ),
+    challengeTreeView.frame,
+    el(
+      'strong',
+      'explorer-small-heading',
+      'Your traversal'
+    ),
+    challengeTrail
+  );
+
+  const challengeSide = el(
+    'div',
+    'explorer-side'
+  );
+
+  const challengeCard = el(
+    'article',
+    'explorer-card explorer-task'
+  );
+
+  const challengeCount = el(
+    'p',
+    'explorer-muted'
+  );
+
+  const challengeCallout = makeCallout(
+    'Your challenge',
+    'Select the first node to visit.'
+  );
+
+  const challengeHint = button(
+    'Show a hint'
+  );
+
+  const challengeRestart = button(
+    'Start over'
+  );
+
+  const challengeActions = el(
+    'div',
+    'explorer-choices'
+  );
+
+  challengeActions.append(
+    challengeHint,
+    challengeRestart
+  );
+
+  challengeCard.append(
+    el(
+      'span',
+      'explorer-eyebrow',
+      'APPLY WHAT YOU LEARNED'
+    ),
+    el(
+      'h2',
+      '',
+      'Build the full traversal'
+    ),
+    challengeCount,
+    challengeCallout.box,
+    challengeActions
+  );
+
+  challengeSide.appendChild(challengeCard);
+
+  challengeLayout.append(
+    challengeTreeCard,
+    challengeSide
+  );
+
+  panels[2].append(
+    challengeToolbar,
+    challengeLayout
+  );
+
+  function resetChallenge() {
+    challengeVisited = [];
+    challengeWrong = null;
+
+    refreshChallenge();
+
+    say(
+      challengeCallout,
+      'Your challenge',
+      `Click the first node using ` +
+      `${ORDER_INFO[challengeOrder].rule}.`
+    );
+  }
+
+  function refreshChallenge() {
+    Object.entries(challengeOrderButtons)
+      .forEach(([key, control]) => {
+        control.setAttribute(
+          'aria-pressed',
+          String(key === challengeOrder)
+        );
+      });
+
+    challengeRule.textContent =
+      ORDER_INFO[challengeOrder].rule;
+
+    const expected = orderValues(
+      root,
+      challengeOrder
+    );
+
+    const done =
+      challengeVisited.length === expected.length;
+
+    drawTree(
+      challengeTreeView,
+      root,
+      {
+        visited: challengeVisited,
+        current: null,
+        error: challengeWrong
+      },
+      node => {
+        if (
+          challengeVisited.includes(node.value) ||
+          done
+        ) {
+          return;
+        }
+
+        const next =
+          expected[challengeVisited.length];
+
+        if (node.value !== next) {
+          challengeWrong = node.value;
+
+          refreshChallenge();
+
+          say(
+            challengeCallout,
+            'Try another node',
+            `Not ${node.value} yet. Use ` +
+            `${ORDER_INFO[challengeOrder].rule}. ` +
+            'You can ask for a hint or try again.'
+          );
+
+          return;
+        }
+
+        challengeWrong = null;
+        challengeVisited.push(node.value);
+
+        refreshChallenge();
+
+        const complete =
+          challengeVisited.length === expected.length;
+
+        say(
+          challengeCallout,
+          complete
+            ? 'Challenge complete!'
+            : 'Correct node!',
+          complete
+            ? `You discovered the ` +
+              `${ORDER_INFO[challengeOrder].title.toLowerCase()} ` +
+              `sequence: ${expected.join(' → ')}. ` +
+              'Try another traversal to compare.'
+            : `${node.value} is visit ` +
+              `#${challengeVisited.length}. ` +
+              'Choose the next node.'
+        );
+      }
+    );
+
+    renderTrail(
+      challengeTrail,
+      challengeVisited,
+      'Click the first node in the tree.'
+    );
+
+    challengeCount.textContent =
+      `${challengeVisited.length} of ` +
+      `${expected.length} nodes selected`;
+
+    challengeHint.disabled = done;
+  }
+
+  challengeHint.addEventListener('click', () => {
+    const expected = orderValues(
+      root,
+      challengeOrder
+    );
+
+    if (
+      challengeVisited.length >= expected.length
+    ) {
+      return;
+    }
+
+    const next =
+      expected[challengeVisited.length];
+
+    say(
+      challengeCallout,
+      'Hint',
+      `The next correct node is ${next}. ` +
+      `The rule is ${ORDER_INFO[challengeOrder].rule}.`
+    );
+  });
+
+  challengeRestart.addEventListener(
+    'click',
+    resetChallenge
+  );
+
+  /* ==========================================
+     BOTTOM NAVIGATION
+     ========================================== */
+
+  const navigation = el(
+    'nav',
+    'explorer-navigation'
+  );
+
+  const back = el(
+    'a',
+    'explorer-btn',
+    '← DFS Introduction'
+  );
+
+  back.href = '#/concept-idea';
+
+  const forward = el(
+    'a',
+    'explorer-btn explorer-primary',
+    'Next: Practice →'
+  );
+
+  forward.href = '#/practice';
+
+  navigation.append(back, forward);
 
   page.append(
-    progress,
     intro,
-    setup,
-    layout,
-    compareCard,
-    experiment,
-    reflect,
+    tabBar,
+    ...panels,
     navigation
   );
 
   container.appendChild(page);
 
-  restartRun();
+  // Initial render.
+  updateBuild();
+  updateSavedComparison();
+  resetLab();
+  resetChallenge();
+  showTab(0);
 
+  // Cleanup for router navigation.
   return () => {
-    stopPlayback();
-    headerObserver?.disconnect();
+    stopLab();
   };
 }

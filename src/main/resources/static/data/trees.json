@@ -1,5 +1,6 @@
+
 {
-  "_comment": "Insertion orders for the fixed lesson trees. The server builds the actual tree (POST /api/tree/preview), so the shape always matches the Java BST. Expected DFS results for both trees are in the ID document, section 11.2.",
+  "_comment": "A and B are lesson trees. quizA and quizB are separate assessment trees. Each values array is the BST insertion order.",
   "A": {
     "label": "Tree A",
     "values": [50, 30, 70, 20, 40, 60, 80]
@@ -7,5 +8,13 @@
   "B": {
     "label": "Tree B",
     "values": [45, 25, 65, 15, 35, 55, 30]
+  },
+  "quizA": {
+    "label": "Quiz Tree A",
+    "values": [67, 33, 86, 15, 52, 74, 96, 45]
+  },
+  "quizB": {
+    "label": "Quiz Tree B",
+    "values": [59, 26, 82, 13, 41, 72, 93, 36]
   }
 }
