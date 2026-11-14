@@ -1,8 +1,18 @@
 
 /**
  * COS212 DFS Tutor — Applied Practice
- * Three short tabs, new values, no progress bar.
+ * Four short tabs, no progress bar.
+ *
+ * Tab 1 is Practice 1 (ticket F-05, FR-10, ID sections 10.4 and 11.3): predict each node DFS
+ * visits when searching tree B for 55. It uses the shared tree view, stack panel, step player and
+ * predict mode, and the DFS result always comes from the server (NFR-03).
  */
+
+import { api, loadData } from '../api.js';
+import { renderTree } from '../components/tree-view.js';
+import { StackPanel } from '../components/stack-panel.js';
+import { StepPlayer } from '../components/step-player.js';
+import { PredictMode } from '../components/predict-mode.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 
@@ -496,13 +506,138 @@ function parseSequence(raw) {
    MAIN PRACTICE SCREEN
    ========================================== */
 
-export function render(screen, container) {
+/* ==========================================
+   PRACTICE 1: PREDICT THE SEARCH (F-05)
+   ========================================== */
+
+/**
+ * Builds Practice 1 inside `panel`: the student clicks (or focuses and presses Enter on) the node
+ * DFS visits next. Wrong guesses climb the hint ladder; after two level-3 hints predict mode
+ * suggests replaying the worked example.
+ *
+ * @param {HTMLElement} panel - the tab panel to draw into
+ * @param {object} options
+ * @param {string} options.treeLabel - for example "Tree B"
+ * @param {number} options.target - the value to search for
+ * @param {() => void} options.onDone - called when the last step has been revealed
+ * @returns {{start: (values: number[]) => Promise<void>, stop: () => void}}
+ *   call start with the tree's insertion order once it is known
+ */
+function buildPredictPanel(panel, { treeLabel, target, onDone }) {
+  const wrap = el('div', 'practice-predict');
+
+  const heading = el('div', 'practice-heading');
+  heading.append(
+    el('h2', '', `Practice 1: Predict the search for ${target}`),
+    el('span', 'practice-count', treeLabel)
+  );
+
+  const intro = el(
+    'p',
+    'practice-muted',
+    `DFS is searching ${treeLabel} for ${target}. Before each step, choose the node you ` +
+    'think DFS visits next: click it, or move to it with Tab and press Enter. ' +
+    'If you are not sure, a wrong guess gives you a hint.'
+  );
+
+  const layout = el('div', 'practice-predict-layout');
+
+  // Tree
+  const treeCard = el('div', 'practice-card');
+  const frame = el('div', 'practice-tree-frame');
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('class', 'practice-predict-svg');
+  const legend = el('div', 'practice-legend');
+  [
+    ['current', 'Current (filled)'],
+    ['visited', 'Visited (✓)'],
+    ['pending', 'On the stack (dashed)']
+  ].forEach(([kind, label]) => {
+    const item = el('span', 'practice-legend-item');
+    item.append(el('span', `practice-legend-dot ${kind}`), document.createTextNode(label));
+    legend.append(item);
+  });
+  frame.append(svg, legend);
+  treeCard.append(frame);
+
+  // Stack, step and feedback
+  const side = el('div', 'practice-card practice-stack-card');
+  const stackTitle = el('strong', 'practice-small-heading', 'Stack (top first)');
+  const stackBox = el('div', 'practice-predict-stack');
+  const status = el('p', 'practice-muted practice-predict-status');
+  const explanation = el('p', 'practice-predict-explanation');
+  explanation.setAttribute('aria-live', 'polite');
+  const feedback = el('div', 'message message--info');
+  feedback.setAttribute('aria-live', 'polite');
+  const actions = el('div', 'practice-actions');
+  const restart = button('↺ Start again');
+  actions.append(restart);
+  side.append(stackTitle, stackBox, status, explanation, feedback, actions);
+
+  layout.append(treeCard, side);
+  wrap.append(heading, intro, layout);
+  panel.append(wrap);
+
+  /** @type {PredictMode|null} */
+  let predict = null;
+  /** @type {import('../api.js').DfsResult|null} */
+  let result = null;
+
+  function begin() {
+    predict.start(result);
+    // The player's default "Press Next to start." does not apply here: there is no Next button.
+    explanation.textContent = 'Each step\'s explanation appears here once it is revealed.';
+  }
+
+  restart.addEventListener('click', () => {
+    if (predict && result) begin();
+  });
+
+  async function start(values) {
+    feedback.className = 'message message--info';
+    feedback.textContent = 'Loading the practice tree…';
+    restart.disabled = true;
+    try {
+      const [view, search] = await Promise.all([
+        api.preview(values),
+        api.search(target, values)
+      ]);
+      if (!panel.isConnected) return;
+      const tree = renderTree(svg, view);
+      const stack = new StackPanel(stackBox);
+      const player = new StepPlayer({
+        tree,
+        stack,
+        explanation,
+        status,
+        rootValue: view.root?.value ?? null
+      });
+      predict = new PredictMode({ player, tree, feedback, onFinish: onDone });
+      result = search;
+      restart.disabled = false;
+      begin();
+    } catch (error) {
+      feedback.className = 'message message--error';
+      feedback.textContent =
+        'The practice tree could not be loaded from the server. ' +
+        `Check that the app is running (./mvnw spring-boot:run). ${error.message ?? ''}`;
+    }
+  }
+
+  return {
+    start,
+    stop: () => predict?.stop()
+  };
+}
+
+export function render(screen, container, ctx = {}) {
   const page = el('main', 'practice-page');
 
   const tabs = [
-    ['repair', '1. Fix the BST'],
-    ['trace', '2. Trace DFS'],
-    ['sequence', '3. Traversal Tasks']
+    ['predict', '1. Predict DFS'],
+    ['repair', '2. Fix the BST'],
+    ['trace', '3. Trace DFS'],
+    ['sequence', '4. Traversal Tasks']
   ];
 
   const finishedTabs = new Set();
@@ -542,6 +677,9 @@ export function render(screen, container) {
   });
 
   let activeTab = 0;
+
+  /** The panel for a tab id, so adding or reordering tabs cannot send content to the wrong tab. */
+  const panelFor = id => panels[tabs.findIndex(([tabId]) => tabId === id)];
 
   const tabButtons = tabs.map(([id, label], i) => {
     const b = button(label, 'practice-tab');
@@ -609,15 +747,15 @@ export function render(screen, container) {
     let next = null;
 
     if (event.key === 'ArrowRight') {
-      next = (index + 1) % 3;
+      next = (index + 1) % tabs.length;
     }
 
     if (event.key === 'ArrowLeft') {
-      next = (index + 2) % 3;
+      next = (index + tabs.length - 1) % tabs.length;
     }
 
     if (event.key === 'Home') next = 0;
-    if (event.key === 'End') next = 2;
+    if (event.key === 'End') next = tabs.length - 1;
 
     if (next !== null) {
       event.preventDefault();
@@ -728,7 +866,7 @@ export function render(screen, container) {
     repairRight
   );
 
-  panels[0].append(repairLayout);
+  panelFor('repair').append(repairLayout);
 
   function loadRepair() {
     const scenario = REPAIRS[repairIndex];
@@ -1086,7 +1224,7 @@ export function render(screen, container) {
     traceSide
   );
 
-  panels[1].append(
+  panelFor('trace').append(
     traceModes,
     traceLayout
   );
@@ -1478,7 +1616,7 @@ export function render(screen, container) {
     seqRight
   );
 
-  panels[2].append(
+  panelFor('sequence').append(
     seqButtons,
     seqLayout
   );
@@ -1794,10 +1932,27 @@ export function render(screen, container) {
 
   container.replaceChildren(page);
 
+  // Practice 1 uses the screen's tree and target from lesson.json (tree B, search for 55).
+  const treeKey = screen.tree ?? 'B';
+  const predictPanel = buildPredictPanel(panelFor('predict'), {
+    treeLabel: `Tree ${treeKey}`,
+    target: screen.target ?? 55,
+    onDone: () => markDone('predict')
+  });
+
+  Promise.resolve(ctx.trees?.[treeKey] ?? loadData('trees').then(trees => trees[treeKey]))
+    .then(tree => {
+      if (!tree) throw new Error(`Tree ${treeKey} is missing from trees.json`);
+      return predictPanel.start(tree.values);
+    })
+    .catch(error => console.warn('Practice 1 could not start.', error));
+
   loadRepair();
   resetTrace();
   loadSequence();
   goTab(0);
 
-  return () => {};
+  return () => {
+    predictPanel.stop();
+  };
 }

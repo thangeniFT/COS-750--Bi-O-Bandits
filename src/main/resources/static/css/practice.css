@@ -660,3 +660,217 @@
     transition: none !important;
   }
 }
+
+/* ==========================================
+   PRACTICE 1: PREDICT DFS (F-05)
+   Styles for the shared tree view, stack panel and predict-mode
+   messages, scoped to this tab. Node state is shown by fill AND a
+   mark or line style, never by colour alone.
+   ========================================== */
+
+.practice-predict-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr);
+  gap: 18px;
+  margin-top: 14px;
+  align-items: start;
+}
+
+.practice-predict-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+  padding: 8px;
+}
+
+.practice-predict .tree-edge {
+  stroke: #94a3b8;
+  stroke-width: 2.4;
+}
+
+.practice-predict .tree-node circle:not(.tree-node__mark-bg) {
+  fill: #ffffff;
+  stroke: #64748b;
+  stroke-width: 2.4;
+  transition: fill 0.2s, stroke 0.2s;
+}
+
+.practice-predict .tree-node__value {
+  fill: var(--ink);
+  font: 700 16px Inter, Arial, sans-serif;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+.practice-predict .tree-node__mark,
+.practice-predict .tree-node__mark-bg {
+  display: none;
+}
+
+.practice-predict .tree-node__mark {
+  fill: #ffffff;
+  font: 700 10px Inter, Arial, sans-serif;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+.practice-predict .tree-node__mark-bg {
+  fill: #216b46;
+}
+
+.practice-predict .tree-node[data-state="current"] circle:not(.tree-node__mark-bg),
+.practice-predict .tree-node[data-state="found"] circle:not(.tree-node__mark-bg) {
+  fill: #334155;
+  stroke: #1e293b;
+}
+
+.practice-predict .tree-node[data-state="current"] .tree-node__value,
+.practice-predict .tree-node[data-state="found"] .tree-node__value {
+  fill: #ffffff;
+}
+
+.practice-predict .tree-node[data-state="visited"] circle:not(.tree-node__mark-bg) {
+  fill: #e8f5ec;
+  stroke: #216b46;
+}
+
+.practice-predict .tree-node[data-state="visited"] .tree-node__mark,
+.practice-predict .tree-node[data-state="visited"] .tree-node__mark-bg,
+.practice-predict .tree-node[data-state="found"] .tree-node__mark,
+.practice-predict .tree-node[data-state="found"] .tree-node__mark-bg {
+  display: inline;
+}
+
+.practice-predict .tree-node[data-state="on-stack"] circle:not(.tree-node__mark-bg) {
+  fill: #fff0d6;
+  stroke: #9a641c;
+  stroke-dasharray: 5 3;
+}
+
+.practice-predict .tree-node--clickable {
+  cursor: pointer;
+}
+
+.practice-predict .tree-node--clickable:hover circle:not(.tree-node__mark-bg) {
+  stroke: #1e293b;
+  stroke-width: 3.4;
+}
+
+.practice-predict .tree-node--clickable:focus {
+  outline: none;
+}
+
+.practice-predict .tree-node--clickable:focus-visible circle:not(.tree-node__mark-bg) {
+  stroke: #2563eb;
+  stroke-width: 4;
+}
+
+/* Stack panel */
+.practice-predict-stack .stack-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.practice-predict-stack .stack-panel__item {
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #ffffff;
+  font-family: ui-monospace, Consolas, monospace;
+  font-weight: 700;
+  text-align: center;
+}
+
+.practice-predict-stack .stack-panel__item--top {
+  border: 2px solid #9a641c;
+  background: #fff0d6;
+}
+
+.practice-predict-stack .stack-panel__item--top::after {
+  content: "  ← top";
+  font-weight: 600;
+}
+
+.practice-predict-stack .stack-panel__base {
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 2px;
+  background: #64748b;
+}
+
+.practice-predict-stack .stack-panel__empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.practice-predict-status {
+  margin: 14px 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.practice-predict-explanation {
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+
+/* Predict-mode feedback (class set by PredictMode: message message--info|success|error) */
+.practice-predict .message {
+  padding: 13px 15px;
+  border: 1px solid #9bb9d7;
+  border-left: 5px solid #32618c;
+  border-radius: 9px;
+  background: #eff6ff;
+  color: #17365c;
+  font-size: 14px;
+}
+
+.practice-predict .message p {
+  margin: 0 0 6px;
+}
+
+.practice-predict .message p:last-child {
+  margin-bottom: 0;
+}
+
+.practice-predict .message--success {
+  border-color: #b7dcc5;
+  border-left-color: #216b46;
+  background: #e8f5ec;
+  color: #185c39;
+}
+
+.practice-predict .message--error {
+  border-color: #f0c2c2;
+  border-left-color: #b42318;
+  background: #fdecec;
+  color: #7a1c14;
+}
+
+.practice-predict .message a {
+  color: inherit;
+  font-weight: 700;
+}
+
+.practice-predict .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .practice-predict-layout {
+    grid-template-columns: 1fr;
+  }
+}
