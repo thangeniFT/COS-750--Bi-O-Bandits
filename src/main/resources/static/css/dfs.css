@@ -1090,12 +1090,12 @@
 
 .dfs-lesson-page .dfs-nav--next {
   margin-left: auto;
-  background: var(--dfs-ink);
+  background: var(--dfs-accent);
   color: #ffffff;
 }
 
 .dfs-lesson-page .dfs-nav--next:hover {
-  background: #414b56;
+  background: #475569;
   color: #ffffff;
   transform: translateY(-2px);
 }

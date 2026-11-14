@@ -1017,7 +1017,7 @@ export function render(screen, container) {
   );
 
   const controls = el("div", "bst-player");
-  const nextStep = btn("Show next step →", "bst-btn primary");
+  const nextStep = btn("Reveal Next Step →", "bst-btn primary");
   const play = btn("Play", "bst-btn");
   const speed = el("select", "bst-speed");
 
