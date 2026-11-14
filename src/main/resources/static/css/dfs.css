@@ -289,6 +289,12 @@
   font-size: 12px;
 }
 
+.dfs-lesson-page .dfs-type-link .dfs-type-link__summary {
+  color: var(--dfs-ink);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .dfs-lesson-page .dfs-type-link:hover {
   border-color: var(--dfs-accent);
   background: #e8eef3;
@@ -526,6 +532,17 @@
 
 .dfs-lesson-page .dfs-compare__order {
   text-align: right;
+}
+
+.dfs-lesson-page .dfs-relate__text {
+  margin: 8px 0 0;
+  color: #374151;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.dfs-lesson-page .dfs-relate__text:first-of-type {
+  margin-top: 2px;
 }
 
 /* Step caption box (shared) */
@@ -1232,6 +1249,10 @@
 /* ============================================
    TAB 3 — WATCH THE STACK: UPDATED LAYOUT
    ============================================ */
+
+.dfs-lesson-page .dfs-stack-intro {
+  margin-bottom: 16px;
+}
 
 /* Balanced columns */
 .dfs-lesson-page .dfs-stack-grid {
