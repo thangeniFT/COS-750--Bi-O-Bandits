@@ -2,15 +2,51 @@
 /**
  * COS212 DFS Tutor — Applied Readiness Quiz
  * Three topic tabs, one question at a time.
- * Compatible with Guided Review.
+ *
+ * Each attempt picks unseen variants (selectItems), remembering seen ids in sessionStorage.
+ * Below the pass mark the results offer a guided review (F-08, ID section 10.5), most
+ * confident mistakes first; "Continue to summary anyway" is always offered.
+ * Review content comes from data/guided-review.json.
  */
 
+import {
+  addSeen,
+  nextStep,
+  planReview,
+  reviewOutcomes,
+  scoreQuiz,
+  selectItems
+} from '../quiz/quiz-engine.js';
+import { renderGuidedReview } from '../quiz/guided-review.js';
+
 const QUIZ_NS = 'http://www.w3.org/2000/svg';
+
+const QUIZ_RESULT_KEY = 'cos212-dfs-quiz-result';
+const QUIZ_SEEN_KEY = 'cos212-dfs-quiz-seen';
+
+function readSeen() {
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(QUIZ_SEEN_KEY));
+    return Array.isArray(parsed) ? parsed.filter(id => typeof id === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeSeen(ids) {
+  try {
+    sessionStorage.setItem(QUIZ_SEEN_KEY, JSON.stringify(ids));
+  } catch {
+    // Storage can be blocked; the quiz still works, retries may just repeat variants.
+  }
+}
 
 
 const QUIZ_TREES = {
   quizA: [67, 33, 86, 15, 52, 74, 96, 45],
-  quizB: [59, 26, 82, 13, 41, 72, 93, 36]
+  quizB: [59, 26, 82, 13, 41, 72, 93, 36],
+  // Lesson tree A (trees.json), used by the guided review. Shown as "Tree Example".
+  quizExample: [50, 30, 70, 20, 40, 60, 80]
 };
 
 
@@ -407,6 +443,7 @@ export function render(screen, container) {
 
   const state = {
     bank: null,
+    reviewContent: null,
     attempt: 0,
     items: [],
     index: 0,
@@ -538,6 +575,14 @@ export function render(screen, container) {
 
   results.hidden = true;
 
+  const reviewStage = qEl(
+    'section',
+    'quiz-card quiz-review'
+  );
+
+  reviewStage.setAttribute('aria-label', 'Guided review');
+  reviewStage.hidden = true;
+
   const nav = qEl(
     'nav',
     'quiz-navigation'
@@ -571,6 +616,7 @@ export function render(screen, container) {
     tabBar,
     stage,
     results,
+    reviewStage,
     nav
   );
 
@@ -667,6 +713,8 @@ export function render(screen, container) {
     results.hidden = true;
     stage.hidden = false;
 
+    reviewStage.hidden = true;
+
     renderQuestion();
   }
 
@@ -682,31 +730,12 @@ export function render(screen, container) {
     state.drafts.clear();
     state.confidences.clear();
 
-    const variant = attempt % 2 === 0
-      ? 'A'
-      : 'B';
-
-    const slots = new Map();
-
-    state.bank.items.forEach(item => {
-      if (!slots.has(item.slot)) {
-        slots.set(item.slot, []);
-      }
-
-      slots.get(item.slot).push(item);
-    });
-
-    state.items = [...slots.entries()]
-      .sort(
-        (a, b) => Number(a[0]) - Number(b[0])
-      )
-      .map(([, versions]) =>
-        versions.find(
-          q => q.variant === variant
-        ) || versions[0]
-      );
+    // One unseen variant per slot; remember what was shown for the next attempt.
+    state.items = selectItems(state.bank, readSeen());
+    writeSeen(addSeen(readSeen(), state.items));
 
     results.hidden = true;
+    reviewStage.hidden = true;
     stage.hidden = false;
 
     renderQuestion();
@@ -721,6 +750,8 @@ export function render(screen, container) {
 
     results.hidden = true;
     stage.hidden = false;
+
+    reviewStage.hidden = true;
 
     updateTabs();
 
@@ -1431,6 +1462,7 @@ export function render(screen, container) {
     if (!isFinished()) return;
 
     stage.hidden = true;
+    reviewStage.hidden = true;
     results.hidden = false;
     results.replaceChildren();
 
@@ -1440,12 +1472,25 @@ export function render(screen, container) {
       q => state.responses.get(q.slot)
     );
 
-    const correct = answers.filter(
-      a => a.correct
-    ).length;
+    // Same shape as QuizResponse in quiz-engine.js.
+    const responses = state.items.map((item, i) => ({
+      item,
+      answer: answers[i].response,
+      confidence: answers[i].confidence,
+      result: {
+        correct: answers[i].correct,
+        feedback: answers[i].explanation,
+        misconception: answers[i].misconception
+      }
+    }));
 
-    const pass =
-      correct >= state.bank.passMark;
+    const score = scoreQuiz(responses, state.bank.passMark);
+    const plan = planReview(responses);
+    const outcomesToReview = reviewOutcomes(plan);
+    const step = nextStep(score, outcomesToReview);
+
+    const correct = score.correct;
+    const pass = score.passed;
 
     const weak = answers.filter(
       a => !a.correct
@@ -1458,9 +1503,9 @@ export function render(screen, container) {
     // Preserve Guided Review integration.
     try {
       sessionStorage.setItem(
-        'cos212-dfs-quiz-result',
+        QUIZ_RESULT_KEY,
         JSON.stringify({
-          version: 1,
+          version: 2,
           attempt: state.attempt,
           correct,
           total: answers.length,
@@ -1472,7 +1517,9 @@ export function render(screen, container) {
             correct: a.correct,
             confidence: a.confidence,
             misconception: a.misconception
-          }))
+          })),
+          review: plan.review,
+          worthALook: plan.worthALook
         })
       );
     } catch (e) {
@@ -1492,7 +1539,7 @@ export function render(screen, container) {
         'h2',
         '',
         pass
-          ? 'Ready for Guided Review'
+          ? "You're ready to continue"
           : 'A few ideas to strengthen'
       ),
       qEl(
@@ -1610,9 +1657,21 @@ export function render(screen, container) {
       'quiz-actions'
     );
 
+    const toSummary = qEl(
+      'a',
+      step.primary === 'summary'
+        ? 'quiz-button quiz-button--primary'
+        : 'quiz-button quiz-button--quiet',
+      step.primary === 'summary'
+        ? 'Continue to summary →'
+        : 'Continue to summary anyway'
+    );
+
+    toSummary.href = '#/summary';
+
     const retry = qButton(
-      'Retry with alternate questions →',
-      'quiz-button quiz-button--primary'
+      'Retry with alternate questions',
+      'quiz-button'
     );
 
     retry.addEventListener('click', () => {
@@ -1622,17 +1681,77 @@ export function render(screen, container) {
     const reviewAction = qEl(
       'a',
       'quiz-button',
-      'Open Guided Review →'
+      'Open Guided Review page'
     );
 
     reviewAction.href = '#/review';
 
-    actions.append(
-      retry,
-      reviewAction
-    );
+    if (step.offerReview && state.reviewContent) {
+      const startReview = qButton(
+        step.primary === 'review'
+          ? 'Start guided review →'
+          : 'Review what I missed',
+        step.primary === 'review'
+          ? 'quiz-button quiz-button--primary'
+          : 'quiz-button'
+      );
+
+      startReview.addEventListener('click', () => {
+        showGuidedReview(outcomesToReview);
+      });
+
+      if (step.primary === 'review') {
+        actions.append(startReview, toSummary);
+      } else {
+        actions.append(toSummary, startReview, retry);
+      }
+    } else {
+      actions.append(toSummary, retry, reviewAction);
+    }
 
     results.appendChild(actions);
+
+    const heading = results.querySelector('h2');
+    heading?.setAttribute('tabindex', '-1');
+    heading?.focus({ preventScroll: true });
+  }
+
+  /* ==========================================
+     GUIDED REVIEW (F-08)
+     ========================================== */
+
+  function showGuidedReview(outcomes) {
+    stage.hidden = true;
+    results.hidden = true;
+    reviewStage.hidden = false;
+
+    renderGuidedReview(reviewStage, {
+      outcomes,
+      content: state.reviewContent,
+      // Review content uses lesson tree A, drawn with the quiz's own figure ("Tree Example").
+      drawTree: (treeKey, highlight) =>
+        qFigure(treeKey === 'A' ? 'quizExample' : treeKey, highlight),
+      onRetry: () => startAttempt(state.attempt + 1)
+    });
+  }
+
+  // The quiz still works without review content; the review button is simply not offered.
+  async function loadReviewContent() {
+    try {
+      const response = await fetch(
+        '/data/guided-review.json',
+        { cache: 'no-store' }
+      );
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const data = await response.json();
+
+      return data && data.outcomes ? data : null;
+    } catch (e) {
+      console.warn('Guided review content could not load.', e);
+      return null;
+    }
   }
 
   /* ==========================================
@@ -1667,6 +1786,10 @@ export function render(screen, container) {
       if (destroyed) return;
 
       state.bank = bank;
+      state.reviewContent = await loadReviewContent();
+
+      if (destroyed) return;
+
       startAttempt(0);
 
     } catch (e) {
