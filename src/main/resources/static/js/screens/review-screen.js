@@ -383,7 +383,7 @@ function reviewTree() {
    ========================================== */
 
 export function render(screen, container) {
-  const page = rvEl('main', 'review-page');
+  const page = rvEl('div', 'review-page');
 
   let stored = readReviewResult();
   let bank = new Map();

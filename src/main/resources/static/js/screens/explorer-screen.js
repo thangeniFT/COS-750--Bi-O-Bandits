@@ -10,6 +10,8 @@
  * No progress bar or backend changes required.
  */
 
+import { describeNodeTag, nameTreeNode } from '../util.js';
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const START_VALUES = [48, 27, 76, 14, 39, 63, 91, 34];
 const MAX_NODES = 15;
@@ -483,14 +485,7 @@ function drawTree(view, root, state, onPick) {
       class: classes.join(' '),
       role: 'button',
       tabindex: '0',
-      'data-value': node.value,
-      'aria-label':
-        `Node ${node.value}. ` +
-        (
-          node.parent
-            ? `Child of ${node.parent.value}.`
-            : 'Root.'
-        )
+      'data-value': node.value
     });
 
     const label = svgEl('text', {
@@ -516,6 +511,18 @@ function drawTree(view, root, state, onPick) {
             ? 'WAIT'
             : '';
 
+    // Insert results and selection also get a text tag, so no state is shown by colour alone.
+    if (!tag.textContent) {
+      tag.textContent =
+        node.value === state.error
+          ? '✕'
+          : node.value === state.added
+            ? 'NEW'
+            : node.value === state.selected
+              ? 'PICKED'
+              : '';
+    }
+
     group.append(
       svgEl('circle', {
         cx: x,
@@ -524,6 +531,14 @@ function drawTree(view, root, state, onPick) {
       }),
       label,
       tag
+    );
+
+    nameTreeNode(
+      group,
+      [
+        describeNodeTag(tag.textContent),
+        node.parent ? `Child of ${node.parent.value}.` : 'Root.'
+      ].filter(Boolean).join(' ')
     );
 
     const choose = () => onPick(node);
@@ -596,7 +611,7 @@ function renderTrail(target, numbers, blankText) {
    ========================================== */
 
 export function render(screen, container) {
-  const page = el('main', 'explorer-page');
+  const page = el('div', 'explorer-page');
 
   let root = makeTree(START_VALUES);
   let addedValues = [];

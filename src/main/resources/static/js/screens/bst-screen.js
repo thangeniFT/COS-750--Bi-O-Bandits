@@ -12,6 +12,8 @@
  * Warm-up questions are read from lesson.json.
  */
 
+import { nameTreeNode } from "../util.js";
+
 const NS = "http://www.w3.org/2000/svg";
 const INITIAL = [50, 30, 70, 20, 40, 60, 80];
 const MAX_NODES = 15;
@@ -202,8 +204,6 @@ function createTree(root, opts = {}) {
       "data-value": n.value,
       role: "button",
       tabindex: "0",
-      "aria-label": `Node ${n.value}. ` +
-        facts(n).map(([k,v]) => `${k}: ${v}`).join(". ")
     });
 
     g.append(
@@ -258,6 +258,8 @@ function createTree(root, opts = {}) {
       );
       g.appendChild(pill);
     }
+
+    nameTreeNode(g, facts(n).map(([k, v]) => `${k}: ${v}`).join(". ") + ".");
 
     if (onSelect) {
       g.addEventListener("click", () => onSelect(n, g));
@@ -428,7 +430,7 @@ const VOCAB = [
 ];
 
 export function render(screen, container) {
-  const page = el("main", "bst-page");
+  const page = el("div", "bst-page");
   const cleanup = [];
   const completed = new Set();
   let activeTab = 0;
@@ -1033,6 +1035,7 @@ export function render(screen, container) {
   const controls = el("div", "bst-player");
   const play = btn("Play", "bst-btn");
   const speed = el("select", "bst-speed");
+  speed.setAttribute("aria-label", "Playback speed");
 
   [
     ["2200", "Slow"],

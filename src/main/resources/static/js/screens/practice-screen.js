@@ -4,6 +4,8 @@
  * Three short tabs, new values, no progress bar.
  */
 
+import { describeNodeTag, nameTreeNode } from '../util.js';
+
 const NS = 'http://www.w3.org/2000/svg';
 
 const TRACE_VALUES = [62, 29, 84, 11, 46, 73, 95, 35];
@@ -382,12 +384,15 @@ function paint(view, root, state, onClick) {
       label = 'FIXED';
     }
 
+    // Selected and wrong picks also get a text tag, so they are never shown by colour alone.
+    if (!label && state.error === n.value) label = '✕';
+    if (!label && state.selected === n.value) label = 'PICKED';
+
     const group = svgEl('g', {
       class: classes.join(' '),
       role: 'button',
       tabindex: 0,
-      'data-value': n.value,
-      'aria-label': `Node ${n.value}`
+      'data-value': n.value
     });
 
     const text = svgEl('text', {
@@ -415,6 +420,8 @@ function paint(view, root, state, onClick) {
       text,
       tag
     );
+
+    nameTreeNode(group, describeNodeTag(label));
 
     const act = () => onClick(n);
 
@@ -497,7 +504,7 @@ function parseSequence(raw) {
    ========================================== */
 
 export function render(screen, container) {
-  const page = el('main', 'practice-page');
+  const page = el('div', 'practice-page');
 
   const tabs = [
     ['repair', '1. Fix the BST'],

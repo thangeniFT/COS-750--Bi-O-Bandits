@@ -104,7 +104,8 @@
   cursor: pointer;
 }
 
-.quiz-page .quiz-tab:hover:not(:disabled) {
+/* Not on the active tab: its white text would sit on the light hover colour. */
+.quiz-page .quiz-tab:hover:not(:disabled):not(.is-active) {
   background: #edf1f5;
 }
 
