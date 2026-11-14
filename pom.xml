@@ -38,12 +38,6 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Bean Validation (@NotNull etc.) on request bodies. -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency>
-
         <!-- Restarts the app when Java changes and reloads static files. Never packaged into the JAR. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
