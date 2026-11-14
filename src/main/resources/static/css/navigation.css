@@ -1,213 +1,375 @@
-/* COS212 DFS Tutor — shared top navigation
-   Uses the .top-nav links already created by setupTopNavigation() in app.js.
-   No changes to the screen renderers are required. */
 
-.app-header:has(> .top-nav) {
+/* ==========================================
+   COS212 LEARNING COMPANION
+   MAIN NAVIGATION
+
+   Colours: Blue, Dark Blue, Black, White
+   No top border
+   ========================================== */
+
+.app-header {
+  --nav-ink: #242b33;
+  --nav-muted: #526071;
+  --nav-blue: #2563a6;
+  --nav-dark-blue: #1e3a5f;
+  --nav-light-blue: #eaf2fb;
+  --nav-border: #dce1e5;
+
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
+
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 12px 24px;
-  min-height: 88px;
-  padding: 16px clamp(20px, 5.8vw, 84px);
+  justify-content: space-between;
+  gap: 24px;
+
+  width: 100%;
+  min-height: 72px;
+
+  padding: 10px max(
+    20px,
+    calc((100vw - 1240px) / 2)
+  );
+
   background: #ffffff;
-  border-bottom: 1px solid #d9dee3;
+
+  /* No top border */
+  border-top: none !important;
+  border-left: none;
+  border-right: none;
+  border-bottom: 1px solid var(--nav-border);
+
+  box-shadow: 0 2px 10px rgba(30, 40, 50, 0.04);
+
+  box-sizing: border-box;
 }
 
-/* Any existing brand/title elements stay on the left. */
-.app-header .top-nav {
+/* ==========================================
+   BRAND / LOGO
+   ========================================== */
+
+.app-header .top-nav__brand,
+.app-header .app-header__brand,
+.app-header .app-header__logo,
+.app-header .app-header__title,
+.app-header .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+
+  flex: 0 0 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+
+  color: var(--nav-ink);
+
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.5px;
+  text-decoration: none;
+}
+
+/* Nested brand text */
+.app-header .top-nav__brand a,
+.app-header .top-nav__brand h1,
+.app-header .top-nav__brand span,
+.app-header .top-nav__brand strong {
+  margin: 0;
+
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  text-decoration: none;
+}
+
+/* Small dark-blue COS212 icon */
+.app-header .top-nav__brand::before {
+  content: "212";
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+
+  border: 1px solid #cbdff1;
+  border-radius: 10px;
+
+  background: var(--nav-light-blue);
+  color: var(--nav-dark-blue);
+
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+/* ==========================================
+   TOP NAVIGATION
+   ========================================== */
+
+.app-header > .top-nav {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  flex: 1 1 auto;
-  gap: clamp(12px, 2.2vw, 32px);
+  flex-wrap: nowrap;
+
+  flex: 0 1 auto;
+  gap: 6px;
+
   min-width: 0;
   margin-left: auto;
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  padding: 0;
+
+  font-family: Inter, system-ui, sans-serif;
 }
 
 .app-header .top-nav a {
   position: relative;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  padding: 10px 4px;
-  border-radius: 4px;
+
+  flex: 0 0 auto;
+  min-height: 42px;
+
+  padding: 10px 17px;
+
+  border: 1px solid transparent;
+  border-radius: 9px;
+
   background: transparent;
-  color: #66707a;
-  font-size: 15px;
-  font-weight: 500;
-  line-height: 1.4;
+  color: var(--nav-muted);
+
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
   text-decoration: none;
   white-space: nowrap;
-  transition: color 160ms ease;
+
+  cursor: pointer;
+
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease;
 }
 
+/* ==========================================
+   HOVER STATE
+   ========================================== */
+
 .app-header .top-nav a:hover {
-  color: #242b33;
+  background: #f0f5fa;
+  color: var(--nav-dark-blue);
 }
+
+/* ==========================================
+   ACTIVE PAGE
+   ========================================== */
 
 .app-header .top-nav a.top-nav__link--active,
 .app-header .top-nav a[aria-current="page"] {
-  color: #242b33;
+  background: var(--nav-light-blue);
+  border-color: #cbdff1;
+
+  color: var(--nav-dark-blue);
   font-weight: 700;
 }
 
+/* Small blue underline */
 .app-header .top-nav a.top-nav__link--active::after,
 .app-header .top-nav a[aria-current="page"]::after {
   content: "";
+
   position: absolute;
-  right: 4px;
-  bottom: 3px;
-  left: 4px;
+  bottom: 4px;
+  left: 35%;
+  right: 35%;
+
   height: 2px;
-  border-radius: 2px;
-  background: currentColor;
+  border-radius: 3px;
+  background: var(--nav-blue);
 }
-
-.app-header .top-nav a:focus-visible {
-  outline: 3px solid #4a6a83;
-  outline-offset: 4px;
-}
-
-/* The app's existing progress element stays below the nav when present. */
-.app-header:has(> .top-nav) > .app-header__progress {
-  flex: 0 0 100%;
-}
-
-@media (max-width: 720px) {
-  .app-header:has(> .top-nav) {
-    gap: 8px;
-    padding: 12px 18px;
-  }
-
-  .app-header .top-nav {
-    order: 2;
-    flex: 0 0 100%;
-    justify-content: flex-start;
-    gap: 22px;
-    margin-left: 0;
-    overflow-x: auto;
-    overscroll-behavior-inline: contain;
-    scrollbar-width: thin;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .app-header:has(> .top-nav) > .app-header__progress {
-    order: 3;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .app-header .top-nav a {
-    transition: none;
-  }
-}
-
 
 /* ==========================================
-   COS212 — NAVIGATION CLEANUP
-   Keep only the main top navigation
+   ACCESSIBILITY
    ========================================== */
 
-/* Remove duplicate learning progress section */
+.app-header .top-nav a:focus-visible,
+.app-header .top-nav__brand:focus-visible,
+.app-header .top-nav__brand a:focus-visible {
+  outline: 3px solid var(--nav-blue);
+  outline-offset: 3px;
+}
+
+/* ==========================================
+   REMOVE OLD HEADER PROGRESS
+   ========================================== */
+
+.app-header > .app-header__progress,
 #learning-progress {
   display: none !important;
 }
 
-/* Remove bottom lesson navigation */
-.lesson-actions {
-  display: none !important;
-}
+/* ==========================================
+   REMOVE OLD GLOBAL NAVIGATION
+   ========================================== */
 
-/* Hide the application's old Back/Next buttons */
 #nav-back,
-#nav-next {
+#nav-next,
+.lesson-actions,
+.app-footer__navigation,
+.app-navigation {
   display: none !important;
 }
 
-/* Hide the old global screen progress */
+/* Remove old global progress */
 #progress,
 #progress-label {
   display: none !important;
 }
 
-/* Main screen container */
+/* ==========================================
+   CLEAN MAIN CONTAINERS
+   ========================================== */
+
+#main {
+  width: 100%;
+  max-width: none;
+  margin: 0 auto;
+  padding: 0;
+
+  border: none;
+  background: #ffffff;
+}
+
 #screen {
   width: 100%;
   max-width: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
+
   border: none;
   border-radius: 0;
   box-shadow: none;
   background: transparent;
 }
 
-/* Make the main content clean and spacious */
-#main {
-  width: 100%;
-  max-width: none;
-  margin: 0 auto;
-  padding: 0;
-  border: none;
-  background: #ffffff;
-}
+/* ==========================================
+   SKIP LINK
+   ========================================== */
 
-/* Keep the top navigation above page content */
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: #ffffff;
-  border-bottom: 1px solid #dce1e5;
-}
-
-/* Keep the skip link accessible,
-   but hide it until keyboard focus */
 .skip-link {
-  position: absolute;
-  top: -100px;
+  position: fixed;
   left: 16px;
-  z-index: 200;
+  top: -100px;
+  z-index: 2000;
+
   padding: 12px 16px;
-  background: #242b33;
+
+  border-radius: 8px;
+  background: var(--nav-dark-blue);
   color: #ffffff;
   text-decoration: none;
 }
 
 .skip-link:focus {
-  position: fixed;
   top: 12px;
 }
 
-/* Remove default spacing around the DFS page */
-.dfs-lesson-page {
-  margin: 0 auto;
-  border: none;
-  box-shadow: none;
+/* ==========================================
+   MEDIUM SCREENS
+   ========================================== */
+
+@media (max-width: 1000px) {
+  .app-header {
+    gap: 12px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .app-header .top-nav a {
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+
+  .app-header .top-nav__brand {
+    font-size: 18px;
+  }
 }
 
-/* Remove old page navigation if present */
-.app-footer__navigation,
-.app-navigation {
-  display: none;
+/* ==========================================
+   MOBILE AND SMALL TABLETS
+   ========================================== */
+
+@media (max-width: 760px) {
+  .app-header {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+
+    gap: 10px;
+    min-height: 0;
+    padding: 12px 16px 9px;
+  }
+
+  .app-header .top-nav__brand {
+    font-size: 18px;
+  }
+
+  .app-header .top-nav__brand::before {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+  }
+
+  .app-header > .top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    width: 100%;
+    max-width: 100%;
+
+    gap: 5px;
+    margin: 0;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    scrollbar-width: none;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-header > .top-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-header .top-nav a {
+    min-height: 39px;
+    padding: 8px 13px;
+    font-size: 13px;
+  }
 }
 
+/* ==========================================
+   REDUCED MOTION
+   ========================================== */
 
-/* Brand typography — apply to the actual
-   logo element in the app header */
-
-.app-header .app-header__brand,
-.app-header .app-header__logo,
-.app-header .brand {
-  font-family: Inter, Arial, sans-serif;
-  font-size: 21px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  color: #242b33;
-  text-decoration: none;
+@media (prefers-reduced-motion: reduce) {
+  .app-header .top-nav a {
+    transition: none;
+  }
 }

@@ -1,470 +1,197 @@
 
 {
-  "_comment": "COS212 Readiness Quiz — Appendix B. Seven slots, A/B variants. Wrong options identify misconceptions where applicable. Verify Tree B against Java DFS fixture C-02.",
-  "version": 2,
-  "passMark": 5,
-  "confidenceLevels": [
-    "guessing",
-    "fairly-sure",
-    "certain"
-  ],
+  "_comment": "COS212 Quiz — fresh BST and DFS application scenarios. Eight questions per attempt, with A/B variants.",
+  "version": 3,
+  "passMark": 6,
+  "confidenceLevels": ["guessing", "fairly-sure", "certain"],
   "items": [
     {
-      "id": "1A",
-      "slot": 1,
-      "outcome": "LO1",
-      "variant": "A",
-      "type": "choice",
-      "tree": null,
-      "prompt": "What does DFS use to remember which nodes it still has to explore?",
+      "id": "1A", "slot": 1, "variant": "A", "section": "bst", "outcome": "LO1", "type": "choice", "tree": "A",
+      "prompt": "Where should you insert 81 in Tree A?",
       "options": [
-        {
-          "id": "a",
-          "text": "Stack",
-          "correct": true,
-          "feedback": "Correct. DFS remembers pending nodes using a stack, which removes the most recently added item first."
-        },
-        {
-          "id": "b",
-          "text": "Queue",
-          "misconception": "M1",
-          "feedback": "A queue removes the oldest item first. That is used by breadth-first search, which explores level by level."
-        },
-        {
-          "id": "c",
-          "text": "Sorted list",
-          "misconception": "M4",
-          "feedback": "DFS does not need the values sorted. It needs to remember where it can continue exploring."
-        },
-        {
-          "id": "d",
-          "text": "Nothing; it just follows the lines",
-          "feedback": "After reaching a leaf, DFS needs to remember which nodes are still waiting. A stack helps it do that."
-        }
+        {"id": "a", "text": "Right child of 74", "correct": true, "feedback": "Correct: 81 > 67, 81 < 86, then 81 > 74. The right child of 74 is empty."},
+        {"id": "b", "text": "Left child of 74", "correct": false, "feedback": "81 is greater than 74, so it must be to its right."},
+        {"id": "c", "text": "Right child of 86", "correct": false, "feedback": "81 is smaller than 86, so move left, not right."},
+        {"id": "d", "text": "Right child of 52", "correct": false, "feedback": "81 is greater than the root 67, so it belongs in the right subtree."}
       ]
     },
     {
-      "id": "1B",
-      "slot": 1,
-      "outcome": "LO1",
-      "variant": "B",
-      "type": "choice",
-      "tree": "A",
-      "prompt": "You insert 65 into tree A. Where does it go?",
+      "id": "1B", "slot": 1, "variant": "B", "section": "bst", "outcome": "LO1", "type": "choice", "tree": "B",
+      "prompt": "Where should you insert 79 in Tree B?",
       "options": [
-        {
-          "id": "a",
-          "text": "Right child of 60",
-          "correct": true,
-          "feedback": "Correct. 65 > 50, so go right. 65 < 70, so go left. 65 > 60, so insert it as the right child of 60."
-        },
-        {
-          "id": "b",
-          "text": "Left child of 70",
-          "feedback": "70 already has a left child, 60. Continue comparing until an empty position is found."
-        },
-        {
-          "id": "c",
-          "text": "Right child of 80",
-          "feedback": "65 is smaller than 70, so the insertion path goes left at 70, not right."
-        },
-        {
-          "id": "d",
-          "text": "Left child of 60",
-          "feedback": "65 is larger than 60, so it goes to the right of 60."
-        }
+        {"id": "a", "text": "Right child of 72", "correct": true, "feedback": "Correct: 79 > 59, 79 < 82, then 79 > 72. Insert to the right of 72."},
+        {"id": "b", "text": "Left child of 72", "correct": false, "feedback": "79 is larger than 72, so it cannot go left of 72."},
+        {"id": "c", "text": "Left child of 59", "correct": false, "feedback": "79 is larger than the root 59. It belongs in the right subtree."},
+        {"id": "d", "text": "Right child of 82", "correct": false, "feedback": "79 is smaller than 82, so follow the left child of 82."}
       ]
     },
     {
-      "id": "2A",
-      "slot": 2,
-      "outcome": "LO2",
-      "variant": "A",
-      "type": "choice",
-      "tree": "A",
+      "id": "2A", "slot": 2, "variant": "A", "section": "bst", "outcome": "LO1", "type": "choice", "tree": "A",
+      "prompt": "Why would moving node 74 anywhere into the left subtree of 67 break the BST rule?",
+      "options": [
+        {"id": "a", "text": "74 is greater than 67", "correct": true, "feedback": "Correct. Every value in the left subtree of 67 must be smaller than 67."},
+        {"id": "b", "text": "74 is less than 67", "correct": false, "feedback": "Check the comparison: 74 is greater than 67."},
+        {"id": "c", "text": "A left subtree can only contain one node", "correct": false, "feedback": "A BST subtree may contain many nodes if each placement follows its ancestor constraints."},
+        {"id": "d", "text": "74 has to be a leaf", "correct": false, "feedback": "Whether a node is a leaf does not determine which side of the root it belongs on."}
+      ]
+    },
+    {
+      "id": "2B", "slot": 2, "variant": "B", "section": "bst", "outcome": "LO1", "type": "choice", "tree": "B",
+      "prompt": "Why would placing node 36 anywhere in the right subtree of 59 break the BST rule?",
+      "options": [
+        {"id": "a", "text": "36 is smaller than 59", "correct": true, "feedback": "Correct. All values in the right subtree of 59 must be greater than 59."},
+        {"id": "b", "text": "36 is larger than 59", "correct": false, "feedback": "36 is smaller than 59, not larger."},
+        {"id": "c", "text": "The right subtree must contain only leaves", "correct": false, "feedback": "Internal nodes are allowed anywhere their BST ordering constraints are satisfied."},
+        {"id": "d", "text": "Node 36 must be the root", "correct": false, "feedback": "The root is 59. Node 36 can belong to its left subtree."}
+      ]
+    },
+    {
+      "id": "3A", "slot": 3, "variant": "A", "section": "dfs", "outcome": "LO4", "type": "choice", "tree": "A",
+      "prompt": "DFS visits 67 and pushes its right child 86, then left child 33. Which node is on top of the stack?",
+      "options": [
+        {"id": "a", "text": "33", "correct": true, "feedback": "Correct. The last node pushed, 33, is popped next."},
+        {"id": "b", "text": "86", "correct": false, "feedback": "86 was pushed before 33, so it sits below 33.", "misconception": "M5"},
+        {"id": "c", "text": "67", "correct": false, "feedback": "67 was already popped and visited, so it is no longer on the stack."},
+        {"id": "d", "text": "15", "correct": false, "feedback": "15 has not been pushed yet; DFS must first visit 33."}
+      ]
+    },
+    {
+      "id": "3B", "slot": 3, "variant": "B", "section": "dfs", "outcome": "LO4", "type": "choice", "tree": "B",
+      "prompt": "After visiting 82, DFS pushes 93 and then 72. Which value is popped next?",
+      "options": [
+        {"id": "a", "text": "72", "correct": true, "feedback": "Correct. Left-first DFS pushes the right child first, then the left child on top."},
+        {"id": "b", "text": "93", "correct": false, "feedback": "93 was pushed first, so 72 is above it in the LIFO stack.", "misconception": "M5"},
+        {"id": "c", "text": "82", "correct": false, "feedback": "82 has already been popped and visited."},
+        {"id": "d", "text": "59", "correct": false, "feedback": "59 is the root and was visited earlier."}
+      ]
+    },
+    {
+      "id": "4A", "slot": 4, "variant": "A", "section": "dfs", "outcome": "LO2", "type": "choice", "tree": "A",
       "presentation": "tree-click",
-      "highlight": {
-        "visited": [50],
-        "current": 30
-      },
-      "prompt": "DFS (pre-order) has just visited 30 in tree A. Which node does it visit next?",
+      "highlight": {"visited": [67, 33], "current": 15},
+      "prompt": "In left-first Pre-order DFS on Tree A, node 15 has just been visited. Click the node DFS visits next.",
       "options": [
-        {
-          "id": "20",
-          "text": "20",
-          "correct": true,
-          "feedback": "Correct. Left-first DFS continues to the left child 20 before visiting the right child 40."
-        },
-        {
-          "id": "70",
-          "text": "70",
-          "misconception": "M1",
-          "feedback": "70 is on the same level as 30. Visiting it next would skip the unfinished left subtree."
-        },
-        {
-          "id": "40",
-          "text": "40",
-          "misconception": "M5",
-          "feedback": "40 is pushed first, then 20. Because 20 is now on top of the stack, DFS visits 20 next."
-        },
-        {
-          "id": "50",
-          "text": "50",
-          "feedback": "50 has already been visited. DFS continues exploring 30's children."
-        }
+        {"id": "52", "text": "52", "correct": true, "feedback": "Correct. 15 is a leaf. DFS backtracks to the waiting right branch of 33 and visits 52."},
+        {"id": "33", "text": "33", "correct": false, "feedback": "33 was already visited. DFS continues from its pending right branch."},
+        {"id": "86", "text": "86", "correct": false, "feedback": "The left subtree of 67 still has node 52 waiting.", "misconception": "M1"},
+        {"id": "45", "text": "45", "correct": false, "feedback": "DFS first visits parent 52 before entering its left child 45."}
       ]
     },
     {
-      "id": "2B",
-      "slot": 2,
-      "outcome": "LO2",
-      "variant": "B",
-      "type": "choice",
-      "tree": null,
-      "prompt": "Which sentence best describes backtracking in DFS?",
+      "id": "4B", "slot": 4, "variant": "B", "section": "dfs", "outcome": "LO2", "type": "choice", "tree": "B",
+      "presentation": "tree-click",
+      "highlight": {"visited": [59, 26], "current": 13},
+      "prompt": "In left-first Pre-order DFS on Tree B, node 13 has just been visited. Click the node DFS visits next.",
       "options": [
-        {
-          "id": "a",
-          "text": "Returning to the most recent point with an unexplored branch",
-          "correct": true,
-          "feedback": "Correct. DFS returns to pending work when the current path cannot be explored further."
-        },
-        {
-          "id": "b",
-          "text": "Starting again from the root",
-          "feedback": "DFS does not need to restart. It continues from pending nodes remembered by the stack."
-        },
-        {
-          "id": "c",
-          "text": "Visiting nodes in reverse numerical order",
-          "feedback": "Backtracking is about continuing after a path ends, not arranging values in reverse order."
-        },
-        {
-          "id": "d",
-          "text": "Moving to the next node on the same level",
-          "misconception": "M1",
-          "feedback": "Moving across a level is associated with breadth-first search. DFS explores depth first."
-        }
+        {"id": "41", "text": "41", "correct": true, "feedback": "Correct. After leaf 13, DFS resumes at the pending right child of 26, node 41."},
+        {"id": "26", "text": "26", "correct": false, "feedback": "26 has already been visited. DFS continues with its pending right branch."},
+        {"id": "82", "text": "82", "correct": false, "feedback": "DFS completes the left subtree of 59 before moving to node 82.", "misconception": "M1"},
+        {"id": "36", "text": "36", "correct": false, "feedback": "The next visit is parent 41. Its child 36 is visited afterward."}
       ]
     },
     {
-      "id": "3A",
-      "slot": 3,
-      "outcome": "LO3",
-      "variant": "A",
-      "type": "order",
-      "tree": "A",
-      "prompt": "Put the nodes of tree A in pre-order.",
-      "answer": [50, 30, 20, 40, 70, 60, 80],
-      "correctFeedback": "Correct. Pre-order records each node before its children: root, left subtree, right subtree.",
+      "id": "5A", "slot": 5, "variant": "A", "section": "dfs", "outcome": "LO5", "type": "choice", "tree": "A",
+      "prompt": "How many nodes does left-first Pre-order DFS visit before finding 96 in Tree A?",
+      "options": [
+        {"id": "a", "text": "8", "correct": true, "feedback": "Correct. DFS visits 67 → 33 → 15 → 52 → 45 → 86 → 74 → 96, including the target."},
+        {"id": "b", "text": "3", "correct": false, "feedback": "That counts the BST lookup path, not left-first DFS. DFS explores the left subtree first.", "misconception": "M4"},
+        {"id": "c", "text": "7", "correct": false, "feedback": "Remember to count the final visit to target 96."},
+        {"id": "d", "text": "5", "correct": false, "feedback": "DFS also visits nodes in the right subtree before reaching 96."}
+      ]
+    },
+    {
+      "id": "5B", "slot": 5, "variant": "B", "section": "dfs", "outcome": "LO5", "type": "choice", "tree": "B",
+      "prompt": "How many nodes does left-first Pre-order DFS visit before finding 72 in Tree B?",
+      "options": [
+        {"id": "a", "text": "7", "correct": true, "feedback": "Correct. DFS visits 59 → 26 → 13 → 41 → 36 → 82 → 72, and stops at the target."},
+        {"id": "b", "text": "3", "correct": false, "feedback": "That is the BST lookup path (59 → 82 → 72), not a full left-first DFS search.", "misconception": "M4"},
+        {"id": "c", "text": "8", "correct": false, "feedback": "DFS stops when it finds 72, so it does not visit 93 afterward."},
+        {"id": "d", "text": "5", "correct": false, "feedback": "The visit to 82 and then 72 also count toward the total."}
+      ]
+    },
+    {
+      "id": "6A", "slot": 6, "variant": "A", "section": "traversal", "outcome": "LO3", "type": "order", "tree": "A",
+      "prompt": "Build the full Pre-order traversal for Tree A.",
+      "answer": [67, 33, 15, 52, 45, 86, 74, 96],
+      "correctFeedback": "Correct. Pre-order follows Root → Left → Right.",
       "rules": [
         {
-          "match": [20, 30, 40, 50, 60, 70, 80],
-          "misconception": "M3",
-          "feedback": "That is in-order. Pre-order starts with the root 50, then explores the left subtree."
-        },
-        {
-          "match": [20, 40, 30, 60, 80, 70, 50],
-          "misconception": "M3",
-          "feedback": "That is post-order. Pre-order visits the root first, not last."
-        },
-        {
-          "match": [50, 30, 70, 20, 40, 60, 80],
-          "misconception": "M1",
-          "feedback": "That is breadth-first order. Pre-order completes the left subtree before visiting 70."
+          "match": [15, 33, 45, 52, 67, 74, 86, 96],
+          "feedback": "That looks like In-order. Recheck where the parent is visited.",
+          "misconception": "M3"
         }
       ],
-      "fallbackFeedback": "Not quite. Position {position} should be {expected}. In pre-order, visit each node when you first reach it, then explore left before right."
+      "fallbackFeedback": "Not quite. Check position {position}; it should be {expected}. Reapply the Pre-order rule at every subtree."
     },
     {
-      "id": "3B",
-      "slot": 3,
-      "outcome": "LO3",
-      "variant": "B",
-      "type": "order",
-      "tree": "B",
-      "prompt": "Put the nodes of tree B in in-order.",
-      "answer": [15, 25, 30, 35, 45, 55, 65],
-      "correctFeedback": "Correct. In-order traversal of a BST lists the values in ascending order.",
+      "id": "6B", "slot": 6, "variant": "B", "section": "traversal", "outcome": "LO3", "type": "order", "tree": "B",
+      "prompt": "Build the full Pre-order traversal for Tree B.",
+      "answer": [59, 26, 13, 41, 36, 82, 72, 93],
+      "correctFeedback": "Correct. Pre-order follows Root → Left → Right.",
       "rules": [
         {
-          "match": [45, 25, 15, 35, 30, 65, 55],
-          "misconception": "M3",
-          "feedback": "That is pre-order. In-order visits the node between its left and right subtrees."
-        },
-        {
-          "match": [15, 25, 35, 30, 45, 55, 65],
-          "feedback": "Very close. Node 30 is the left child of 35, so 30 must be visited before 35."
-        },
-        {
-          "match": [15, 30, 35, 25, 55, 65, 45],
-          "misconception": "M3",
-          "feedback": "That is post-order. For a BST, in-order traversal gives sorted values."
+          "match": [13, 26, 36, 41, 59, 72, 82, 93],
+          "feedback": "That looks like In-order. Recheck where the parent is visited.",
+          "misconception": "M3"
         }
       ],
-      "fallbackFeedback": "Not quite. Position {position} should be {expected}. Remember that in-order traversal of a BST is sorted."
+      "fallbackFeedback": "Not quite. Check position {position}; it should be {expected}. Reapply the Pre-order rule at every subtree."
     },
     {
-      "id": "4A",
-      "slot": 4,
-      "outcome": "LO4",
-      "variant": "A",
-      "type": "choice",
-      "tree": "A",
-      "prompt": "During a DFS search on tree A, the stack is [40, 70], top first. Which node is popped next?",
-      "options": [
+      "id": "7A", "slot": 7, "variant": "A", "section": "traversal", "outcome": "LO3", "type": "order", "tree": "B",
+      "prompt": "Build the full In-order traversal for Tree B.",
+      "answer": [13, 26, 36, 41, 59, 72, 82, 93],
+      "correctFeedback": "Correct. In-order follows Left → Root → Right.",
+      "rules": [
         {
-          "id": "a",
-          "text": "40",
-          "correct": true,
-          "feedback": "Correct. The top item is shown first, so 40 is removed next."
-        },
-        {
-          "id": "b",
-          "text": "70",
-          "misconception": "M5",
-          "feedback": "70 is below 40. A stack removes the top item first."
-        },
-        {
-          "id": "c",
-          "text": "20",
-          "feedback": "20 has already been visited, so it is not in this stack."
-        },
-        {
-          "id": "d",
-          "text": "50",
-          "feedback": "50 was already visited and is no longer pending."
+          "match": [59, 26, 13, 41, 36, 82, 72, 93],
+          "feedback": "That looks like Pre-order. Recheck where the parent is visited.",
+          "misconception": "M3"
         }
-      ]
+      ],
+      "fallbackFeedback": "Not quite. Check position {position}; it should be {expected}. Reapply the In-order rule at every subtree."
     },
     {
-      "id": "4B",
-      "slot": 4,
-      "outcome": "LO4",
-      "variant": "B",
-      "type": "choice",
-      "tree": "A",
-      "prompt": "DFS is searching tree A for 60 and has just visited 70. What is on the stack now, top first?",
-      "options": [
+      "id": "7B", "slot": 7, "variant": "B", "section": "traversal", "outcome": "LO3", "type": "order", "tree": "A",
+      "prompt": "Build the full In-order traversal for Tree A.",
+      "answer": [15, 33, 45, 52, 67, 74, 86, 96],
+      "correctFeedback": "Correct. In-order follows Left → Root → Right.",
+      "rules": [
         {
-          "id": "a",
-          "text": "60, 80",
-          "correct": true,
-          "feedback": "Correct. Push 80 first, then 60. The top is 60."
-        },
-        {
-          "id": "b",
-          "text": "80, 60",
-          "misconception": "M5",
-          "feedback": "Right is pushed first and left last, so 60 is on top."
-        },
-        {
-          "id": "c",
-          "text": "70, 60, 80",
-          "feedback": "70 has already been popped and visited."
-        },
-        {
-          "id": "d",
-          "text": "60",
-          "feedback": "Both children of 70 are pushed. DFS does not skip 80 based on value comparisons."
+          "match": [67, 33, 15, 52, 45, 86, 74, 96],
+          "feedback": "That looks like Pre-order. Recheck where the parent is visited.",
+          "misconception": "M3"
         }
-      ]
+      ],
+      "fallbackFeedback": "Not quite. Check position {position}; it should be {expected}. Reapply the In-order rule at every subtree."
     },
     {
-      "id": "5A",
-      "slot": 5,
-      "outcome": "LO5",
-      "variant": "A",
-      "type": "choice",
-      "tree": "A",
-      "prompt": "How many nodes does left-first pre-order DFS visit to find 80 in tree A?",
-      "options": [
+      "id": "8A", "slot": 8, "variant": "A", "section": "traversal", "outcome": "LO3", "type": "order", "tree": "A",
+      "prompt": "Build the full Post-order traversal for Tree A.",
+      "answer": [15, 45, 52, 33, 74, 96, 86, 67],
+      "correctFeedback": "Correct. Post-order follows Left → Right → Root.",
+      "rules": [
         {
-          "id": "a",
-          "text": "7",
-          "correct": true,
-          "feedback": "Correct. DFS visits 50, 30, 20, 40, 70, 60, 80 before finding 80."
-        },
-        {
-          "id": "b",
-          "text": "3",
-          "misconception": "M4",
-          "feedback": "That uses BST lookup comparisons (50, 70, 80). Plain DFS still explores left first."
-        },
-        {
-          "id": "c",
-          "text": "2",
-          "feedback": "DFS begins at the root and visits nodes along its traversal, not just two nodes."
-        },
-        {
-          "id": "d",
-          "text": "6",
-          "feedback": "Count the entire visiting sequence, including 80 itself: there are seven nodes."
+          "match": [15, 33, 45, 52, 67, 74, 86, 96],
+          "feedback": "That looks like In-order. Recheck where the parent is visited.",
+          "misconception": "M3"
         }
-      ]
+      ],
+      "fallbackFeedback": "Not quite. Check position {position}; it should be {expected}. Reapply the Post-order rule at every subtree."
     },
     {
-      "id": "5B",
-      "slot": 5,
-      "outcome": "LO5",
-      "variant": "B",
-      "type": "choice",
-      "tree": "B",
-      "prompt": "How many nodes does left-first pre-order DFS visit to find 30 in tree B?",
-      "options": [
+      "id": "8B", "slot": 8, "variant": "B", "section": "traversal", "outcome": "LO3", "type": "order", "tree": "B",
+      "prompt": "Build the full Post-order traversal for Tree B.",
+      "answer": [13, 36, 41, 26, 72, 93, 82, 59],
+      "correctFeedback": "Correct. Post-order follows Left → Right → Root.",
+      "rules": [
         {
-          "id": "a",
-          "text": "5",
-          "correct": true,
-          "feedback": "Correct: 45, 25, 15, 35, 30."
-        },
-        {
-          "id": "b",
-          "text": "4",
-          "misconception": "M4",
-          "feedback": "BST lookup would use 45, 25, 35, 30. DFS also explores 15 first."
-        },
-        {
-          "id": "c",
-          "text": "7",
-          "feedback": "DFS stops as soon as the target 30 is found."
-        },
-        {
-          "id": "d",
-          "text": "3",
-          "feedback": "Count every visit: 45, 25, 15, 35, 30."
+          "match": [13, 26, 36, 41, 59, 72, 82, 93],
+          "feedback": "That looks like In-order. Recheck where the parent is visited.",
+          "misconception": "M3"
         }
-      ]
-    },
-    {
-      "id": "6A",
-      "slot": 6,
-      "outcome": "LO5",
-      "variant": "A",
-      "type": "choice",
-      "tree": null,
-      "prompt": "Why is the in-order traversal of a BST always sorted, assuming unique values?",
-      "options": [
-        {
-          "id": "a",
-          "text": "All values in a left subtree are smaller and all in the right are larger; in-order visits left, node, then right",
-          "correct": true,
-          "feedback": "Correct. The BST ordering property holds at each node, so in-order produces values from smallest to largest."
-        },
-        {
-          "id": "b",
-          "text": "Because DFS compares values as it goes",
-          "misconception": "M4",
-          "feedback": "In-order DFS follows the structure; the sorted result comes from the BST property."
-        },
-        {
-          "id": "c",
-          "text": "It only happens for this particular tree",
-          "feedback": "Every valid BST with unique values produces ascending values in-order."
-        },
-        {
-          "id": "d",
-          "text": "Because inserting a value sorts the tree",
-          "feedback": "Insertion preserves the BST ordering property, but in-order traversal is what reads the values in sorted order."
-        }
-      ]
-    },
-    {
-      "id": "6B",
-      "slot": 6,
-      "outcome": "LO5",
-      "variant": "B",
-      "type": "choice",
-      "tree": null,
-      "prompt": "A classmate says: \"On a BST, DFS goes right whenever the target is bigger.\" What is wrong?",
-      "options": [
-        {
-          "id": "a",
-          "text": "DFS uses traversal order rather than BST value comparisons; the classmate describes BST lookup",
-          "correct": true,
-          "feedback": "Correct. Plain left-first DFS does not select a branch by comparing the target."
-        },
-        {
-          "id": "b",
-          "text": "Nothing, it is correct",
-          "misconception": "M4",
-          "feedback": "That is the BST lookup rule, not plain DFS."
-        },
-        {
-          "id": "c",
-          "text": "DFS goes left when the target is bigger",
-          "feedback": "DFS does not use the target value to decide which branch to traverse."
-        },
-        {
-          "id": "d",
-          "text": "DFS chooses a direction randomly",
-          "feedback": "DFS follows a defined traversal rule, not random choices."
-        }
-      ]
-    },
-    {
-      "id": "7A",
-      "slot": 7,
-      "outcome": "LO2",
-      "variant": "A",
-      "type": "choice",
-      "tree": "A",
-      "prompt": "In left-first pre-order DFS of tree A, node 20 has just been visited. Which node comes next?",
-      "options": [
-        {
-          "id": "a",
-          "text": "40",
-          "correct": true,
-          "feedback": "Correct. Node 20 is a leaf; DFS resumes from pending node 40 on the stack."
-        },
-        {
-          "id": "b",
-          "text": "30",
-          "feedback": "30 has already been visited. DFS continues with its unvisited child 40."
-        },
-        {
-          "id": "c",
-          "text": "70",
-          "feedback": "The left subtree still has node 40 waiting."
-        },
-        {
-          "id": "d",
-          "text": "Stop searching",
-          "feedback": "A leaf does not end the entire traversal while nodes remain on the stack."
-        }
-      ]
-    },
-    {
-      "id": "7B",
-      "slot": 7,
-      "outcome": "LO2",
-      "variant": "B",
-      "type": "choice",
-      "tree": "B",
-      "prompt": "In left-first pre-order DFS of tree B, node 15 has just been visited. Which node comes next?",
-      "options": [
-        {
-          "id": "a",
-          "text": "35",
-          "correct": true,
-          "feedback": "Correct. Node 15 is a leaf, so DFS resumes at pending node 35."
-        },
-        {
-          "id": "b",
-          "text": "25",
-          "feedback": "25 was visited already; DFS continues with its pending right branch."
-        },
-        {
-          "id": "c",
-          "text": "45",
-          "feedback": "The left subtree is not finished; node 35 is still waiting."
-        },
-        {
-          "id": "d",
-          "text": "Stop searching",
-          "feedback": "Reaching a leaf does not end DFS while there are pending nodes."
-        }
-      ]
+      ],
+      "fallbackFeedback": "Not quite. Check position {position}; it should be {expected}. Reapply the Post-order rule at every subtree."
     }
   ]
 }

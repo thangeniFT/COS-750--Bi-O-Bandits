@@ -1,27 +1,22 @@
 
-/* ============================================
-   COS212 DFS TUTOR — GUIDED REVIEW
-   PAGE 7
-   ============================================ */
+/* ==========================================
+   COS212 — RESULTS & GUIDED REVIEW
+   Matching the previous lesson pages.
+   No sticky progress bar.
+   ========================================== */
 
 .review-page {
-  --review-ink: #242b33;
-  --review-muted: #4b5563;
-  --review-border: #dce1e5;
-  --review-light: #f5f6f8;
-  --review-success: #216b46;
-  --review-success-bg: #e8f5ec;
-  --review-warning: #8b541b;
-  --review-warning-bg: #fff4e6;
+  --rv-ink: #242b33;
+  --rv-muted: #526071;
+  --rv-border: #dce1e5;
+  --rv-light: #f5f6f8;
 
-  width: min(1270px, calc(100% - 48px));
+  width: min(1240px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 32px 0 80px;
+  padding: 24px 0 54px;
 
-  color: var(--review-ink);
-  font-family: Inter, Arial, sans-serif;
-  line-height: 1.6;
-  overflow: visible;
+  font: 400 15px/1.55 Inter, Arial, sans-serif;
+  color: var(--rv-ink);
 }
 
 .review-page *,
@@ -34,9 +29,39 @@
   display: none !important;
 }
 
-.review-page button,
-.review-page input {
+.review-page button {
   font: inherit;
+}
+
+.review-page h1,
+.review-page h2,
+.review-page h3 {
+  line-height: 1.3;
+  color: var(--rv-ink);
+}
+
+.review-page h1 {
+  margin: 0 0 7px;
+  font-size: clamp(27px, 3vw, 35px);
+}
+
+.review-page h2 {
+  margin: 0 0 11px;
+  font-size: 21px;
+}
+
+.review-page h3 {
+  margin: 0 0 12px;
+  font-size: 17px;
+}
+
+.review-page p {
+  margin: 0 0 12px;
+}
+
+.review-page a,
+.review-page button {
+  -webkit-tap-highlight-color: transparent;
 }
 
 .review-page button:focus-visible,
@@ -46,242 +71,385 @@
   outline-offset: 3px;
 }
 
-.review-page section {
-  scroll-margin-top:
-    calc(var(--app-header-height, 72px) + 125px);
-}
-
-/* ============================================
-   STICKY PROGRESS
-   ============================================ */
-
-.review-page .lesson-progress {
-  position: sticky;
-  top: calc(var(--app-header-height, 72px) + 8px);
-  z-index: 40;
-
-  width: 100%;
-  margin-bottom: 28px;
-  padding: 17px 22px;
-
-  border: 1px solid var(--review-border);
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 4px 16px rgba(30, 40, 50, 0.08);
-}
-
-.review-page .lesson-progress__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-
-  color: var(--review-ink);
+.review-page .review-muted {
+  color: var(--rv-muted);
   font-size: 13px;
-  font-weight: 700;
-}
-
-.review-page .lesson-progress__track {
-  width: 100%;
-  height: 9px;
-  overflow: hidden;
-  border-radius: 99px;
-  background: #e3e7eb;
-}
-
-.review-page .lesson-progress__fill {
-  width: 0;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--review-ink);
-  transition: width 0.3s ease;
-}
-
-/* ============================================
-   SHARED CARDS AND TYPOGRAPHY
-   ============================================ */
-
-.review-page .review-card {
-  min-width: 0;
-  margin-bottom: 28px;
-  padding: 28px;
-
-  border: 1px solid var(--review-border);
-  border-radius: 14px;
-  background: #ffffff;
-}
-
-.review-page h1,
-.review-page h2,
-.review-page h3,
-.review-page h4 {
-  color: var(--review-ink);
-  line-height: 1.35;
-}
-
-.review-page .review-card h2 {
-  margin: 8px 0 15px;
-  font-size: 24px;
-  font-weight: 700;
+  line-height: 1.65;
 }
 
 .review-page .review-eyebrow {
-  display: inline-block;
-  margin-bottom: 12px;
-
-  color: var(--review-muted);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 1.3px;
+  color: #526071;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
   text-transform: uppercase;
 }
 
-.review-page .review-muted {
-  color: var(--review-muted);
-  font-size: 14px;
-  line-height: 1.75;
+.review-page .review-intro {
+  margin-bottom: 18px;
 }
 
-/* ============================================
-   SHARED BUTTONS
-   ============================================ */
+.review-page .review-intro p {
+  max-width: 900px;
+  margin: 0;
+}
+
+/* ==========================================
+   FOUR TABS
+   ========================================== */
+
+.review-page .review-tabs {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 9px;
+  margin-bottom: 18px;
+}
+
+.review-page .review-tab {
+  min-height: 48px;
+  padding: 10px 13px;
+
+  border: 1px solid #cbd5df;
+  border-radius: 9px;
+
+  background: #fff;
+  color: #334155;
+
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.review-page .review-tab:hover {
+  background: #edf1f5;
+}
+
+.review-page .review-tab.is-active {
+  border-color: #334155;
+  background: #334155;
+  color: #fff;
+}
+
+.review-page .review-panel {
+  min-width: 0;
+}
+
+.review-page .review-panel:focus {
+  outline: none;
+}
+
+/* ==========================================
+   SHARED CARDS
+   ========================================== */
+
+.review-page .review-card {
+  min-width: 0;
+  padding: 21px;
+  margin-bottom: 15px;
+
+  border: 1px solid var(--rv-border);
+  border-radius: 13px;
+  background: #fff;
+}
+
+.review-page .review-empty {
+  padding: 28px;
+}
+
+.review-page .review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 15px;
+}
 
 .review-page .review-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  min-height: 46px;
-  padding: 11px 19px;
+  min-height: 42px;
+  padding: 9px 15px;
 
   border: 1px solid #334155;
   border-radius: 8px;
-  background: #ffffff;
+
+  background: #fff;
   color: #334155;
 
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
 }
 
-.review-page .review-button--primary {
-  background: #242b33;
-  color: #ffffff;
+.review-page .review-button:hover {
+  background: #edf1f5;
 }
 
-.review-page .review-button:hover:not(:disabled) {
-  background: #e8edf2;
+.review-page .review-button.review-primary {
+  background: #334155;
+  color: #fff;
 }
 
 .review-page
-.review-button--primary:hover:not(:disabled) {
-  background: #414b56;
-  color: #ffffff;
+.review-button.review-primary:hover {
+  background: #475569;
 }
 
-.review-page .review-button:disabled {
-  opacity: 0.55;
-  cursor: default;
+/* ==========================================
+   ACTUAL QUIZ SCORE
+   ========================================== */
+
+.review-page .review-score-card {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1.1fr);
+
+  gap: 18px;
+  align-items: center;
 }
 
-/* ============================================
-   INTRODUCTION
-   ============================================ */
-
-.review-page .review-intro {
-  padding: 30px 34px;
+.review-page .review-score-main h2 {
+  margin: 5px 0;
 }
 
-.review-page .review-intro h1 {
-  margin: 0 0 17px;
-  font-size: clamp(29px, 3.5vw, 38px);
-  letter-spacing: -0.8px;
-}
+.review-page .review-score {
+  margin: 3px 0;
 
-.review-page .review-lead {
-  max-width: 950px;
-  margin: 0 0 12px;
-  font-size: 17px;
-  line-height: 1.8;
-}
-
-.review-page .review-intro .review-muted {
-  max-width: 950px;
-  margin: 0;
-}
-
-/* ============================================
-   01 — QUIZ RESULTS
-   ============================================ */
-
-.review-page .review-results {
-  background: var(--review-light);
-}
-
-.review-page .review-result-summary {
-  margin: 20px 0 22px;
-  padding: 24px;
-
-  border: 1px solid var(--review-border);
-  border-radius: 12px;
-  background: #ffffff;
-}
-
-.review-page .review-result-score {
-  display: block;
-  margin-bottom: 12px;
-  font-size: 34px;
+  font-size: clamp(30px, 4vw, 42px);
   font-weight: 800;
   letter-spacing: -0.8px;
+  font-variant-numeric: tabular-nums;
 }
 
-.review-page .review-result-summary p {
-  margin: 8px 0;
-  font-size: 15px;
-}
-
-.review-page .review-confidence-note {
-  padding: 13px 16px;
-  border: 1px solid #ead5b5;
-  border-radius: 9px;
-  background: var(--review-warning-bg);
-  color: var(--review-warning);
-  line-height: 1.7;
-}
-
-/* ============================================
-   02 — CONCEPT REVIEW
-   ============================================ */
-
-.review-page .review-concepts {
-  margin: 34px 0;
-}
-
-.review-page .review-concepts > h2 {
-  margin: 8px 0 13px;
-  font-size: 27px;
-}
-
-.review-page .review-concepts > p {
-  margin: 0 0 23px;
-}
-
-.review-page .review-concepts-grid {
+.review-page .review-metrics {
   display: grid;
-  gap: 14px;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 9px;
 }
 
-.review-page .review-concept-card {
-  min-width: 0;
-  border: 1px solid var(--review-border);
-  border-radius: 12px;
-  background: #ffffff;
+.review-page .review-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  min-height: 89px;
+  padding: 13px 10px;
+
+  border: 1px solid var(--rv-border);
+  border-radius: 9px;
+  background: var(--rv-light);
+
+  text-align: center;
+}
+
+.review-page .review-metric strong {
+  font-size: 23px;
+  font-variant-numeric: tabular-nums;
+}
+
+.review-page .review-metric span {
+  font-size: 12px;
+  color: var(--rv-muted);
+}
+
+/* ==========================================
+   RESULTS BY TOPIC
+   ========================================== */
+
+.review-page .review-area-grid {
+  display: grid;
+  gap: 9px;
+}
+
+.review-page .review-area-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+
+  padding: 11px 13px;
+
+  border: 1px solid var(--rv-border);
+  border-radius: 8px;
+  background: #fcfcfd;
+
+  font-size: 13px;
+}
+
+.review-page .review-area-row strong {
+  flex: 1 1 165px;
+}
+
+.review-page .review-area-row span:last-child {
+  margin-left: auto;
+
+  color: var(--rv-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.review-page
+.review-area-row .review-area-needs {
+  color: #8b541b !important;
+}
+
+.review-page .review-note {
+  margin: 13px 0 0;
+  padding: 10px 13px;
+
+  background: #fff4e6;
+  border-radius: 7px;
+  color: #805019;
+
+  font-size: 13px;
+}
+
+/* ==========================================
+   INDIVIDUAL QUESTION RESULTS
+   ========================================== */
+
+.review-page .review-question-list {
+  display: grid;
+  gap: 9px;
+}
+
+.review-page .review-question-row {
+  border: 1px solid var(--rv-border);
+  border-left: 4px solid #b3bbc4;
+  border-radius: 9px;
+
+  overflow: hidden;
+  background: #fff;
+}
+
+.review-page .review-question-row.is-correct {
+  border-left-color: #216b46;
+}
+
+.review-page .review-question-row.is-review {
+  border-left-color: #b7791f;
+}
+
+.review-page .review-question-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  min-height: 48px;
+  padding: 11px 14px;
+
+  cursor: pointer;
+  list-style-position: inside;
+  font-size: 13px;
+}
+
+.review-page .review-question-summary strong {
+  font-size: 13px;
+}
+
+.review-page .review-question-topic {
+  color: var(--rv-muted);
+  font-size: 12px;
+}
+
+.review-page .review-status {
+  margin-left: auto;
+
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.review-page
+.review-question-row.is-correct .review-status {
+  color: #216b46;
+}
+
+.review-page
+.review-question-row.is-review .review-status {
+  color: #805019;
+}
+
+.review-page .review-question-body {
+  padding: 14px 17px 17px;
+  border-top: 1px solid var(--rv-border);
+  font-size: 13px;
+}
+
+.review-page .review-question-body p {
+  overflow-wrap: anywhere;
+}
+
+.review-page .review-prompt {
+  font-weight: 700;
+}
+
+.review-page .review-correct-answer {
+  font-weight: 700;
+  color: #216b46;
+}
+
+.review-page .review-text-link {
+  display: inline-block;
+  margin-top: 4px;
+
+  color: #334155;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+/* ==========================================
+   HIGHLIGHTED EXPLANATIONS
+   ========================================== */
+
+.review-page .review-callout {
+  padding: 13px 15px;
+  margin: 12px 0;
+
+  border: 1px solid #9bb9d7;
+  border-left: 5px solid #32618c;
+  border-radius: 9px;
+
+  background: #eff6ff;
+  color: #17365c;
+}
+
+.review-page .review-callout strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
+.review-page .review-callout p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+/* ==========================================
+   KEY IDEAS ACCORDIONS
+   ========================================== */
+
+.review-page .review-concept {
+  margin-bottom: 12px;
+
+  border: 1px solid var(--rv-border);
+  border-radius: 10px;
+
+  background: #fff;
   overflow: hidden;
 }
 
-.review-page .review-concept-card.is-recommended {
+.review-page .review-concept.is-recommended {
   border-left: 4px solid #334155;
 }
 
@@ -289,629 +457,326 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 15px;
-
-  min-height: 85px;
-  padding: 19px 23px;
-  cursor: pointer;
-  list-style: none;
-}
-
-.review-page .review-concept-summary::-webkit-details-marker {
-  display: none;
-}
-
-.review-page .review-concept-summary:hover {
-  background: #f5f6f8;
-}
-
-.review-page .review-concept-heading {
-  display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
+  gap: 8px;
+
+  padding: 17px 19px;
+  cursor: pointer;
 }
 
-.review-page .review-concept-heading strong {
-  font-size: 17px;
-}
-
-.review-page .review-concept-code {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  min-width: 48px;
-  min-height: 35px;
-  padding: 6px 10px;
-
-  border: 1px solid #cbd5df;
-  border-radius: 7px;
-  background: #e8edf2;
-
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.review-page .review-concept-label {
-  color: var(--review-muted);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-}
-
-.review-page .review-concept-chevron {
-  font-size: 25px;
-  font-weight: 700;
-  transition: transform 0.2s ease;
-}
-
-.review-page
-.review-concept-card[open]
-.review-concept-chevron {
-  transform: rotate(180deg);
-}
-
-.review-page .review-concept-body {
-  padding: 0 23px 24px;
-  border-top: 1px solid var(--review-border);
-}
-
-.review-page .review-concept-body p {
-  margin: 15px 0;
-  color: #374151;
-  font-size: 14px;
-  line-height: 1.8;
-}
-
-.review-page .review-concept-lead {
-  font-weight: 700;
-}
-
-/* ============================================
-   EXAMPLES AND TAKEAWAYS
-   ============================================ */
-
-.review-page .review-example {
-  margin: 19px 0;
-  padding: 20px;
-
-  border: 1px solid var(--review-border);
-  border-radius: 10px;
-  background: var(--review-light);
-}
-
-.review-page .review-example > strong,
-.review-page .review-takeaway > strong {
-  display: block;
+.review-page .review-concept-summary strong {
   font-size: 15px;
 }
 
-.review-page .review-example p,
-.review-page .review-takeaway p {
-  margin: 8px 0 0;
+.review-page .review-concept-summary span {
+  color: var(--rv-muted);
+  font-size: 12px;
 }
 
-.review-page .review-takeaway {
-  margin: 18px 0;
-  padding: 17px 20px;
+.review-page .review-concept-content {
+  padding: 0 18px 18px;
 
-  border: 1px solid #cbd5df;
-  border-left: 4px solid #334155;
+  border-top: 1px solid var(--rv-border);
+
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.review-page .review-concept-content > p {
+  margin-top: 14px;
+}
+
+.review-page .review-example {
+  margin: 13px 0;
+  padding: 14px;
+
+  border: 1px solid var(--rv-border);
   border-radius: 9px;
-  background: #f4f6f8;
+  background: var(--rv-light);
 }
 
-.review-page .review-topic-link {
-  display: inline-flex;
-  align-items: center;
+.review-page .review-example strong {
+  font-size: 13px;
+}
 
-  margin-top: 8px;
-  padding: 10px 17px;
-  min-height: 43px;
+.review-page .review-example p {
+  margin: 8px 0;
+  font-size: 13px;
+}
 
-  border: 1px solid #334155;
+/* ==========================================
+   REVIEW TREE
+   ========================================== */
+
+.review-page .review-tree-frame {
+  width: min(430px, 100%);
+  padding: 6px;
+
+  border: 1px solid var(--rv-border);
   border-radius: 8px;
-  background: #ffffff;
-  color: #334155;
 
-  font-size: 14px;
-  font-weight: 700;
-  text-decoration: none;
+  background: #fff;
 }
 
-.review-page .review-topic-link:hover {
-  background: #e8edf2;
-}
-
-.review-page .review-concepts-status {
-  margin: 18px 0 0;
-  color: #374151;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-/* ============================================
-   MINI TREE DIAGRAM
-   ============================================ */
-
-.review-page .review-diagram {
-  margin-top: 15px;
-  padding: 12px;
-
-  border: 1px solid var(--review-border);
-  border-radius: 9px;
-  background: #ffffff;
-}
-
-.review-page .review-diagram svg {
+.review-page .review-tree-frame svg {
   display: block;
-  width: min(390px, 100%);
+  width: 100%;
   height: auto;
-  margin: 0 auto;
+}
+
+.review-page .review-tree-frame .review-muted {
+  margin: 0;
+  text-align: center;
 }
 
 .review-page .review-tree-edge {
-  stroke: #98a4af;
-  stroke-width: 2.5;
+  stroke: #94a3b8;
+  stroke-width: 2.4;
 }
 
-.review-page .review-diagram circle {
-  fill: #ffffff;
-  stroke: #242b33;
-  stroke-width: 2;
+.review-page .review-tree-frame circle {
+  fill: #fff;
+  stroke: #334155;
+  stroke-width: 2.4;
 }
 
-.review-page .review-diagram circle.review-tree-root {
-  fill: #242b33;
+.review-page .review-tree-frame circle.review-root {
+  fill: #334155;
 }
 
-.review-page .review-tree-value {
-  fill: #242b33;
-  font-size: 15px;
-  font-weight: 700;
+.review-page .review-tree-number {
+  fill: #334155;
+  font-size: 14px;
+  font-weight: 800;
+
   text-anchor: middle;
   dominant-baseline: central;
 }
 
-.review-page .review-diagram
-circle.review-tree-root + .review-tree-value {
-  fill: #ffffff;
+.review-page
+.review-root + .review-tree-number {
+  fill: #fff;
 }
 
-/* ============================================
-   STACK DIAGRAM
-   ============================================ */
+/* ==========================================
+   MINI STACK
+   ========================================== */
 
-.review-page .review-stack-diagram {
-  width: min(250px, 100%);
-  margin: 18px auto 0;
-  text-align: center;
-}
-
-.review-page .review-diagram-label {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 1px;
-}
-
-.review-page .review-stack-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-
-  min-height: 42px;
-  margin: 6px 0;
-  padding: 10px 15px;
-
-  border: 1px solid #334155;
-  border-radius: 7px;
-  background: #ffffff;
-
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.review-page .review-stack-item.is-top {
-  border-width: 2px;
-  background: #e2eaf2;
-}
-
-.review-page .review-stack-item span {
-  color: #374151;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.review-page .review-diagram-note {
-  text-align: center;
-  font-size: 13px;
-}
-
-/* ============================================
-   TRAVERSAL ORDER EXAMPLES
-   ============================================ */
-
-.review-page .review-order-diagram {
+.review-page .review-mini-stack {
   display: grid;
-  gap: 9px;
-  margin-top: 17px;
-}
-
-.review-page .review-order-row {
-  display: grid;
-  grid-template-columns: 105px minmax(0, 1fr);
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-
-  border: 1px solid var(--review-border);
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.review-page .review-order-row strong {
-  font-size: 13px;
-}
-
-.review-page .review-order-row span {
-  color: #374151;
-  font-size: 13px;
-  overflow-wrap: anywhere;
-}
-
-/* ============================================
-   MISCONCEPTION FEEDBACK
-   ============================================ */
-
-.review-page .review-misconceptions {
-  background: var(--review-light);
-}
-
-.review-page .review-misconception-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 15px;
-  margin-top: 22px;
-}
-
-.review-page .review-misconception-item {
-  min-width: 0;
-  padding: 20px;
-
-  border: 1px solid var(--review-border);
-  border-radius: 10px;
-  background: #ffffff;
-}
-
-.review-page .review-misconception-code {
-  display: inline-flex;
-  margin-bottom: 15px;
-  padding: 6px 12px;
-
-  border: 1px solid #cbd5df;
-  border-radius: 7px;
-  background: #e8edf2;
-
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.review-page .review-misconception-item h3 {
-  margin: 0 0 12px;
-  font-size: 17px;
-}
-
-.review-page .review-misconception-item p {
-  margin: 0;
-  color: #374151;
-  font-size: 14px;
-  line-height: 1.75;
-}
-
-/* ============================================
-   03 — CORRECTIVE PRACTICE
-   ============================================ */
-
-.review-page .review-practice {
-  margin-top: 30px;
-}
-
-.review-page .review-practice-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-  margin-top: 24px;
-}
-
-.review-page .review-practice-question {
-  min-width: 0;
-  padding: 22px;
-
-  border: 1px solid var(--review-border);
-  border-radius: 12px;
-  background: var(--review-light);
-}
-
-.review-page .review-question-code {
-  display: block;
-  margin-bottom: 12px;
-
-  color: var(--review-muted);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.8px;
-}
-
-.review-page .review-practice-question h3 {
-  min-height: 65px;
-  margin: 0 0 17px;
-  font-size: 17px;
-}
-
-/* ============================================
-   ANSWER BUTTONS
-   ============================================ */
-
-.review-page .review-answer-options {
-  display: grid;
-  gap: 10px;
-}
-
-.review-page .review-answer {
-  display: flex;
-  align-items: center;
-
-  width: 100%;
-  min-height: 53px;
-  padding: 12px 15px;
-
-  border: 1px solid #cbd3da;
-  border-radius: 9px;
-  background: #ffffff;
-  color: #242b33;
-
-  font-size: 14px;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-}
-
-.review-page .review-answer:hover {
-  background: #e8edf2;
-}
-
-.review-page .review-answer[aria-pressed="true"] {
-  border: 2px solid #334155;
-  background: #e1e8ef;
-}
-
-/* ============================================
-   PRACTICE FEEDBACK
-   ============================================ */
-
-.review-page .review-feedback {
-  margin-top: 16px;
-  font-size: 14px;
-  line-height: 1.75;
-}
-
-.review-page .review-feedback:empty {
-  display: none;
-}
-
-.review-page .review-feedback.is-correct {
-  padding: 14px 16px;
-
-  border: 1px solid #c9e5d3;
-  border-radius: 9px;
-  background: var(--review-success-bg);
-  color: var(--review-success);
-}
-
-.review-page .review-feedback.is-review {
-  padding: 14px 16px;
-
-  border: 1px solid #ead5b5;
-  border-radius: 9px;
-  background: var(--review-warning-bg);
-  color: var(--review-warning);
-}
-
-/* ============================================
-   04 — LEARNING PLAN
-   ============================================ */
-
-.review-page .review-plan {
-  margin-top: 30px;
-}
-
-.review-page .review-plan-options {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 23px;
-}
-
-.review-page .review-plan-option {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-
-  width: 100%;
-  min-height: 110px;
-  padding: 19px;
-
-  border: 1px solid #cbd3da;
-  border-radius: 10px;
-  background: #ffffff;
-  color: #242b33;
-
-  text-align: left;
-  cursor: pointer;
-}
-
-.review-page .review-plan-option strong {
-  font-size: 15px;
-}
-
-.review-page .review-plan-option span {
-  color: #4b5563;
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.review-page .review-plan-option:hover {
-  background: #f4f6f8;
-}
-
-.review-page .review-plan-option[aria-pressed="true"] {
-  border: 2px solid #334155;
-  background: #e8edf2;
-}
-
-.review-page .review-plan-feedback {
-  min-height: 22px;
-  margin: 17px 0;
-  color: #374151;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.review-page .review-plan .review-button {
+  max-width: 240px;
+  gap: 6px;
   margin-top: 10px;
 }
 
-/* ============================================
+.review-page .review-mini-stack span {
+  padding: 9px 13px;
+
+  border: 1px solid var(--rv-border);
+  border-radius: 7px;
+
+  background: #fff;
+  font-weight: 700;
+}
+
+.review-page .review-mini-stack span:first-child {
+  border: 2px dashed #334155;
+  background: #e8edf2;
+}
+
+/* ==========================================
+   QUICK CHECK QUESTIONS
+   ========================================== */
+
+.review-page .review-check-card h3 {
+  margin-top: 6px;
+}
+
+.review-page .review-choices {
+  display: grid;
+  gap: 9px;
+}
+
+.review-page .review-choice {
+  min-height: 43px;
+  padding: 10px 13px;
+
+  border: 1px solid #cbd3da;
+  border-radius: 8px;
+
+  background: #fff;
+  color: #334155;
+
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.review-page .review-choice:hover:not(:disabled) {
+  background: #edf1f5;
+}
+
+.review-page
+.review-choice[aria-pressed="true"] {
+  border-color: #334155;
+  background: #e8edf2;
+}
+
+.review-page .review-choice:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+
+/* ==========================================
+   QUICK CHECK FEEDBACK
+   ========================================== */
+
+.review-page .review-check-feedback:empty {
+  display: none;
+}
+
+.review-page
+.review-check-feedback:not(:empty) {
+  margin-top: 12px;
+  padding: 12px 14px;
+
+  border-radius: 8px;
+  background: #eff6ff;
+  border-left: 4px solid #32618c;
+
+  color: #17365c;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.review-page
+.review-check-feedback.is-correct {
+  border-left-color: #216b46;
+}
+
+.review-page
+.review-check-feedback.is-review {
+  border-left-color: #b7791f;
+}
+
+/* ==========================================
+   NEXT STEPS
+   ========================================== */
+
+.review-page .review-next-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 11px;
+  margin-top: 15px;
+}
+
+.review-page .review-next-link {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  min-height: 94px;
+  padding: 15px;
+
+  border: 1px solid #cbd5df;
+  border-radius: 9px;
+  background: #fff;
+
+  color: var(--rv-ink);
+  text-decoration: none;
+}
+
+.review-page .review-next-link:hover {
+  background: #edf1f5;
+}
+
+.review-page .review-next-link strong {
+  font-size: 14px;
+}
+
+.review-page .review-next-link span {
+  color: var(--rv-muted);
+  font-size: 12px;
+}
+
+/* ==========================================
    BOTTOM NAVIGATION
-   ============================================ */
+   ========================================== */
 
 .review-page .review-navigation {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 
-  margin-top: 35px;
-  padding: 27px 0;
+  margin-top: 23px;
+  padding-top: 19px;
 
-  border-top: 1px solid var(--review-border);
+  border-top: 1px solid var(--rv-border);
 }
 
-.review-page .review-navigation a {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
 
-  min-height: 52px;
-  padding: 13px 25px;
-
-  border: 1px solid #242b33;
-  border-radius: 9px;
-
-  font-size: 15px;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.review-page .review-navigation__back {
-  background: #ffffff;
-  color: #242b33;
-}
-
-.review-page .review-navigation__back:hover {
-  background: #f5f6f8;
-  color: #242b33;
-}
-
-.review-page .review-navigation__next {
-  margin-left: auto;
-  background: #242b33;
-  color: #ffffff;
-}
-
-.review-page .review-navigation__next:hover {
-  background: #414b56;
-  color: #ffffff;
-}
-
-/* ============================================
-   TABLET
-   ============================================ */
-
-@media (max-width: 850px) {
-  .review-page .review-practice-grid,
-  .review-page .review-misconception-list {
+@media (max-width: 880px) {
+  .review-page .review-score-card {
     grid-template-columns: 1fr;
   }
 }
-
-/* ============================================
-   MOBILE
-   ============================================ */
 
 @media (max-width: 650px) {
   .review-page {
-    width: calc(100% - 28px);
-    padding: 24px 0 55px;
+    width: calc(100% - 24px);
+    padding: 20px 0 48px;
   }
 
   .review-page .review-card {
-    padding: 20px;
+    padding: 16px;
   }
 
-  .review-page .lesson-progress {
-    padding: 14px;
+  .review-page .review-tabs {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
 
-  .review-page .review-intro h1 {
-    font-size: 29px;
-  }
-
-  .review-page .review-concept-summary {
-    padding: 17px;
-  }
-
-  .review-page .review-concept-body {
-    padding: 0 17px 20px;
-  }
-
-  .review-page .review-plan-options {
+  .review-page .review-next-grid {
     grid-template-columns: 1fr;
   }
 
-  .review-page .review-order-row {
-    grid-template-columns: 1fr;
-    gap: 5px;
+  .review-page .review-metrics {
+    gap: 6px;
+  }
+
+  .review-page .review-metric {
+    padding: 12px 6px;
+  }
+
+  .review-page .review-metric strong {
+    font-size: 19px;
+  }
+
+  .review-page .review-question-summary {
+    align-items: flex-start;
   }
 
   .review-page .review-navigation {
     flex-direction: column;
-    align-items: stretch;
   }
 
   .review-page .review-navigation a {
     width: 100%;
   }
-
-  .review-page .review-plan .review-button {
-    width: 100%;
-  }
-
-  .review-page .review-concept-heading {
-    gap: 8px;
-  }
 }
 
-/* ============================================
-   REDUCED MOTION
-   ============================================ */
-
 @media (prefers-reduced-motion: reduce) {
-  .review-page .lesson-progress__fill,
-  .review-page .review-concept-chevron {
-    transition: none;
+  .review-page *,
+  .review-page *::before,
+  .review-page *::after {
+    transition: none !important;
+    animation: none !important;
   }
 }

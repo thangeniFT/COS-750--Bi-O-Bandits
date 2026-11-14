@@ -1,21 +1,56 @@
-/* ============================================
-   COS212 DFS TUTOR — WELCOME PAGE
-   Figma Page 1
 
-   All styling is scoped to .welcome-page
-   (except .app-logo at the very bottom)
-   ============================================ */
+/* ==========================================
+   COS212 LEARNING COMPANION
+   WELCOME PAGE
+
+   Blue / Dark Blue / Black / White
+   Responsive, no outer page border
+   ========================================== */
+
+/* ==========================================
+   REMOVE OLD OUTER WRAPPER BORDERS
+   ========================================== */
+
+#main:has(.welcome-page),
+#screen:has(.welcome-page) {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0;
+  background: transparent;
+}
+
+#main:has(.welcome-page):focus {
+  outline: none;
+}
+
+/* ==========================================
+   MAIN WELCOME PAGE
+   ========================================== */
 
 .welcome-page {
   --welcome-ink: #242b33;
-  --welcome-muted: #565e6b;
+  --welcome-dark-blue: #1e3a5f;
+  --welcome-blue: #2563a6;
+  --welcome-muted: #526071;
   --welcome-border: #dce1e5;
-  --welcome-surface: #f5f6f8;
+  --welcome-light: #f5f7fa;
   --welcome-white: #ffffff;
 
-  width: min(1270px, calc(100% - 48px));
+  width: min(1240px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 54px 0 80px;
+  padding: 34px 0 58px;
+
+  border: none !important;
+  outline: none;
+  box-shadow: none !important;
+  border-radius: 0;
+  background: transparent;
+
   color: var(--welcome-ink);
   font-family: Inter, Arial, sans-serif;
   line-height: 1.6;
@@ -27,16 +62,37 @@
   box-sizing: border-box;
 }
 
-/* ============================================
-   HERO
-   ============================================ */
+.welcome-page h1,
+.welcome-page h2,
+.welcome-page h3 {
+  color: var(--welcome-ink);
+  line-height: 1.3;
+}
+
+.welcome-page button,
+.welcome-page a {
+  font-family: inherit;
+}
+
+.welcome-page button:focus-visible,
+.welcome-page a:focus-visible {
+  outline: 3px solid var(--welcome-blue);
+  outline-offset: 3px;
+}
+
+/* ==========================================
+   HERO SECTION
+   ========================================== */
 
 .welcome-page .welcome-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-columns:
+    minmax(0, 1.1fr)
+    minmax(0, 1fr);
+
   align-items: center;
-  gap: 56px;
-  margin-bottom: 64px;
+  gap: 38px;
+  margin-bottom: 45px;
 }
 
 .welcome-page .welcome-hero__content {
@@ -46,282 +102,351 @@
 .welcome-page .welcome-eyebrow,
 .welcome-page .section-eyebrow {
   display: inline-block;
-  color: var(--welcome-muted);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 1.6px;
+
+  color: var(--welcome-dark-blue);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
 }
 
 .welcome-page .welcome-eyebrow {
-  margin-bottom: 22px;
+  margin-bottom: 13px;
 }
 
 .welcome-page .welcome-title {
-  max-width: 620px;
-  margin: 0 0 24px;
-  color: var(--welcome-ink);
-  font-size: clamp(38px, 4vw, 56px);
-  font-weight: 700;
-  letter-spacing: -1.8px;
-  line-height: 1.12;
+  max-width: 610px;
+  margin: 0 0 16px;
+
+  font-size: clamp(34px, 4vw, 52px);
+  font-weight: 800;
+  letter-spacing: -1.3px;
+  line-height: 1.14;
 }
 
 .welcome-page .welcome-description {
-  max-width: 540px;
+  max-width: 550px;
   margin: 0;
+
   color: var(--welcome-muted);
-  font-size: 18px;
-  line-height: 1.8;
+  font-size: 16px;
+  line-height: 1.75;
 }
 
-/* ============================================
+/* ==========================================
    EXPECTATION CHIPS
-   ============================================ */
+   ========================================== */
 
 .welcome-page .welcome-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin: 24px 0 0;
+  gap: 8px;
+
+  margin: 19px 0 0;
   padding: 0;
   list-style: none;
 }
 
 .welcome-page .welcome-chip {
-  padding: 6px 14px;
-  border: 1px solid var(--welcome-border);
-  border-radius: 999px;
-  background: var(--welcome-surface);
-  color: var(--welcome-ink);
-  font-size: 14px;
+  padding: 7px 12px;
+
+  border: 1px solid #d4e1ee;
+  border-radius: 20px;
+  background: #f0f5fa;
+
+  color: var(--welcome-dark-blue);
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.4;
 }
 
-/* ============================================
-   BUTTONS
-   ============================================ */
+/* ==========================================
+   HERO BUTTONS
+   ========================================== */
 
 .welcome-page .welcome-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 32px;
+  gap: 12px;
+
+  margin-top: 26px;
 }
 
 .welcome-page .welcome-actions .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 54px;
-  padding: 14px 28px;
-  border: 1.5px solid var(--welcome-ink);
+
+  min-height: 46px;
+  padding: 11px 19px;
+
+  border: 1px solid var(--welcome-dark-blue);
   border-radius: 9px;
-  font: inherit;
-  font-size: 15px;
+
+  font-size: 14px;
   font-weight: 700;
   line-height: 1.4;
+  text-align: center;
   text-decoration: none;
+
   cursor: pointer;
+
   transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
 }
 
+/* Start Learning */
 .welcome-page .welcome-start {
-  background: var(--welcome-ink);
-  color: var(--welcome-white);
+  background: var(--welcome-dark-blue);
+  color: #ffffff;
 }
 
 .welcome-page .welcome-start:hover {
-  background: #414b56;
-  color: var(--welcome-white);
+  background: #2b507c;
+  color: #ffffff;
   transform: translateY(-2px);
-  box-shadow: 0 5px 14px rgba(36, 43, 51, 0.13);
 }
 
+/* Skip to Practice */
 .welcome-page .welcome-explore {
-  background: var(--welcome-white);
-  color: var(--welcome-ink);
+  background: #ffffff;
+  color: var(--welcome-dark-blue);
 }
 
 .welcome-page .welcome-explore:hover {
-  background: var(--welcome-surface);
-  color: var(--welcome-ink);
+  background: #edf4fb;
+  color: var(--welcome-dark-blue);
   transform: translateY(-2px);
 }
 
-.welcome-page .welcome-actions .btn:focus-visible {
-  outline: 3px solid #7890a6;
-  outline-offset: 3px;
-}
-
-/* ============================================
-   "NOT MARKED" CALLOUT
-   ============================================ */
+/* ==========================================
+   INFORMATION NOTE
+   ========================================== */
 
 .welcome-page .welcome-note {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  max-width: 540px;
-  margin: 24px 0 0;
-  padding: 14px 16px;
-  border: 1px solid #b9d3c2;
-  border-radius: 10px;
-  background: #eef7f1;
-  color: #1f4d33;
-  font-size: 15px;
-  line-height: 1.5;
+  gap: 11px;
+
+  max-width: 570px;
+  margin: 22px 0 0;
+  padding: 13px 15px;
+
+  border: 1px solid #bfd3e8;
+  border-radius: 9px;
+
+  background: #eff6ff;
+  color: var(--welcome-dark-blue);
+
+  font-size: 13px;
+  line-height: 1.65;
 }
 
 .welcome-page .welcome-note__icon {
-  flex: none;
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 22px;
   width: 22px;
   height: 22px;
+
   border-radius: 50%;
-  background: #1f4d33;
+  background: var(--welcome-dark-blue);
   color: #ffffff;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 22px;
-  text-align: center;
+
+  font-size: 12px;
+  font-weight: 800;
 }
 
-/* ============================================
-   TREE ILLUSTRATION CARD
-   ============================================ */
+/* ==========================================
+   ANIMATED TREE CARD
+   ========================================== */
 
 .welcome-page .welcome-hero__illustration {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
   min-width: 0;
-  min-height: 410px;
-  padding: 30px 24px 22px;
+  min-height: 385px;
+  padding: 23px 20px;
+
   border: 1px solid var(--welcome-border);
-  border-radius: 16px;
-  background: var(--welcome-surface);
+  border-radius: 13px;
+  background: var(--welcome-light);
 }
 
 .welcome-page .welcome-visual-heading {
   width: 100%;
-  margin-bottom: 12px;
-  color: var(--welcome-muted);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 1.4px;
+  margin-bottom: 15px;
+
+  color: var(--welcome-dark-blue);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
   text-align: center;
 }
 
+/* SVG TREE */
+
 .welcome-page .welcome-tree {
   display: block;
+
   width: 100%;
   max-width: 410px;
   height: auto;
+
+  border: none;
+  box-shadow: none;
   overflow: visible;
-  transition: opacity 0.5s ease;
+
+  transition: opacity 0.6s ease;
 }
 
-/* Branches: drawn parent -> child (line has pathLength="1") */
+/* Tree connections */
 .welcome-page .welcome-tree__edge {
-  stroke: #8995a1;
-  stroke-width: 3;
+  stroke: #94a3b8;
+  stroke-width: 2.7;
   stroke-linecap: round;
+
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
+
   opacity: 0;
 }
 
-/* Nodes */
+/* Node groups start invisible */
 .welcome-page .welcome-tree__group {
   opacity: 0;
 }
 
-/* The loop in welcome.js adds .is-playing to start (and restart) the build */
-.welcome-page .welcome-tree.is-playing .welcome-tree__edge {
+/* Node circle */
+.welcome-page .welcome-tree__node {
+  fill: #ffffff;
+  stroke: #334155;
+  stroke-width: 2.7;
+
+  transition:
+    fill 220ms ease,
+    stroke 220ms ease;
+}
+
+/* Node number */
+.welcome-page .welcome-tree__label {
+  fill: #242b33;
+  font-size: 18px;
+  font-weight: 800;
+
+  text-anchor: middle;
+  dominant-baseline: central;
+
+  transition: fill 220ms ease;
+}
+
+/* ==========================================
+   TREE BUILD ANIMATION
+   ========================================== */
+
+.welcome-page
+.welcome-tree.is-playing
+.welcome-tree__edge {
   animation: welcome-draw-edge 0.3s ease both;
   animation-delay: var(--reveal, 0s);
 }
 
-.welcome-page .welcome-tree.is-playing .welcome-tree__group {
+.welcome-page
+.welcome-tree.is-playing
+.welcome-tree__group {
   animation: welcome-reveal-node 0.4s ease both;
   animation-delay: var(--reveal, 0s);
 }
 
-/* DFS highlighting */
-.welcome-page .welcome-tree__node,
-.welcome-page .welcome-tree__label,
-.welcome-page .welcome-tree__edge {
-  transition: fill 0.25s ease, stroke 0.25s ease;
+/* ==========================================
+   DFS NODE HIGHLIGHTING
+   ========================================== */
+
+/* Previously visited nodes */
+.welcome-page
+.welcome-tree__group.is-visited
+.welcome-tree__node {
+  fill: #dbeafe;
+  stroke: #2563a6;
 }
 
-.welcome-page .welcome-tree__group.is-visited .welcome-tree__node {
-  fill: #dbe8f5;
-  stroke: #2b6cb0;
+/* Currently visited node */
+.welcome-page
+.welcome-tree__group.is-current
+.welcome-tree__node {
+  fill: #1e3a5f;
+  stroke: #1e3a5f;
+  stroke-width: 3.5;
 }
 
-.welcome-page .welcome-tree__group.is-current .welcome-tree__node {
-  fill: #2b6cb0;
-  stroke: #1e4e82;
-}
-
-.welcome-page .welcome-tree__group.is-current .welcome-tree__label {
+.welcome-page
+.welcome-tree__group.is-current
+.welcome-tree__label {
   fill: #ffffff;
 }
 
+/* Visited connections */
 .welcome-page .welcome-tree__edge.is-visited {
-  stroke: #2b6cb0;
+  stroke: #2563a6;
+  stroke-width: 3;
 }
 
-/* Live "DFS visits: 50 -> 30 -> ..." line */
+/* DFS visited sequence */
 .welcome-page .welcome-dfs-order {
-  min-height: 1.6em;
+  min-height: 24px;
   margin: 12px 0 0;
-  color: #1e4e82;
-  font-size: 15px;
-  font-weight: 700;
+
+  color: var(--welcome-dark-blue);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.6;
   text-align: center;
 }
 
-/* Whole tree fades out before it rebuilds */
+/* Illustration explanation */
+.welcome-page .welcome-visual-note {
+  max-width: 390px;
+  margin: 13px 0 0;
+
+  color: var(--welcome-muted);
+  font-size: 13px;
+  line-height: 1.65;
+  text-align: center;
+}
+
+/* Fade away before restarting */
 .welcome-page .welcome-tree.is-fading {
   opacity: 0;
 }
 
-.welcome-page .welcome-tree__node {
-  fill: var(--welcome-white);
-  stroke: var(--welcome-ink);
-  stroke-width: 3;
+/* Static tree for reduced motion */
+.welcome-page .welcome-tree.is-static
+.welcome-tree__group {
+  opacity: 1;
 }
 
-.welcome-page .welcome-tree__label {
-  fill: var(--welcome-ink);
-  font-family: Inter, Arial, sans-serif;
-  font-size: 19px;
-  font-weight: 700;
-  text-anchor: middle;
-  dominant-baseline: central;
+.welcome-page .welcome-tree.is-static
+.welcome-tree__edge {
+  opacity: 1;
+  stroke-dashoffset: 0;
 }
 
-.welcome-page .welcome-visual-note {
-  max-width: 380px;
-  margin: 14px 0 0;
-  color: var(--welcome-muted);
-  font-size: 14px;
-  line-height: 1.55;
-  text-align: center;
-}
+/* ==========================================
+   ANIMATION KEYFRAMES
+   ========================================== */
 
 @keyframes welcome-reveal-node {
   from {
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -333,193 +458,227 @@
     opacity: 0;
     stroke-dashoffset: 1;
   }
+
   to {
     opacity: 1;
     stroke-dashoffset: 0;
   }
 }
 
-/* ============================================
+/* ==========================================
    LEARNING OUTCOMES
-   ============================================ */
+   ========================================== */
 
 .welcome-page .welcome-outcomes {
-  margin-bottom: 56px;
+  margin-bottom: 40px;
 }
 
 .welcome-page .welcome-outcomes h2 {
-  margin: 0 0 16px;
-  color: var(--welcome-ink);
-  font-size: clamp(22px, 2.4vw, 28px);
-  font-weight: 700;
-  letter-spacing: -0.4px;
-  line-height: 1.3;
+  margin: 0 0 14px;
+
+  font-size: clamp(21px, 2.5vw, 25px);
+  font-weight: 800;
 }
 
 .welcome-page .welcome-outcomes__list {
   margin: 0;
-  padding-left: 22px;
-  font-size: 17px;
-  line-height: 1.9;
+  padding-left: 23px;
+
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.85;
 }
 
-/* ============================================
-   LEARNING JOURNEY (4 STEPS)
-   ============================================ */
+.welcome-page .welcome-outcomes__list li {
+  margin-bottom: 6px;
+  padding-left: 5px;
+}
+
+.welcome-page
+.welcome-outcomes__list li::marker {
+  color: var(--welcome-blue);
+}
+
+/* ==========================================
+   LEARNING JOURNEY
+   ========================================== */
 
 .welcome-page .welcome-objectives {
-  padding-top: 32px;
+  padding-top: 27px;
   border-top: 1px solid var(--welcome-border);
 }
 
 .welcome-page .welcome-objectives h2 {
-  margin: 12px 0 30px;
-  color: var(--welcome-ink);
-  font-size: clamp(26px, 2.8vw, 34px);
-  font-weight: 700;
-  letter-spacing: -0.6px;
-  line-height: 1.3;
+  margin: 8px 0;
+
+  font-size: clamp(23px, 2.8vw, 29px);
+  font-weight: 800;
 }
 
+.welcome-page .welcome-journey-description {
+  max-width: 790px;
+  margin: 0 0 23px;
+
+  color: var(--welcome-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* Six cards: 3 per row */
 .welcome-page .welcome-objectives__grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 26px;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 15px;
 }
 
+/* ==========================================
+   LEARNING CARDS
+   ========================================== */
+
 .welcome-page .welcome-card {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+
   min-width: 0;
-  min-height: 230px;
-  padding: 26px;
+  min-height: 205px;
+  padding: 21px;
+
   border: 1px solid var(--welcome-border);
-  border-radius: 13px;
-  background: var(--welcome-white);
+  border-radius: 11px;
+
+  background: #ffffff;
+
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }
 
 .welcome-page .welcome-card:hover {
-  border-color: #aab4be;
-  transform: translateY(-3px);
-  box-shadow: 0 9px 24px rgba(36, 43, 51, 0.07);
+  border-color: #b5c7d9;
+  background: #fafcff;
+
+  box-shadow:
+    0 5px 18px rgba(30, 58, 95, 0.06);
+
+  transform: translateY(-2px);
 }
 
-/* Arrow between steps */
-.welcome-page .welcome-card:not(:last-child)::after {
-  content: "\2192";
-  position: absolute;
-  top: 50%;
-  right: -20px;
-  z-index: 1;
-  transform: translateY(-50%);
-  color: var(--welcome-muted);
-  font-size: 18px;
+/* Remove the old arrows between cards */
+.welcome-page .welcome-card::after {
+  display: none !important;
+  content: none !important;
 }
 
 .welcome-page .welcome-card__number {
   display: inline-block;
-  margin-bottom: 20px;
-  color: var(--welcome-muted);
-  font-size: 14px;
-  font-weight: 700;
+  align-self: flex-start;
+
+  margin-bottom: 10px;
+
+  color: var(--welcome-dark-blue);
+  font-size: 12px;
+  font-weight: 800;
   letter-spacing: 0.8px;
 }
 
 .welcome-page .welcome-card h3 {
-  margin: 0 0 12px;
-  color: var(--welcome-ink);
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.4;
+  margin: 0 0 8px;
+
+  font-size: 17px;
+  font-weight: 800;
 }
 
 .welcome-page .welcome-card p {
   margin: 0;
+
   color: var(--welcome-muted);
-  font-size: 15px;
-  line-height: 1.7;
+  font-size: 13px;
+  line-height: 1.65;
 }
 
+/* Time at the bottom of each card */
 .welcome-page .welcome-card__time {
   display: inline-block;
-  margin-top: 14px;
-  color: var(--welcome-ink);
-  font-size: 13px;
-  font-weight: 700;
+  align-self: flex-start;
+
+  margin-top: auto;
+  padding-top: 15px;
+
+  color: var(--welcome-dark-blue);
+  font-size: 12px;
+  font-weight: 800;
 }
 
-/* ============================================
-   RESPONSIVE — TABLETS
-   ============================================ */
+/* ==========================================
+   TABLETS
+   ========================================== */
 
 @media (max-width: 1000px) {
   .welcome-page .welcome-hero {
-    gap: 30px;
+    gap: 24px;
   }
 
   .welcome-page .welcome-title {
-    font-size: 43px;
-  }
-
-  .welcome-page .welcome-description {
-    font-size: 16px;
+    font-size: clamp(34px, 4vw, 43px);
   }
 
   .welcome-page .welcome-objectives__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
-  }
-
-  .welcome-page .welcome-card::after {
-    display: none;
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
 }
 
-/* ============================================
-   RESPONSIVE — SMALL SCREENS
-   ============================================ */
+/* ==========================================
+   MOBILE SCREENS
+   ========================================== */
 
 @media (max-width: 760px) {
   .welcome-page {
-    width: calc(100% - 32px);
-    padding: 34px 0 60px;
+    width: calc(100% - 24px);
+    padding: 24px 0 45px;
   }
 
   .welcome-page .welcome-hero {
     grid-template-columns: 1fr;
-    gap: 32px;
-    margin-bottom: 48px;
-  }
-
-  .welcome-page .welcome-hero__illustration {
-    min-height: 320px;
-    padding: 20px 14px;
+    gap: 26px;
+    margin-bottom: 36px;
   }
 
   .welcome-page .welcome-title {
-    font-size: clamp(34px, 7vw, 44px);
+    font-size: clamp(33px, 7vw, 42px);
+  }
+
+  .welcome-page .welcome-hero__illustration {
+    min-height: 315px;
+    padding: 20px 14px;
+  }
+
+  .welcome-page .welcome-outcomes {
+    margin-bottom: 32px;
   }
 
   .welcome-page .welcome-objectives__grid {
     grid-template-columns: 1fr;
+    gap: 11px;
   }
 
   .welcome-page .welcome-card {
-    min-height: auto;
-    padding: 24px;
+    min-height: 0;
+    padding: 18px;
   }
 }
 
-/* ============================================
-   RESPONSIVE — PHONES
-   ============================================ */
+/* ==========================================
+   SMALL PHONES
+   ========================================== */
 
 @media (max-width: 480px) {
   .welcome-page .welcome-title {
-    font-size: 34px;
+    font-size: 33px;
     letter-spacing: -1px;
   }
 
@@ -532,47 +691,156 @@
   }
 
   .welcome-page .welcome-objectives h2 {
-    font-size: 28px;
+    font-size: 23px;
   }
 }
 
-/* ============================================
-   ACCESSIBILITY — REDUCED MOTION
-   ============================================ */
+/* ==========================================
+   ACCESSIBILITY: REDUCED MOTION
+   ========================================== */
 
 @media (prefers-reduced-motion: reduce) {
+  .welcome-page .welcome-tree,
+  .welcome-page .welcome-tree__node,
+  .welcome-page .welcome-tree__label,
+  .welcome-page .welcome-card,
+  .welcome-page .welcome-actions .btn {
+    transition: none;
+  }
+
+  .welcome-page .welcome-tree__edge,
+  .welcome-page .welcome-tree__group {
+    animation: none !important;
+  }
+
   .welcome-page .welcome-tree__edge {
-    animation: none;
     opacity: 1;
     stroke-dashoffset: 0;
   }
 
   .welcome-page .welcome-tree__group {
-    animation: none;
     opacity: 1;
   }
 
-  .welcome-page .welcome-actions .btn,
-  .welcome-page .welcome-card {
-    transition: none;
-  }
-
-  .welcome-page .welcome-actions .btn:hover,
-  .welcome-page .welcome-card:hover {
+  .welcome-page .welcome-card:hover,
+  .welcome-page .welcome-actions .btn:hover {
     transform: none;
   }
 }
 
-/* ============================================
-   APP LOGO (lives in the app shell, so it is
-   NOT scoped to .welcome-page). Add class
-   "app-logo" to the "COS212 DFS Tutor" element.
-   ============================================ */
 
-.app-logo {
-  color: #242b33;
-  font-family: Inter, Arial, sans-serif;
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.4px;
+
+/* ==========================================
+   WELCOME — PRACTICE SHORTCUT
+   ========================================== */
+
+.welcome-page .welcome-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.welcome-page .welcome-practice-option {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+}
+
+.welcome-page .welcome-practice-text {
+  color: #526071;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.welcome-page .welcome-practice-link {
+  color: #1e3a5f;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.welcome-page .welcome-practice-link:hover {
+  color: #2563a6;
+  text-decoration: underline;
+}
+
+.welcome-page .welcome-practice-link:focus-visible {
+  outline: 3px solid #2563a6;
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+@media (max-width: 480px) {
+  .welcome-page .welcome-actions {
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .welcome-page .welcome-practice-option {
+    align-items: center;
+    text-align: center;
+  }
+}
+
+
+
+/* ==========================================
+   WELCOME BUTTONS
+   ========================================== */
+
+.welcome-page .welcome-actions {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 26px;
+}
+
+.welcome-page .welcome-start {
+  min-height: 46px;
+  background: #1e3a5f;
+  border-color: #1e3a5f;
+  color: #ffffff;
+}
+
+.welcome-page .welcome-practice-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+
+.welcome-page .welcome-practice-option .welcome-explore {
+  min-height: 46px;
+  background: #ffffff;
+  border: 1px solid #1e3a5f;
+  color: #1e3a5f;
+}
+
+.welcome-page .welcome-practice-option .welcome-explore:hover {
+  background: #eaf2fb;
+}
+
+.welcome-page .welcome-practice-text {
+  color: #526071;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .welcome-page .welcome-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .welcome-page .welcome-practice-option {
+    width: 100%;
+  }
+
+  .welcome-page .welcome-practice-option .welcome-explore {
+    width: 100%;
+  }
 }

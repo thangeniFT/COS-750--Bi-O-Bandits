@@ -1,229 +1,168 @@
 
 /**
- * COS212 DFS Tutor — Readiness Quiz
- * Page 6
- *
- * Learning design:
- * - Gagne: elicit performance and provide feedback
- * - Mayer: segmenting and signalling
- * - Retrieval practice and metacognition
- *
- * First attempt: Variant A
- * First retry: Variant B
- *
- * Questions loaded from data/quiz-bank.json.
+ * COS212 DFS Tutor — Applied Readiness Quiz
+ * Three topic tabs, one question at a time.
+ * Compatible with Guided Review.
  */
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
+const QUIZ_NS = 'http://www.w3.org/2000/svg';
 
-const TREES = {
-  A: {
-    nodes: [
-      [50, 300, 42],
-      [30, 155, 136],
-      [70, 445, 136],
-      [20, 75, 252],
-      [40, 235, 252],
-      [60, 365, 252],
-      [80, 525, 252]
-    ],
-    edges: [
-      [50, 30],
-      [50, 70],
-      [30, 20],
-      [30, 40],
-      [70, 60],
-      [70, 80]
-    ]
-  },
-
-  B: {
-    nodes: [
-      [45, 300, 42],
-      [25, 153, 136],
-      [65, 447, 136],
-      [15, 75, 252],
-      [35, 235, 252],
-      [55, 397, 252],
-      [30, 185, 350]
-    ],
-    edges: [
-      [45, 25],
-      [45, 65],
-      [25, 15],
-      [25, 35],
-      [35, 30],
-      [65, 55]
-    ]
-  }
+const QUIZ_TREES = {
+  A: [67, 33, 86, 15, 52, 74, 96, 45],
+  B: [59, 26, 82, 13, 41, 72, 93, 36]
 };
 
-function node(tag, className = '', value = '') {
-  const element = document.createElement(tag);
+const QUIZ_SECTIONS = [
+  { id: 'bst', name: 'BST Skills' },
+  { id: 'dfs', name: 'DFS & Stack' },
+  { id: 'traversal', name: 'Traversal Orders' }
+];
 
-  if (className) {
-    element.className = className;
-  }
-
-  element.textContent = value;
-  return element;
+function qEl(tag, cls = '', text = '') {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  e.textContent = text;
+  return e;
 }
 
-function svgNode(tag, attributes = {}) {
-  const element = document.createElementNS(SVG_NS, tag);
+function qButton(text, cls = 'quiz-button') {
+  const b = qEl('button', cls, text);
+  b.type = 'button';
+  return b;
+}
 
-  for (const [key, value] of Object.entries(attributes)) {
-    element.setAttribute(key, String(value));
-  }
+function qSvg(tag, props = {}) {
+  const e = document.createElementNS(QUIZ_NS, tag);
 
-  return element;
+  Object.entries(props).forEach(([k, v]) => {
+    e.setAttribute(k, String(v));
+  });
+
+  return e;
 }
 
 /* ==========================================
-   TREE DIAGRAMS
+   TREE HELPERS
    ========================================== */
 
-function treeFigure(treeKey, highlight = {}) {
-  const tree = TREES[treeKey];
+function qTree(values) {
+  let root = null;
 
-  const wrapper = node('figure', 'quiz-tree');
-  const caption = node('figcaption', '', `Tree ${treeKey}`);
-
-  const svg = svgNode('svg', {
-    viewBox: treeKey === 'B'
-      ? '0 0 600 410'
-      : '0 0 600 320',
-    role: 'img',
-    'aria-label':
-      `Tree ${treeKey} with nodes ` +
-      tree.nodes.map(n => n[0]).join(', ')
-  });
-
-  const positions = new Map(
-    tree.nodes.map(([value, x, y]) => [
-      value,
-      { x, y }
-    ])
-  );
-
-  // Draw connections behind nodes.
-  tree.edges.forEach(([parentValue, childValue]) => {
-    const parent = positions.get(parentValue);
-    const child = positions.get(childValue);
-
-    svg.appendChild(
-      svgNode('line', {
-        x1: parent.x,
-        y1: parent.y,
-        x2: child.x,
-        y2: child.y,
-        class: 'quiz-tree-edge'
-      })
-    );
-  });
-
-  tree.nodes.forEach(([value, x, y]) => {
-    const current = Number(highlight.current) === value;
-
-    const visited = (
-      highlight.visited || []
-    ).includes(value);
-
-    const className = current
-      ? 'quiz-tree-node is-current'
-      : visited
-        ? 'quiz-tree-node is-visited'
-        : 'quiz-tree-node';
-
-    const group = svgNode('g', {
-      class: className
-    });
-
-    const circle = svgNode('circle', {
-      cx: x,
-      cy: y,
-      r: 26
-    });
-
-    const valueText = svgNode('text', {
-      x,
-      y,
-      class: 'quiz-tree-value'
-    });
-
-    valueText.textContent = String(value);
-
-    group.append(circle, valueText);
-
-    // Labels give non-colour cues.
-    if (current || visited) {
-      const state = svgNode('text', {
-        x,
-        y: y + 43,
-        class: 'quiz-tree-state'
-      });
-
-      state.textContent = current ? 'NOW' : '✓';
-      group.appendChild(state);
+  for (const value of values) {
+    if (!root) {
+      root = {
+        value,
+        left: null,
+        right: null,
+        parent: null
+      };
+      continue;
     }
 
-    svg.appendChild(group);
-  });
+    let node = root;
 
-  wrapper.append(caption, svg);
+    while (node) {
+      const side = value < node.value
+        ? 'left'
+        : 'right';
 
-  return wrapper;
+      if (!node[side]) {
+        node[side] = {
+          value,
+          left: null,
+          right: null,
+          parent: node
+        };
+        break;
+      }
+
+      node = node[side];
+    }
+  }
+
+  return root;
 }
 
-/* ==========================================
-   ANSWER VALIDATION
-   ========================================== */
+function qEntries(root) {
+  const arr = [];
 
-function normalizeOrder(text) {
+  function visit(n, depth = 0) {
+    if (!n) return;
+
+    visit(n.left, depth + 1);
+    arr.push({ n, depth });
+    visit(n.right, depth + 1);
+  }
+
+  visit(root);
+  return arr;
+}
+
+function qParseOrder(text) {
   const raw = text.trim();
 
-  // Accept whole numbers separated by spaces,
-  // commas, semicolons or arrows.
   if (
     !raw ||
-    !/^\s*\d+(?:\s*(?:,|;|→|\s)\s*\d+)*\s*$/.test(raw)
+    !/^\d+(?:[\s,;→]+\d+)*$/.test(raw)
   ) {
     return null;
   }
 
   return raw
     .split(/[\s,;→]+/)
-    .filter(Boolean)
     .map(Number);
 }
 
-function arraysEqual(a, b) {
+function qSame(a, b) {
   return (
     Array.isArray(a) &&
     Array.isArray(b) &&
     a.length === b.length &&
-    a.every((value, index) => value === b[index])
+    a.every((v, i) => v === b[i])
   );
 }
 
-function feedbackFor(item, submitted) {
+/* ==========================================
+   ANSWER EVALUATION
+   ========================================== */
+
+function qEvaluate(item, submitted) {
+  if (submitted === '__unsure__') {
+    return {
+      correct: false,
+      explanation:
+        'Review the explanation below, then try the ' +
+        'alternate quiz on your next attempt.',
+      misconception: null
+    };
+  }
+
   if (item.type === 'choice') {
-    const selected = item.options.find(
-      option => option.id === submitted
+    const selected = (item.options || []).find(
+      opt => opt.id === submitted
     );
 
     return {
       correct: selected?.correct === true,
       explanation:
         selected?.feedback ||
-        'Review the concept before continuing.',
+        'Review the concept and compare the available choices.',
       misconception:
         selected?.misconception || null
     };
   }
 
-  // Traversal-order question.
-  if (arraysEqual(submitted, item.answer)) {
+  if (!Array.isArray(submitted)) {
+    return {
+      correct: false,
+      explanation:
+        'Enter whole numbers separated by commas, ' +
+        'spaces or arrows.',
+      misconception: null
+    };
+  }
+
+  if (qSame(submitted, item.answer)) {
     return {
       correct: true,
       explanation: item.correctFeedback,
@@ -231,42 +170,230 @@ function feedbackFor(item, submitted) {
     };
   }
 
-  // Match common incorrect traversals.
-  const rule = (item.rules || []).find(rule =>
-    arraysEqual(submitted, rule.match)
+  const known = (item.rules || []).find(
+    rule => qSame(rule.match, submitted)
   );
 
-  if (rule) {
+  if (known) {
     return {
       correct: false,
-      explanation: rule.feedback,
-      misconception: rule.misconception || null
+      explanation: known.feedback,
+      misconception: known.misconception || null
     };
   }
 
-  // Custom feedback: identify first mistake.
-  const mismatch = item.answer.findIndex(
-    (value, index) => submitted?.[index] !== value
+  const first = item.answer.findIndex(
+    (v, i) => submitted[i] !== v
   );
 
-  const position = mismatch < 0
+  const pos = first === -1
     ? item.answer.length + 1
-    : mismatch + 1;
+    : first + 1;
 
-  const expected = item.answer[mismatch] ?? '—';
-
-  const explanation = (
-    item.fallbackFeedback ||
-    'Review the traversal order.'
-  )
-    .replaceAll('{position}', String(position))
-    .replaceAll('{expected}', String(expected));
+  const expected = item.answer[first] ?? '—';
 
   return {
     correct: false,
-    explanation,
+    explanation:
+      (
+        item.fallbackFeedback ||
+        'Review the traversal rule.'
+      )
+        .replaceAll('{position}', String(pos))
+        .replaceAll('{expected}', String(expected)),
     misconception: null
   };
+}
+
+/* ==========================================
+   INTERACTIVE TREE
+   ========================================== */
+
+function qFigure(
+  key,
+  highlight = {},
+  onPick = null,
+  draft = []
+) {
+  const root = qTree(QUIZ_TREES[key]);
+  const entries = qEntries(root);
+
+  const maxDepth = Math.max(
+    ...entries.map(e => e.depth)
+  );
+
+  const width = 680;
+  const height = Math.max(
+    335,
+    115 + maxDepth * 92
+  );
+
+  const positions = new Map();
+
+  entries.forEach(({ n, depth }, i) => {
+    positions.set(n, {
+      x: 53 + i * (width - 106) /
+        (entries.length - 1),
+      y: 48 + depth * 92
+    });
+  });
+
+  const figure = qEl('figure', 'quiz-tree');
+
+  const caption = qEl(
+    'figcaption',
+    '',
+    `Tree ${key} · ${entries.length} nodes`
+  );
+
+  const svg = qSvg('svg', {
+    viewBox: `0 0 ${width} ${height}`,
+    'aria-label':
+      `Tree ${key}. Select a node when the ` +
+      'question asks you to.',
+    role: onPick ? 'group' : 'img'
+  });
+
+  // Tree edges
+  entries.forEach(({ n }) => {
+    if (!n.parent) return;
+
+    const a = positions.get(n.parent);
+    const b = positions.get(n);
+
+    svg.appendChild(
+      qSvg('line', {
+        x1: a.x,
+        y1: a.y,
+        x2: b.x,
+        y2: b.y,
+        class: 'quiz-tree-edge'
+      })
+    );
+  });
+
+  // Tree nodes
+  entries.forEach(({ n }) => {
+    const { x, y } = positions.get(n);
+
+    const classes = ['quiz-tree-node'];
+
+    if (
+      Number(highlight.current) === n.value
+    ) {
+      classes.push('is-current');
+    } else if (
+      (highlight.visited || []).includes(n.value)
+    ) {
+      classes.push('is-visited');
+    }
+
+    if (draft.includes(n.value)) {
+      classes.push('is-draft');
+    }
+
+    if (highlight.selected === n.value) {
+      classes.push('is-selected');
+    }
+
+    const attrs = {
+      class: classes.join(' '),
+      'data-value': n.value,
+      'aria-label': `Node ${n.value}`
+    };
+
+    if (onPick) {
+      attrs.role = 'button';
+      attrs.tabindex = 0;
+    }
+
+    const group = qSvg('g', attrs);
+
+    const circle = qSvg('circle', {
+      cx: x,
+      cy: y,
+      r: 25
+    });
+
+    const value = qSvg('text', {
+      x,
+      y,
+      class: 'quiz-tree-value'
+    });
+
+    value.textContent = String(n.value);
+
+    group.append(circle, value);
+
+    const index = draft.indexOf(n.value);
+
+    if (
+      index >= 0 ||
+      Number(highlight.current) === n.value
+    ) {
+      const tag = qSvg('text', {
+        x,
+        y: y + 43,
+        class: 'quiz-tree-state'
+      });
+
+      tag.textContent = index >= 0
+        ? `#${index + 1}`
+        : 'NOW';
+
+      group.appendChild(tag);
+    }
+
+    if (onPick) {
+      group.addEventListener(
+        'click',
+        () => onPick(n.value)
+      );
+
+      group.addEventListener(
+        'keydown',
+        e => {
+          if (
+            e.key === 'Enter' ||
+            e.key === ' '
+          ) {
+            e.preventDefault();
+            onPick(n.value);
+          }
+        }
+      );
+    }
+
+    svg.appendChild(group);
+  });
+
+  // Legend inside the bordered tree card
+  const legend = qEl('div', 'quiz-legend');
+
+  [
+    ['Not selected', 'normal'],
+    ['Current', 'current'],
+    ['Visited / draft', 'visited']
+  ].forEach(([name, cls]) => {
+    const item = qEl(
+      'span',
+      'quiz-legend-item'
+    );
+
+    item.append(
+      qEl(
+        'span',
+        `quiz-legend-dot ${cls}`
+      ),
+      document.createTextNode(name)
+    );
+
+    legend.appendChild(item);
+  });
+
+  figure.append(caption, svg, legend);
+
+  return figure;
 }
 
 /* ==========================================
@@ -274,157 +401,152 @@ function feedbackFor(item, submitted) {
    ========================================== */
 
 export function render(screen, container) {
-  const page = node('main', 'quiz-page');
+  const page = qEl('main', 'quiz-page');
 
   const state = {
     bank: null,
     attempt: 0,
     items: [],
     index: 0,
-    answers: [],
-    chosen: null,
-    confidence: null
+    responses: new Map(),
+    drafts: new Map(),
+    confidences: new Map()
   };
 
   let destroyed = false;
 
-  // Measure sticky navigation height.
-  const header = document.querySelector('.app-header');
-
-  let headerObserver = null;
-
-  if (header) {
-    const measure = () => {
-      document.documentElement.style.setProperty(
-        '--app-header-height',
-        `${Math.ceil(header.getBoundingClientRect().height)}px`
-      );
-    };
-
-    measure();
-
-    if (typeof ResizeObserver !== 'undefined') {
-      headerObserver = new ResizeObserver(measure);
-      headerObserver.observe(header);
-    }
-  }
-
-  // ========================================
-  // STICKY PROGRESS
-  // ========================================
-
-  const progress = node('div', 'lesson-progress');
-
-  const progressHeading = node(
-    'div',
-    'lesson-progress__header'
-  );
-
-  const progressTitle = node(
-    'strong',
-    '',
-    'READINESS QUIZ'
-  );
-
-  const progressText = node(
-    'span',
-    '',
-    'Question 0 of 0'
-  );
-
-  progressHeading.append(
-    progressTitle,
-    progressText
-  );
-
-  const progressTrack = node(
-    'div',
-    'lesson-progress__track'
-  );
-
-  progressTrack.setAttribute('role', 'progressbar');
-
-  progressTrack.setAttribute(
-    'aria-label',
-    'Completed quiz questions'
-  );
-
-  progressTrack.setAttribute('aria-valuemin', '0');
-  progressTrack.setAttribute('aria-valuemax', '7');
-  progressTrack.setAttribute('aria-valuenow', '0');
-
-  const progressFill = node(
-    'div',
-    'lesson-progress__fill'
-  );
-
-  progressTrack.appendChild(progressFill);
-
-  progress.append(
-    progressHeading,
-    progressTrack
-  );
-
-  // ========================================
+  // ------------------------------------------
   // INTRODUCTION
-  // ========================================
+  // ------------------------------------------
 
-  const intro = node(
+  const intro = qEl(
     'header',
-    'quiz-intro quiz-card'
+    'quiz-intro'
   );
 
   intro.append(
-    node(
-      'span',
-      'quiz-eyebrow',
-      'PAGE 6 / CHECK YOUR READINESS'
-    ),
-    node('h1', '', 'Readiness Quiz'),
-    node(
-      'p',
-      'quiz-lead',
-      'Answer one question at a time, ' +
-      'then indicate how confident you feel. ' +
-      'You will receive feedback immediately.'
-    ),
-    node(
+    qEl('h1', '', 'Readiness Quiz'),
+    qEl(
       'p',
       'quiz-muted',
-      'This quiz is for learning, not marks. ' +
-      'You can review explanations and retry ' +
-      'with different questions.'
+      'Apply BST rules, trace DFS with a stack, ' +
+      'and solve traversal questions on new trees. ' +
+      'Check each answer for feedback. Confidence ' +
+      'is optional; your answers are not graded.'
     )
   );
 
-  // ========================================
-  // QUIZ AND RESULT CONTAINERS
-  // ========================================
+  // ------------------------------------------
+  // TOPIC TABS
+  // ------------------------------------------
 
-  const stage = node(
+  const tabBar = qEl('div', 'quiz-tabs');
+
+  tabBar.setAttribute('role', 'tablist');
+
+  tabBar.setAttribute(
+    'aria-label',
+    'Quiz topics'
+  );
+
+  const tabButtons = QUIZ_SECTIONS.map(section => {
+    const b = qButton(
+      section.name,
+      'quiz-tab'
+    );
+
+    b.setAttribute('role', 'tab');
+    b.dataset.section = section.id;
+
+    b.addEventListener('click', () => {
+      goSection(section.id);
+    });
+
+    tabBar.appendChild(b);
+
+    return b;
+  });
+
+  const resultsTab = qButton(
+    'My Results',
+    'quiz-tab quiz-results-tab'
+  );
+
+  resultsTab.setAttribute('role', 'tab');
+  resultsTab.disabled = true;
+
+  resultsTab.addEventListener(
+    'click',
+    () => showResults()
+  );
+
+  tabBar.appendChild(resultsTab);
+
+  tabBar.addEventListener('keydown', event => {
+    const buttons = [
+      ...tabBar.querySelectorAll(
+        'button:not(:disabled)'
+      )
+    ];
+
+    const current = buttons.indexOf(
+      document.activeElement
+    );
+
+    if (current < 0) return;
+
+    let next = null;
+
+    if (event.key === 'ArrowRight') {
+      next = (current + 1) % buttons.length;
+    }
+
+    if (event.key === 'ArrowLeft') {
+      next =
+        (current + buttons.length - 1) %
+        buttons.length;
+    }
+
+    if (event.key === 'Home') next = 0;
+
+    if (event.key === 'End') {
+      next = buttons.length - 1;
+    }
+
+    if (next !== null) {
+      event.preventDefault();
+      buttons[next].click();
+      buttons[next].focus();
+    }
+  });
+
+  // ------------------------------------------
+  // CONTENT AREAS
+  // ------------------------------------------
+
+  const stage = qEl(
     'section',
     'quiz-card quiz-stage'
   );
 
-  const results = node(
+  const results = qEl(
     'section',
     'quiz-card quiz-results'
   );
 
   results.hidden = true;
 
-  // Navigation
-  const navigation = node(
+  const nav = qEl(
     'nav',
     'quiz-navigation'
   );
 
-  navigation.setAttribute(
+  nav.setAttribute(
     'aria-label',
-    'Quiz navigation'
+    'Quiz page navigation'
   );
 
-  const back = node(
+  const back = qEl(
     'a',
     'quiz-nav-back',
     '← Practice'
@@ -432,84 +554,113 @@ export function render(screen, container) {
 
   back.href = '#/practice';
 
-  const reviewLink = node(
+  const review = qEl(
     'a',
     'quiz-nav-next',
-    'Next Lesson →'
+    'Guided Review →'
   );
 
-  reviewLink.href = '#/review';
+  review.href = '#/review';
 
-  navigation.append(back, reviewLink);
+  nav.append(back, review);
 
   page.append(
-    progress,
     intro,
+    tabBar,
     stage,
     results,
-    navigation
+    nav
   );
 
-  container.appendChild(page);
+  container.replaceChildren(page);
 
-  // ========================================
-  // UPDATE PROGRESS
-  // ========================================
-
-  function updateProgress() {
-    const total = state.items.length;
-    const done = state.answers.length;
-
-    progressText.textContent =
-      `Question ${done} of ${total}`;
-
-    progressFill.style.width = total
-      ? `${(done / total) * 100}%`
-      : '0%';
-
-    progressTrack.setAttribute(
-      'aria-valuemax',
-      String(total)
-    );
-
-    progressTrack.setAttribute(
-      'aria-valuenow',
-      String(done)
+  function sectionOf(item) {
+    return item.section || (
+      item.slot <= 2
+        ? 'bst'
+        : item.slot <= 5
+          ? 'dfs'
+          : 'traversal'
     );
   }
 
-  // ========================================
-  // START AN ATTEMPT
-  // ========================================
+  const isFinished = () =>
+    state.responses.size === state.items.length;
 
-  function startAttempt(attempt) {
-    state.attempt = attempt;
-    state.index = 0;
-    state.answers = [];
-    state.chosen = null;
-    state.confidence = null;
+  // ------------------------------------------
+  // TAB STATUS
+  // ------------------------------------------
 
-    const variant = attempt % 2 === 0 ? 'A' : 'B';
+  function updateTabs(resultsMode = false) {
+    const item = state.items[state.index];
 
-    // Group questions by slot.
-    const bySlot = new Map();
+    const active = resultsMode
+      ? 'results'
+      : item
+        ? sectionOf(item)
+        : 'bst';
 
-    state.bank.items.forEach(item => {
-      if (!bySlot.has(item.slot)) {
-        bySlot.set(item.slot, []);
-      }
+    tabButtons.forEach(b => {
+      const id = b.dataset.section;
 
-      bySlot.get(item.slot).push(item);
+      const questions = state.items.filter(
+        q => sectionOf(q) === id
+      );
+
+      const complete =
+        questions.length &&
+        questions.every(
+          q => state.responses.has(q.slot)
+        );
+
+      b.classList.toggle(
+        'is-done',
+        Boolean(complete)
+      );
+
+      b.classList.toggle(
+        'is-active',
+        active === id
+      );
+
+      b.setAttribute(
+        'aria-selected',
+        String(active === id)
+      );
     });
 
-    // Choose one question per slot.
-    state.items = [...bySlot.entries()]
-      .sort((a, b) => a[0] - b[0])
-      .map(([, versions]) => {
-        return versions.find(
-          item => item.variant === variant
-        ) || versions[0];
-      });
+    resultsTab.disabled = !isFinished();
+
+    resultsTab.classList.toggle(
+      'is-active',
+      active === 'results'
+    );
+
+    resultsTab.setAttribute(
+      'aria-selected',
+      String(active === 'results')
+    );
+  }
+
+  function goSection(section) {
+    if (!state.items.length) return;
+
+    const firstUnanswered =
+      state.items.findIndex(
+        q =>
+          sectionOf(q) === section &&
+          !state.responses.has(q.slot)
+      );
+
+    const first = state.items.findIndex(
+      q => sectionOf(q) === section
+    );
+
+    state.index = firstUnanswered !== -1
+      ? firstUnanswered
+      : first;
+
+    if (state.index < 0) return;
 
     results.hidden = true;
     stage.hidden = false;
@@ -517,632 +668,974 @@ export function render(screen, container) {
     renderQuestion();
   }
 
-  // ========================================
-  // RENDER ONE QUESTION
-  // ========================================
+  // ------------------------------------------
+  // START / RETRY QUIZ
+  // ------------------------------------------
+
+  function startAttempt(attempt) {
+    state.attempt = attempt;
+    state.index = 0;
+
+    state.responses.clear();
+    state.drafts.clear();
+    state.confidences.clear();
+
+    const variant = attempt % 2 === 0
+      ? 'A'
+      : 'B';
+
+    const slots = new Map();
+
+    state.bank.items.forEach(item => {
+      if (!slots.has(item.slot)) {
+        slots.set(item.slot, []);
+      }
+
+      slots.get(item.slot).push(item);
+    });
+
+    state.items = [...slots.entries()]
+      .sort(
+        (a, b) => Number(a[0]) - Number(b[0])
+      )
+      .map(([, versions]) =>
+        versions.find(
+          q => q.variant === variant
+        ) || versions[0]
+      );
+
+    results.hidden = true;
+    stage.hidden = false;
+
+    renderQuestion();
+  }
+
+  /* ==========================================
+     RENDER A QUESTION
+     ========================================== */
 
   function renderQuestion() {
     stage.replaceChildren();
 
-    state.chosen = null;
-    state.confidence = null;
+    results.hidden = true;
+    stage.hidden = false;
 
-    updateProgress();
+    updateTabs();
 
     const item = state.items[state.index];
+    if (!item) return;
 
-    if (!item) {
-      renderResults();
-      return;
-    }
+    const saved = state.responses.get(item.slot);
 
-    stage.append(
-      node(
+    const section = QUIZ_SECTIONS.find(
+      s => s.id === sectionOf(item)
+    );
+
+    const header = qEl(
+      'div',
+      'quiz-question-header'
+    );
+
+    header.append(
+      qEl(
         'span',
         'quiz-eyebrow',
-        `QUESTION ${state.index + 1} OF ` +
-        `${state.items.length} · ${item.outcome}`
+        section?.name || item.outcome
       ),
-      node(
+      qEl(
+        'span',
+        'quiz-counter',
+        `Question ${state.index + 1} of ` +
+        `${state.items.length}`
+      )
+    );
+
+    stage.append(
+      header,
+      qEl(
         'h2',
         'quiz-question',
         item.prompt
       )
     );
 
-    // Show relevant tree.
-    if (item.tree && TREES[item.tree]) {
-      stage.appendChild(
-        treeFigure(item.tree, item.highlight)
-      );
-    }
+    const workspace = qEl(
+      'div',
+      'quiz-workspace'
+    );
 
-    const form = node('form', 'quiz-answer-form');
+    const treeHost = qEl(
+      'div',
+      'quiz-tree-host'
+    );
 
-    const feedback = node(
+    const answerPanel = qEl(
+      'div',
+      'quiz-answer-panel'
+    );
+
+    const form = qEl(
+      'form',
+      'quiz-answer-form'
+    );
+
+    const feedback = qEl(
       'div',
       'quiz-feedback'
     );
 
-    feedback.setAttribute('role', 'status');
-    feedback.setAttribute('aria-live', 'polite');
-
-    const confidenceLabel = node(
-      'p',
-      'quiz-subheading',
-      'How confident are you?'
+    feedback.setAttribute(
+      'aria-live',
+      'polite'
     );
 
-    const confidenceGroup = node(
+    let working = state.drafts.has(item.slot)
+      ? state.drafts.get(item.slot)
+      : null;
+
+    const isChoice = item.type === 'choice';
+
+    const isTreeChoice =
+      isChoice &&
+      item.presentation === 'tree-click' &&
+      Boolean(item.tree);
+
+    const choiceList = qEl(
+      'div',
+      'quiz-choices'
+    );
+
+    const responseInput = qEl(
+      'input',
+      'quiz-order-input'
+    );
+
+    const draftTrail = qEl(
+      'div',
+      'quiz-draft-trail'
+    );
+
+    const confidenceGroup = qEl(
       'div',
       'quiz-confidence'
     );
 
-    confidenceGroup.setAttribute('role', 'group');
-    confidenceGroup.setAttribute(
-      'aria-label',
-      'Confidence in your answer'
+    const check = qButton(
+      'Check answer',
+      'quiz-button quiz-button--primary'
     );
 
-    const confidenceHelp = node(
-      'p',
-      'quiz-muted',
-      'Choose your confidence after selecting an answer.'
+    check.type = 'submit';
+
+    const next = qButton(
+      'Next question →',
+      'quiz-button quiz-button--primary'
     );
 
-    const checkButton = node(
-      'button',
-      'quiz-button quiz-button--primary',
-      'Check answer'
+    const previous = qButton(
+      '← Previous',
+      'quiz-button'
     );
 
-    checkButton.type = 'submit';
-    checkButton.disabled = true;
-
-    const nextButton = node(
-      'button',
-      'quiz-button',
-      'Next question →'
-    );
-
-    nextButton.type = 'button';
-    nextButton.hidden = true;
-
-    const controls = node(
+    const actions = qEl(
       'div',
       'quiz-actions'
     );
 
-    controls.append(checkButton, nextButton);
+    actions.append(
+      previous,
+      check,
+      next
+    );
 
-    let locked = false;
+    next.hidden = true;
+    previous.disabled = state.index === 0;
 
-    function refreshCheckButton() {
-      checkButton.disabled =
-        locked ||
-        state.chosen === null ||
-        state.confidence === null;
+    function updateCheck() {
+      if (state.responses.has(item.slot)) {
+        return;
+      }
+
+      check.disabled =
+        working === null ||
+        (
+          typeof working === 'string' &&
+          !working.trim()
+        );
+    }
+
+    // ----------------------------------------
+    // TREE UPDATE
+    // ----------------------------------------
+
+    function drawFigure() {
+      if (
+        !item.tree ||
+        !QUIZ_TREES[item.tree]
+      ) {
+        return;
+      }
+
+      const draft = !isChoice
+        ? (
+            qParseOrder(responseInput.value) ||
+            []
+          )
+        : [];
+
+      const selected =
+        isTreeChoice &&
+        working !== null &&
+        working !== '__unsure__'
+          ? Number(working)
+          : null;
+
+      const highlight = {
+        ...(item.highlight || {}),
+        selected
+      };
+
+      treeHost.replaceChildren(
+        qFigure(
+          item.tree,
+          highlight,
+          state.responses.has(item.slot)
+            ? null
+            : isTreeChoice
+              ? selectChoice
+              : !isChoice
+                ? addNode
+                : null,
+          draft
+        )
+      );
     }
 
     // ----------------------------------------
     // MULTIPLE CHOICE
     // ----------------------------------------
 
-    if (item.type === 'choice') {
-      const choices = node(
-        'div',
-        'quiz-choices'
+    function selectChoice(id) {
+      if (
+        state.responses.has(item.slot)
+      ) {
+        return;
+      }
+
+      working = String(id);
+
+      state.drafts.set(
+        item.slot,
+        working
       );
 
-      item.options.forEach(option => {
-        const button = node(
-          'button',
-          'quiz-choice',
-          option.text
-        );
-
-        button.type = 'button';
-        button.setAttribute(
-          'aria-pressed',
-          'false'
-        );
-
-        button.addEventListener('click', () => {
-          if (locked) return;
-
-          state.chosen = option.id;
-
-          choices.querySelectorAll('button')
-            .forEach(other => {
-              other.setAttribute(
-                'aria-pressed',
-                String(other === button)
-              );
-            });
-
-          refreshCheckButton();
+      choiceList.querySelectorAll('button')
+        .forEach(b => {
+          b.setAttribute(
+            'aria-pressed',
+            String(b.dataset.id === working)
+          );
         });
 
-        choices.appendChild(button);
-      });
+      updateCheck();
 
-      const unsure = node(
-        'button',
-        'quiz-choice quiz-choice--unsure',
-        'Not sure'
-      );
-
-      unsure.type = 'button';
-      unsure.setAttribute('aria-pressed', 'false');
-
-      unsure.addEventListener('click', () => {
-        if (locked) return;
-
-        state.chosen = '__unsure__';
-
-        choices.querySelectorAll('button')
-          .forEach(other => {
-            other.setAttribute(
-              'aria-pressed',
-              String(other === unsure)
-            );
-          });
-
-        refreshCheckButton();
-      });
-
-      choices.appendChild(unsure);
-      form.appendChild(choices);
+      if (isTreeChoice) {
+        drawFigure();
+      }
     }
 
     // ----------------------------------------
-    // TRAVERSAL ORDER INPUT
+    // TRAVERSAL DRAFT
     // ----------------------------------------
 
-    if (item.type === 'order') {
-      const label = node(
+    function renderDraft() {
+      draftTrail.replaceChildren();
+
+      const parsed = qParseOrder(
+        responseInput.value
+      );
+
+      if (!parsed || !parsed.length) {
+        draftTrail.textContent =
+          'Your sequence will appear here.';
+        return;
+      }
+
+      parsed.forEach((v, i) => {
+        draftTrail.appendChild(
+          qEl(
+            'span',
+            'quiz-draft-chip',
+            String(v)
+          )
+        );
+
+        if (i !== parsed.length - 1) {
+          draftTrail.appendChild(
+            qEl('span', '', '→')
+          );
+        }
+      });
+    }
+
+    function setInput(v) {
+      responseInput.value = v;
+
+      working = v.trim()
+        ? v
+        : null;
+
+      if (working === null) {
+        state.drafts.delete(item.slot);
+      } else {
+        state.drafts.set(
+          item.slot,
+          working
+        );
+      }
+
+      renderDraft();
+      updateCheck();
+      drawFigure();
+    }
+
+    function addNode(value) {
+      if (
+        state.responses.has(item.slot)
+      ) {
+        return;
+      }
+
+      const parsed = qParseOrder(
+        responseInput.value
+      );
+
+      if (
+        responseInput.value.trim() &&
+        !parsed
+      ) {
+        return;
+      }
+
+      const list = parsed || [];
+
+      if (list.includes(value)) return;
+
+      setInput(
+        [...list, value].join(', ')
+      );
+    }
+
+    // ----------------------------------------
+    // BUILD ANSWER AREA
+    // ----------------------------------------
+
+    if (isChoice) {
+      if (isTreeChoice) {
+        answerPanel.appendChild(
+          qEl(
+            'p',
+            'quiz-muted',
+            'Select your answer directly on the tree.'
+          )
+        );
+      }
+
+      if (!isTreeChoice) {
+        (item.options || []).forEach(opt => {
+          const b = qButton(
+            opt.text,
+            'quiz-choice'
+          );
+
+          b.dataset.id = opt.id;
+
+          b.setAttribute(
+            'aria-pressed',
+            String(working === opt.id)
+          );
+
+          b.disabled = Boolean(saved);
+
+          b.addEventListener(
+            'click',
+            () => selectChoice(opt.id)
+          );
+
+          choiceList.appendChild(b);
+        });
+      }
+
+      const unsure = qButton(
+        'Not sure',
+        'quiz-choice quiz-choice--unsure'
+      );
+
+      unsure.dataset.id = '__unsure__';
+      unsure.disabled = Boolean(saved);
+
+      unsure.setAttribute(
+        'aria-pressed',
+        String(working === '__unsure__')
+      );
+
+      unsure.addEventListener(
+        'click',
+        () => selectChoice('__unsure__')
+      );
+
+      choiceList.appendChild(unsure);
+      answerPanel.appendChild(choiceList);
+
+    } else {
+      const label = qEl(
         'label',
         'quiz-order-label',
-        'Type the node values in visiting order'
+        'Build the sequence by clicking nodes ' +
+        'or typing their values'
       );
 
-      const input = node(
+      responseInput.type = 'text';
+
+      responseInput.placeholder =
+        'e.g. 67, 33, 15, ...';
+
+      responseInput.autocomplete = 'off';
+
+      responseInput.value =
+        typeof working === 'string'
+          ? working
+          : '';
+
+      responseInput.disabled = Boolean(saved);
+
+      responseInput.addEventListener(
         'input',
-        'quiz-order-input'
+        () => setInput(responseInput.value)
       );
 
-      input.type = 'text';
-      input.autocomplete = 'off';
-      input.placeholder = 'e.g. 50, 30, 20, ...';
+      label.appendChild(responseInput);
 
-      input.setAttribute(
-        'aria-describedby',
-        'quiz-order-help'
+      const editing = qEl(
+        'div',
+        'quiz-edit-actions'
       );
 
-      const help = node(
-        'p',
-        'quiz-muted',
-        'Separate values using commas or spaces.'
+      const undo = qButton(
+        'Undo last',
+        'quiz-button quiz-button--small'
       );
 
-      help.id = 'quiz-order-help';
+      const clear = qButton(
+        'Clear',
+        'quiz-button quiz-button--small'
+      );
 
-      input.addEventListener('input', () => {
-        if (locked) return;
+      undo.disabled = Boolean(saved);
+      clear.disabled = Boolean(saved);
 
-        state.chosen = input.value.trim()
-          ? input.value
-          : null;
+      undo.addEventListener('click', () => {
+        const values = qParseOrder(
+          responseInput.value
+        );
 
-        refreshCheckButton();
+        if (values) {
+          setInput(
+            values.slice(0, -1).join(', ')
+          );
+        }
       });
 
-      label.appendChild(input);
-      form.append(label, help);
+      clear.addEventListener(
+        'click',
+        () => setInput('')
+      );
+
+      editing.append(undo, clear);
+
+      answerPanel.append(
+        label,
+        qEl(
+          'p',
+          'quiz-muted',
+          'Each node is visited once. Use commas, ' +
+          'spaces or arrows.'
+        ),
+        draftTrail,
+        editing
+      );
+
+      renderDraft();
     }
 
     // ----------------------------------------
-    // CONFIDENCE RATINGS
+    // TREE + RESPONSE LAYOUT
     // ----------------------------------------
 
-    const confidenceNames = {
-      guessing: 'Guessing',
-      'fairly-sure': 'Fairly sure',
-      certain: 'Certain'
-    };
-
-    state.bank.confidenceLevels.forEach(level => {
-      const button = node(
-        'button',
-        'quiz-confidence-button',
-        confidenceNames[level] || level
+    if (
+      item.tree &&
+      QUIZ_TREES[item.tree]
+    ) {
+      workspace.classList.add(
+        'has-tree'
       );
 
-      button.type = 'button';
-      button.setAttribute('aria-pressed', 'false');
+      workspace.append(
+        treeHost,
+        answerPanel
+      );
 
-      button.addEventListener('click', () => {
-        if (locked) return;
+      drawFigure();
 
-        state.confidence = level;
+    } else {
+      workspace.append(answerPanel);
+    }
 
-        confidenceGroup.querySelectorAll('button')
+    form.appendChild(workspace);
+
+    // ----------------------------------------
+    // OPTIONAL CONFIDENCE
+    // ----------------------------------------
+
+    const confidenceTitle = qEl(
+      'p',
+      'quiz-subheading',
+      'How confident are you? (optional)'
+    );
+
+    const levels = [
+      ['guessing', 'Guessing'],
+      ['fairly-sure', 'Fairly sure'],
+      ['certain', 'Certain']
+    ];
+
+    levels.forEach(([value, text]) => {
+      const b = qButton(
+        text,
+        'quiz-confidence-button'
+      );
+
+      b.setAttribute(
+        'aria-pressed',
+        String(
+          state.confidences.get(item.slot) ===
+          value
+        )
+      );
+
+      b.disabled = Boolean(saved);
+
+      b.addEventListener('click', () => {
+        state.confidences.set(
+          item.slot,
+          value
+        );
+
+        confidenceGroup
+          .querySelectorAll('button')
           .forEach(other => {
             other.setAttribute(
               'aria-pressed',
-              String(other === button)
+              String(other === b)
             );
           });
-
-        refreshCheckButton();
       });
 
-      confidenceGroup.appendChild(button);
+      confidenceGroup.appendChild(b);
     });
 
     form.append(
-      confidenceLabel,
+      confidenceTitle,
       confidenceGroup,
-      confidenceHelp,
       feedback,
-      controls
+      actions
     );
 
+    stage.appendChild(form);
+
+    updateCheck();
+
     // ----------------------------------------
-    // CHECK ANSWER
+    // SHOW FEEDBACK
+    // ----------------------------------------
+
+    function showFeedback(response) {
+      feedback.className =
+        `quiz-feedback ${
+          response.correct
+            ? 'is-correct'
+            : 'is-review'
+        }`;
+
+      feedback.replaceChildren(
+        qEl(
+          'strong',
+          '',
+          response.correct
+            ? '✓ Correct'
+            : 'Review this idea'
+        ),
+        qEl(
+          'p',
+          '',
+          response.explanation
+        )
+      );
+
+      if (
+        !response.correct &&
+        item.type === 'order'
+      ) {
+        feedback.appendChild(
+          qEl(
+            'p',
+            'quiz-worked-order',
+            'Correct sequence: ' +
+            item.answer.join(' → ')
+          )
+        );
+      }
+
+      if (
+        !response.correct &&
+        response.confidence === 'certain'
+      ) {
+        feedback.appendChild(
+          qEl(
+            'p',
+            'quiz-calibration',
+            'You selected Certain. Use the ' +
+            'explanation to check your reasoning.'
+          )
+        );
+      }
+
+      form.querySelectorAll(
+        'input, button'
+      ).forEach(b => {
+        if (
+          b !== previous &&
+          b !== next
+        ) {
+          b.disabled = true;
+        }
+      });
+
+      check.hidden = true;
+      next.hidden = false;
+
+      next.textContent =
+        state.index === state.items.length - 1
+          ? (
+              isFinished()
+                ? 'See results →'
+                : 'Find unanswered →'
+            )
+          : 'Next question →';
+
+      updateTabs();
+    }
+
+    if (saved) {
+      showFeedback(saved);
+    } else {
+      check.hidden = false;
+    }
+
+    // ----------------------------------------
+    // SUBMIT ANSWER
     // ----------------------------------------
 
     form.addEventListener('submit', event => {
       event.preventDefault();
 
       if (
-        locked ||
-        state.chosen === null ||
-        state.confidence === null
+        state.responses.has(item.slot) ||
+        working === null
       ) {
         return;
       }
 
-      const submitted = item.type === 'order'
-        ? normalizeOrder(state.chosen)
-        : state.chosen;
+      const submitted =
+        item.type === 'order'
+          ? qParseOrder(working)
+          : working;
 
-      let evaluation;
+      const evaluation = qEvaluate(
+        item,
+        submitted
+      );
 
-      if (state.chosen === '__unsure__') {
-        evaluation = {
-          correct: false,
-          explanation:
-            'Choosing Not sure is useful feedback. ' +
-            'Review the concept, then continue.',
-          misconception: null
-        };
-      } else if (item.type === 'order' && !submitted) {
-        evaluation = {
-          correct: false,
-          explanation:
-            'Use whole numbers separated by commas ' +
-            'or spaces. Compare the sequence with ' +
-            'the worked example in Guided Review.',
-          misconception: null
-        };
-      } else {
-        evaluation = feedbackFor(item, submitted);
-      }
-
-      state.answers.push({
+      const response = {
         id: item.id,
         slot: item.slot,
         outcome: item.outcome,
+        section: sectionOf(item),
         correct: evaluation.correct,
-        confidence: state.confidence,
+        explanation: evaluation.explanation,
         misconception: evaluation.misconception,
+        confidence:
+          state.confidences.get(item.slot) ||
+          'not-set',
         response: submitted
-      });
+      };
 
-      locked = true;
-
-      form.querySelectorAll('input, button')
-        .forEach(element => {
-          if (element !== nextButton) {
-            element.disabled = true;
-          }
-        });
-
-      feedback.className = evaluation.correct
-        ? 'quiz-feedback is-correct'
-        : 'quiz-feedback is-review';
-
-      feedback.replaceChildren(
-        node(
-          'strong',
-          '',
-          evaluation.correct
-            ? '✓ Correct'
-            : 'Review this idea'
-        ),
-        node('p', '', evaluation.explanation)
+      state.responses.set(
+        item.slot,
+        response
       );
 
-      if (!evaluation.correct && item.type === 'order') {
-        feedback.appendChild(
-          node(
-            'p',
-            'quiz-muted',
-            `Worked order: ${item.answer.join(' → ')}`
-          )
-        );
-      }
+      showFeedback(response);
+    });
 
+    // ----------------------------------------
+    // QUESTION NAVIGATION
+    // ----------------------------------------
+
+    function moveTo(index) {
+      state.index = index;
+      renderQuestion();
+    }
+
+    previous.addEventListener('click', () => {
+      if (state.index > 0) {
+        moveTo(state.index - 1);
+      }
+    });
+
+    next.addEventListener('click', () => {
       if (
-        state.confidence === 'certain' &&
-        !evaluation.correct
+        state.index <
+        state.items.length - 1
       ) {
-        feedback.appendChild(
-          node(
-            'p',
-            'quiz-calibration',
-            'You felt certain, but this concept needs ' +
-            'review. Compare your reasoning with ' +
-            'the explanation above.'
-          )
-        );
-      }
-
-      checkButton.hidden = true;
-      nextButton.hidden = false;
-
-      nextButton.textContent =
-        state.index === state.items.length - 1
-          ? 'See my results →'
-          : 'Next question →';
-
-      updateProgress();
-    });
-
-    nextButton.addEventListener('click', () => {
-      if (!locked) return;
-
-      state.index++;
-
-      if (state.index === state.items.length) {
-        renderResults();
+        moveTo(state.index + 1);
+      } else if (isFinished()) {
+        showResults();
       } else {
-        renderQuestion();
+        const first = state.items.findIndex(
+          q => !state.responses.has(q.slot)
+        );
+
+        moveTo(first);
       }
     });
-
-    stage.appendChild(form);
   }
 
-  // ========================================
-  // RESULTS AND GUIDED REVIEW
-  // ========================================
+  /* ==========================================
+     RESULTS
+     ========================================== */
 
-  function renderResults() {
+  function showResults() {
+    if (!isFinished()) return;
+
     stage.hidden = true;
     results.hidden = false;
     results.replaceChildren();
 
-    updateProgress();
+    updateTabs(true);
 
-    const total = state.answers.length;
-
-    const correct = state.answers.filter(
-      answer => answer.correct
-    ).length;
-
-    const pass = correct >= state.bank.passMark;
-
-/*
- * Pass formative quiz results to Guided Review.
- *
- * sessionStorage keeps results in this browser tab
- * while students navigate between lesson screens.
- */
-
-try {
-  const reviewData = {
-    version: 1,
-    attempt: state.attempt,
-    correct,
-    total,
-    passMark: state.bank.passMark,
-    answers: state.answers.map(answer => ({
-      id: answer.id,
-      slot: answer.slot,
-      outcome: answer.outcome,
-      correct: answer.correct,
-      confidence: answer.confidence,
-      misconception: answer.misconception
-    }))
-  };
-
-  sessionStorage.setItem(
-    'cos212-dfs-quiz-result',
-    JSON.stringify(reviewData)
-  );
-} catch (error) {
-  console.warn(
-    'Quiz results could not be stored for Guided Review.',
-    error
-  );
-}
-
-
-    const wrong = state.answers.filter(
-      answer => !answer.correct
+    const answers = state.items.map(
+      q => state.responses.get(q.slot)
     );
 
-    const certainWrong = wrong.filter(
-      answer => answer.confidence === 'certain'
+    const correct = answers.filter(
+      a => a.correct
     ).length;
 
+    const pass =
+      correct >= state.bank.passMark;
+
+    const weak = answers.filter(
+      a => !a.correct
+    );
+
+    const confidentWrong = weak.filter(
+      a => a.confidence === 'certain'
+    ).length;
+
+    // Preserve Guided Review integration.
+    try {
+      sessionStorage.setItem(
+        'cos212-dfs-quiz-result',
+        JSON.stringify({
+          version: 1,
+          attempt: state.attempt,
+          correct,
+          total: answers.length,
+          passMark: state.bank.passMark,
+          answers: answers.map(a => ({
+            id: a.id,
+            slot: a.slot,
+            outcome: a.outcome,
+            correct: a.correct,
+            confidence: a.confidence,
+            misconception: a.misconception
+          }))
+        })
+      );
+    } catch (e) {
+      console.warn(
+        'Could not store quiz results for Guided Review.',
+        e
+      );
+    }
+
     results.append(
-      node(
+      qEl(
         'span',
         'quiz-eyebrow',
-        'YOUR FORMATIVE FEEDBACK'
+        'YOUR RESULTS'
       ),
-      node(
+      qEl(
         'h2',
         '',
         pass
-          ? "You're ready to continue"
-          : 'Review a few ideas first'
+          ? 'Ready for Guided Review'
+          : 'A few ideas to strengthen'
       ),
-      node(
+      qEl(
         'p',
         'quiz-score',
-        `${correct} of ${total} questions correct`
+        `${correct} / ${answers.length} correct`
       ),
-      node(
+      qEl(
         'p',
         'quiz-muted',
-        `Readiness guideline: ` +
-        `${state.bank.passMark} of ${total}. ` +
-        'This is not a recorded grade.'
+        `Readiness guideline: ${state.bank.passMark} ` +
+        `out of ${answers.length}. This is formative, ` +
+        'not a recorded grade.'
       )
     );
 
-    const resultList = node(
+    const list = qEl(
       'div',
       'quiz-result-list'
     );
 
-    state.answers.forEach(answer => {
-      const row = node(
-        'div',
-        answer.correct
-          ? 'quiz-result-row is-correct'
-          : 'quiz-result-row is-review'
+    state.items.forEach((item, i) => {
+      const a = state.responses.get(
+        item.slot
+      );
+
+      const row = qEl(
+        'details',
+        `quiz-result-row ${
+          a.correct
+            ? 'is-correct'
+            : 'is-review'
+        }`
+      );
+
+      const topic = QUIZ_SECTIONS.find(
+        s => s.id === sectionOf(item)
+      );
+
+      const summary = qEl(
+        'summary',
+        '',
+        `${a.correct ? '✓' : '↻'} ` +
+        `Question ${i + 1} · ` +
+        `${topic?.name || item.outcome}`
       );
 
       row.append(
-        node(
-          'strong',
-          '',
-          `${answer.correct ? '✓' : '↻'} ` +
-          `Question ${answer.slot}`
-        ),
-        node(
-          'span',
-          '',
-          `${answer.outcome} · ` +
-          answer.confidence.replace('-', ' ')
-        )
+        summary,
+        qEl('p', '', item.prompt),
+        qEl('p', '', a.explanation)
       );
 
-      resultList.appendChild(row);
+      list.appendChild(row);
     });
 
-    results.appendChild(resultList);
+    results.appendChild(list);
 
-    const guide = node(
+    const guide = qEl(
       'div',
       'quiz-guidance'
     );
 
-    if (wrong.length) {
-      const outcomes = [
-        ...new Set(
-          wrong.map(answer => answer.outcome)
-        )
-      ].join(', ');
-
-      guide.append(
-        node(
-          'h3',
-          '',
-          'Review these learning outcomes'
-        ),
-        node(
-          'p',
-          '',
-          `${outcomes}. Open Guided Review ` +
-          'for explanations and examples.'
-        )
-      );
-    } else {
-      guide.append(
-        node('h3', '', 'Excellent understanding'),
-        node(
-          'p',
-          '',
-          'You correctly answered every question. ' +
-          'Review is still available to reinforce ' +
-          'the concepts.'
-        )
-      );
-    }
-
-    if (certainWrong > 0) {
-      guide.appendChild(
-        node(
-          'p',
-          '',
-          `${certainWrong} incorrect ` +
-          `${certainWrong === 1 ? 'answer was' : 'answers were'} ` +
-          'marked Certain. Review these explanations ' +
-          'to improve confidence calibration.'
-        )
-      );
-    }
-
-    const misconceptionCodes = [
+    const weakSections = [
       ...new Set(
-        wrong
-          .map(answer => answer.misconception)
-          .filter(Boolean)
+        weak.map(a => a.section)
       )
     ];
 
-    if (misconceptionCodes.length) {
+    guide.append(
+      qEl(
+        'h3',
+        '',
+        weak.length
+          ? 'Where to review'
+          : 'Your next step'
+      ),
+      qEl(
+        'p',
+        '',
+        weak.length
+          ? (
+              'Review: ' +
+              weakSections.map(id =>
+                QUIZ_SECTIONS.find(
+                  s => s.id === id
+                )?.name || id
+              ).join(', ') +
+              '. The explanations above show ' +
+              'what to revisit.'
+            )
+          : (
+              'You answered every question correctly. ' +
+              'Continue to Guided Review to reinforce ' +
+              'the concepts.'
+            )
+      )
+    );
+
+    if (confidentWrong) {
       guide.appendChild(
-        node(
+        qEl(
           'p',
-          'quiz-muted',
-          'Misconceptions to review: ' +
-          misconceptionCodes.join(', ')
+          '',
+          `${confidentWrong} incorrect answer(s) ` +
+          'were marked Certain. Revisit those explanations.'
         )
       );
     }
 
     results.appendChild(guide);
 
-    const actions = node(
+    const actions = qEl(
       'div',
       'quiz-actions'
     );
 
-    const retry = node(
-      'button',
-      'quiz-button quiz-button--primary',
-      'Retry with new questions →'
+    const retry = qButton(
+      'Retry with alternate questions →',
+      'quiz-button quiz-button--primary'
     );
-
-    retry.type = 'button';
 
     retry.addEventListener('click', () => {
       startAttempt(state.attempt + 1);
     });
 
-    const review = node(
+    const reviewAction = qEl(
       'a',
       'quiz-button',
       'Open Guided Review →'
     );
 
-    review.href = '#/review';
+    reviewAction.href = '#/review';
 
-    actions.append(retry, review);
+    actions.append(
+      retry,
+      reviewAction
+    );
+
     results.appendChild(actions);
   }
 
-  // ========================================
-  // LOAD QUESTION BANK
-  // ========================================
+  /* ==========================================
+     LOAD QUESTION BANK
+     ========================================== */
 
   async function loadBank() {
     try {
@@ -1152,45 +1645,58 @@ try {
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        throw new Error(
+          `HTTP ${response.status}`
+        );
       }
 
-      const data = await response.json();
+      const bank = await response.json();
 
       if (
-        !Array.isArray(data.items) ||
-        data.items.length === 0 ||
-        !Array.isArray(data.confidenceLevels)
+        !Array.isArray(bank.items) ||
+        !bank.items.length ||
+        !Number.isInteger(bank.passMark)
       ) {
-        throw new Error('Invalid quiz bank');
+        throw new Error(
+          'Invalid quiz bank'
+        );
       }
 
       if (destroyed) return;
 
-      state.bank = data;
+      state.bank = bank;
       startAttempt(0);
-    } catch (error) {
+
+    } catch (e) {
       if (destroyed) return;
 
       stage.replaceChildren(
-        node('h2', '', 'Quiz could not load'),
-        node(
-          'p',
+        qEl(
+          'h2',
           '',
-          'Check /data/quiz-bank.json. ' + error.message
+          'Quiz could not load'
+        ),
+        qEl(
+          'p',
+          'quiz-muted',
+          'Check /data/quiz-bank.json. ' +
+          e.message
         )
       );
     }
   }
 
   stage.appendChild(
-    node('p', '', 'Loading quiz questions…')
+    qEl(
+      'p',
+      'quiz-muted',
+      'Loading questions…'
+    )
   );
 
   loadBank();
 
   return () => {
     destroyed = true;
-    headerObserver?.disconnect();
   };
 }
